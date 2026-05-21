@@ -1,4 +1,4 @@
-import type { Metadata } from 'next'
+﻿import type { Metadata } from 'next'
 import Link from 'next/link'
 import { MaterialSymbol } from '@/components/ui/MaterialSymbol'
 import { ActivityHeatmap } from '@/components/ui/ActivityHeatmap'
@@ -14,8 +14,8 @@ import { extractPlainTextFromRichContent } from '@/lib/utils/extractHeadings'
 import type { MomentRow } from '@/types/moment'
 
 export const metadata: Metadata = {
-  title: '首页',
-  description: '记录文章、瞬间、项目与日常轨迹的个人主页。',
+  title: '\u9996\u9875',
+  description: '\u8bb0\u5f55\u6587\u7ae0\u3001\u77ac\u95f4\u3001\u9879\u76ee\u4e0e\u65e5\u5e38\u8f68\u8ff9\u7684\u4e2a\u4eba\u4e3b\u9875\u3002',
 }
 
 export const revalidate = 60
@@ -47,7 +47,7 @@ function getMomentPreview(moment: MomentRow): { text: string; mono: boolean } | 
   if (moment.type === 'steps') {
     const meta = moment.meta as { steps?: number; distance?: number; calories?: number }
     const parts: string[] = []
-    if (meta.steps != null) parts.push(`${meta.steps.toLocaleString()} 步`)
+    if (meta.steps != null) parts.push(`${meta.steps.toLocaleString()} \u6b65`)
     if (meta.distance != null) parts.push(`${meta.distance} km`)
     if (meta.calories != null) parts.push(`${meta.calories} kcal`)
     return parts.length > 0 ? { text: parts.join('  '), mono: true } : null
@@ -74,11 +74,11 @@ function getYearProgress(year: number) {
 function getSidebarGreeting() {
   const hour = new Date().getHours()
 
-  if (hour < 5) return '凌晨好，别熬啦！'
-  if (hour < 11) return '早上好，今天也慢慢来。'
-  if (hour < 14) return '中午好，记得休息。'
-  if (hour < 18) return '下午好，继续向前。'
-  return '晚上好，欢迎回来。'
+  if (hour < 5) return '\u51cc\u6668\u597d\uff0c\u522b\u7184\u5566\uff01'
+  if (hour < 11) return '\u65e9\u4e0a\u597d\uff0c\u4eca\u5929\u4e5f\u6162\u6162\u6765\u3002'
+  if (hour < 14) return '\u4e2d\u5348\u597d\uff0c\u8bb0\u5f97\u4f11\u606f\u3002'
+  if (hour < 18) return '\u4e0b\u5348\u597d\uff0c\u7ee7\u7eed\u5411\u524d\u3002'
+  return '\u665a\u4e0a\u597d\uff0c\u6b22\u8fce\u56de\u6765\u3002'
 }
 
 function getArchivePreview(posts: Array<{ published_at: Date | string | null }>) {
@@ -111,7 +111,7 @@ function getArchivePreview(posts: Array<{ published_at: Date | string | null }>)
 
 function pickSidebarGreeting(pool: string[]) {
   const source = pool.filter(Boolean)
-  if (source.length === 0) return '下午好，继续向前。'
+  if (source.length === 0) return '\u4e0b\u5348\u597d\uff0c\u7ee7\u7eed\u5411\u524d\u3002'
   return source[Math.floor(Math.random() * source.length)]
 }
 
@@ -136,7 +136,9 @@ export default async function HomePage({
   const hasSceneImage = Boolean(scene.image.url)
   const topTags = tags.slice(0, 18)
   const archivePreview = getArchivePreview(archivePosts)
-  const categoryCount = new Set(archivePosts.map((post) => post.category || '未分类')).size
+  const categoryCount = new Set(
+    archivePosts.map((post) => post.category || '\u672a\u5206\u7c7b')
+  ).size
   const yearProgress = getYearProgress(2026)
   const sidebarGreeting = pickSidebarGreeting(siteProfile.homeGreetingPool)
 
@@ -264,7 +266,9 @@ export default async function HomePage({
                               {preview.text}
                             </p>
                           ) : (
-                            <p className="text-xs leading-6 text-muted-foreground">这一刻还没有留下文字。</p>
+                            <p className="text-xs leading-6 text-muted-foreground">
+                              {'\u8fd9\u4e00\u523b\u8fd8\u6ca1\u6709\u7559\u4e0b\u6587\u5b57\u3002'}
+                            </p>
                           )}
                         </div>
 
@@ -300,7 +304,9 @@ export default async function HomePage({
 
               <div className="mt-8">
                 <div className="mb-6 flex items-center justify-between">
-                  <h2 className="text-xl font-semibold tracking-[-0.03em] text-foreground">最新文章</h2>
+                  <h2 className="text-xl font-semibold tracking-[-0.03em] text-foreground">
+                    {'\u6700\u65b0\u6587\u7ae0'}
+                  </h2>
                   <Link
                     href="/posts"
                     className="inline-flex items-center gap-1.5 text-sm text-primary transition-colors hover:text-primary/75"
@@ -311,7 +317,9 @@ export default async function HomePage({
                 </div>
 
                 {postsResult.data.length === 0 ? (
-                  <p className="py-8 text-center text-sm text-muted-foreground">暂时还没有文章。</p>
+                  <p className="py-8 text-center text-sm text-muted-foreground">
+                    {'\u6682\u65f6\u8fd8\u6ca1\u6709\u6587\u7ae0\u3002'}
+                  </p>
                 ) : (
                   <>
                     <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
@@ -382,7 +390,7 @@ export default async function HomePage({
                 <div className="mt-4 grid grid-cols-3 rounded-[18px] border border-border/70 bg-background/44 py-2.5">
                   {[
                     { label: '文章', value: postsResult.total },
-                    { label: '分组', value: categoryCount },
+                    { label: '分类', value: categoryCount },
                     { label: '标签', value: tags.length },
                   ].map((item, index) => (
                     <div
@@ -396,23 +404,21 @@ export default async function HomePage({
                 </div>
 
                 <div className="mt-4 flex items-center justify-center gap-2.5 text-muted-foreground">
-                  {[
-                    { label: 'GitHub', href: siteProfile.githubUrl, icon: 'code' },
-                    { label: '邮箱', href: `mailto:${siteProfile.email}`, icon: 'mail' },
-                    { label: 'RSS', href: siteProfile.rssUrl || '/rss.xml', icon: 'rss_feed' },
-                    { label: '关于', href: '/about', icon: 'person' },
-                  ].map((item) => (
-                    <a
-                      key={item.label}
-                      href={item.href}
-                      aria-label={item.label}
-                      target={item.href.startsWith('http') ? '_blank' : undefined}
-                      rel={item.href.startsWith('http') ? 'noreferrer' : undefined}
-                      className="inline-flex h-8 w-8 items-center justify-center rounded-full border border-border/70 bg-background/42 transition-colors hover:border-primary/32 hover:text-primary"
-                    >
-                      <MaterialSymbol icon={item.icon} size={16} />
-                    </a>
-                  ))}
+                  {siteProfile.homeProfileLinks
+                    .filter((item) => item.href.trim())
+                    .slice(0, 4)
+                    .map((item) => (
+                      <a
+                        key={item.id}
+                        href={item.href}
+                        aria-label={item.label}
+                        target={item.href.startsWith('http') ? '_blank' : undefined}
+                        rel={item.href.startsWith('http') ? 'noreferrer' : undefined}
+                        className="inline-flex h-8 w-8 items-center justify-center rounded-full border border-border/70 bg-background/42 transition-colors hover:border-primary/32 hover:text-primary"
+                      >
+                        <MaterialSymbol icon={item.icon} size={16} />
+                      </a>
+                    ))}
                 </div>
               </div>
 
@@ -458,7 +464,9 @@ export default async function HomePage({
               </div>
 
               <div className="rounded-[24px] border border-border/75 bg-card/78 p-4 backdrop-blur-xl">
-                <p className="text-[11px] font-mono uppercase tracking-[0.18em] text-muted-foreground">标签云</p>
+                <p className="text-[11px] font-mono uppercase tracking-[0.18em] text-muted-foreground">
+                  {'\u6807\u7b7e\u4e91'}
+                </p>
                 <div className="mt-3 flex flex-wrap gap-2">
                   {topTags.map(({ tag, count }) => (
                     <Link
@@ -479,3 +487,4 @@ export default async function HomePage({
     </>
   )
 }
+

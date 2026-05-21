@@ -84,6 +84,23 @@ const DEFAULT_HOME_QUOTES: SiteProfile['homeQuotePool'] = [
   { id: 'quote-3', text: '把日常过细一点，生活就会亮一点。', from: '站点备忘' },
 ]
 
+function buildDefaultHomeProfileLinks(source?: {
+  githubUrl?: string
+  email?: string
+  rssUrl?: string
+}): SiteProfile['homeProfileLinks'] {
+  const githubUrl = cleanText(source?.githubUrl) || 'https://github.com'
+  const email = cleanText(source?.email) || 'hello@lihuahai.dev'
+  const rssUrl = cleanText(source?.rssUrl) || '/rss.xml'
+
+  return [
+    { id: 'github', label: 'GitHub', href: githubUrl, icon: 'code' },
+    { id: 'email', label: '\u90ae\u7bb1', href: `mailto:${email}`, icon: 'mail' },
+    { id: 'rss', label: 'RSS', href: rssUrl, icon: 'rss_feed' },
+    { id: 'about', label: '\u5173\u4e8e', href: '/about', icon: 'person' },
+  ]
+}
+
 export const DEFAULT_SITE_PROFILE: SiteProfile = {
   siteName: '素心',
   siteNameEn: 'LIHUA HAI',
@@ -98,6 +115,11 @@ export const DEFAULT_SITE_PROFILE: SiteProfile = {
   postCoverPoolUrls: [],
   homeGreetingPool: DEFAULT_HOME_GREETINGS,
   homeQuotePool: DEFAULT_HOME_QUOTES,
+  homeProfileLinks: buildDefaultHomeProfileLinks({
+    githubUrl: 'https://github.com',
+    email: 'hello@lihuahai.dev',
+    rssUrl: '/rss.xml',
+  }),
   gamesHeroImageUrl: null,
   siteUrl: 'https://lihuahai.dev',
   rssUrl: '/rss.xml',
@@ -199,6 +221,10 @@ function cloneGreetingPool(items: SiteProfile['homeGreetingPool']) {
   return [...items]
 }
 
+function cloneHomeProfileLinks(items: SiteProfile['homeProfileLinks']) {
+  return items.map((item) => ({ ...item }))
+}
+
 function normalizeAboutStrengths(value: unknown): SiteProfile['aboutStrengths'] {
   if (!Array.isArray(value)) return cloneAboutStrengths(DEFAULT_ABOUT_STRENGTHS)
 
@@ -266,6 +292,35 @@ function normalizeHomeQuotePool(value: unknown): SiteProfile['homeQuotePool'] {
   return items.length ? items : cloneHomeQuotes(DEFAULT_HOME_QUOTES)
 }
 
+function normalizeHomeProfileLinks(
+  value: unknown,
+  defaults: SiteProfile['homeProfileLinks']
+): SiteProfile['homeProfileLinks'] {
+  if (!Array.isArray(value)) return cloneHomeProfileLinks(defaults)
+
+  const items = value
+    .map((item, index) => {
+      if (!item || typeof item !== 'object') return null
+
+      const source = item as Partial<SiteProfile['homeProfileLinks'][number]>
+      const fallback = defaults[index] ?? defaults[0]
+      const label = cleanText(source.label) || fallback?.label || `Link ${index + 1}`
+      const href = cleanText(source.href) || fallback?.href || ''
+      const icon = cleanText(source.icon) || fallback?.icon || 'star'
+
+      return {
+        id: cleanText(source.id) || fallback?.id || `home-link-${index + 1}`,
+        label,
+        href,
+        icon,
+      }
+    })
+    .filter((item): item is SiteProfile['homeProfileLinks'][number] => Boolean(item))
+    .slice(0, 8)
+
+  return items.length ? items : cloneHomeProfileLinks(defaults)
+}
+
 function normalizePostCoverPool(value: unknown): string[] {
   if (!Array.isArray(value)) return []
 
@@ -312,6 +367,14 @@ export function normalizeSiteProfile(input?: Partial<SiteProfile> | null): SiteP
   const ownerName = cleanText(source.ownerName) || siteName || DEFAULT_SITE_PROFILE.ownerName
   const ownerInitial = cleanText(source.ownerInitial) || firstCharacter(ownerName || siteName)
   const siteUrl = cleanText(source.siteUrl) || DEFAULT_SITE_PROFILE.siteUrl
+  const githubUrl = cleanText(source.githubUrl) || DEFAULT_SITE_PROFILE.githubUrl
+  const email = cleanText(source.email) || DEFAULT_SITE_PROFILE.email
+  const rssUrl = cleanText(source.rssUrl) || DEFAULT_SITE_PROFILE.rssUrl
+  const homeProfileLinkDefaults = buildDefaultHomeProfileLinks({
+    githubUrl,
+    email,
+    rssUrl,
+  })
 
   return {
     siteName,
@@ -329,14 +392,15 @@ export function normalizeSiteProfile(input?: Partial<SiteProfile> | null): SiteP
     ).filter((item): item is string => Boolean(item)),
     homeGreetingPool: normalizeGreetingPool(source.homeGreetingPool),
     homeQuotePool: normalizeHomeQuotePool(source.homeQuotePool),
+    homeProfileLinks: normalizeHomeProfileLinks(source.homeProfileLinks, homeProfileLinkDefaults),
     gamesHeroImageUrl: normalizeAssetUrl(source.gamesHeroImageUrl, siteUrl),
     siteUrl,
-    rssUrl: cleanText(source.rssUrl) || DEFAULT_SITE_PROFILE.rssUrl,
+    rssUrl,
     friendLinkIntro: cleanText(source.friendLinkIntro) || DEFAULT_SITE_PROFILE.friendLinkIntro,
     friendLinkRequirements:
       cleanText(source.friendLinkRequirements) || DEFAULT_SITE_PROFILE.friendLinkRequirements,
-    githubUrl: cleanText(source.githubUrl) || DEFAULT_SITE_PROFILE.githubUrl,
-    email: cleanText(source.email) || DEFAULT_SITE_PROFILE.email,
+    githubUrl,
+    email,
     footerText: cleanText(source.footerText) || DEFAULT_SITE_PROFILE.footerText,
     footerIcpNumber: cleanText(source.footerIcpNumber),
     footerIcpUrl: cleanText(source.footerIcpUrl),

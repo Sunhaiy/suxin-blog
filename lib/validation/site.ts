@@ -51,6 +51,25 @@ const siteQuoteSchema = z.object({
   from: z.string().trim().max(80).default(''),
 })
 
+const homeProfileLinkSchema = z.object({
+  id: z.string().trim().max(48).default(''),
+  label: z.string().trim().max(40).default(''),
+  href: z
+    .string()
+    .trim()
+    .refine(
+      (value) =>
+        !value ||
+        value.startsWith('/') ||
+        value.startsWith('mailto:') ||
+        value.startsWith('#') ||
+        isAbsoluteUrl(value),
+      'Invalid home profile link URL'
+    )
+    .default(''),
+  icon: z.string().trim().max(40).default('star'),
+})
+
 export const siteProfileSchema = z.object({
   siteName: z.string().trim().min(1).max(80),
   siteNameEn: z.string().trim().max(120).default(''),
@@ -87,6 +106,7 @@ export const siteProfileSchema = z.object({
     .default([]),
   homeGreetingPool: z.array(z.string().trim().max(80)).max(16).default([]),
   homeQuotePool: z.array(siteQuoteSchema).max(24).default([]),
+  homeProfileLinks: z.array(homeProfileLinkSchema).max(8).default([]),
   gamesHeroImageUrl: z
     .string()
     .trim()

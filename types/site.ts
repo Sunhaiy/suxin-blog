@@ -10,6 +10,13 @@ export interface SiteQuoteItem {
   from: string
 }
 
+export interface HomeProfileLinkItem {
+  id: string
+  label: string
+  href: string
+  icon: string
+}
+
 export type AboutLifestyleMediaType = 'image' | 'video'
 
 export interface AboutLifestyleItem {
@@ -38,6 +45,7 @@ export interface SiteProfile {
   postCoverPoolUrls: string[]
   homeGreetingPool: string[]
   homeQuotePool: SiteQuoteItem[]
+  homeProfileLinks: HomeProfileLinkItem[]
   gamesHeroImageUrl: string | null
   siteUrl: string
   rssUrl: string

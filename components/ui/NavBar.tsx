@@ -279,6 +279,26 @@ export function NavBar({ categories, siteProfile }: NavBarProps) {
                 ))}
               </div>
 
+              <div className="my-3 border-t border-border/75 dark:border-white/[0.07]" />
+              <p className="mb-2 px-1 text-[10px] font-medium tracking-[0.18em] text-muted-foreground">
+                文章入口
+              </p>
+              <div className="grid grid-cols-1 gap-2">
+                {POST_SUB_PAGES.slice(1).map((item) => (
+                  <Link
+                    key={item.href}
+                    href={item.href}
+                    onClick={() => setMobileMenuOpen(false)}
+                    className={mobileMenuItemClass}
+                  >
+                    <span className="text-muted-foreground transition-colors group-hover:text-primary">
+                      <MaterialSymbol icon={item.icon} size={16} />
+                    </span>
+                    <span>{item.label}</span>
+                  </Link>
+                ))}
+              </div>
+
               {categories.length > 0 ? (
                 <>
                   <div className="my-3 border-t border-border/75 dark:border-white/[0.07]" />

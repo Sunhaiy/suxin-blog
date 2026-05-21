@@ -195,6 +195,47 @@ function parseQuotePool(input: string): SiteProfile['homeQuotePool'] {
     .filter((item): item is SiteProfile['homeQuotePool'][number] => Boolean(item))
 }
 
+const HOME_PROFILE_ICON_OPTIONS = [
+  { value: 'code', label: 'Code' },
+  { value: 'mail', label: 'Mail' },
+  { value: 'rss_feed', label: 'RSS' },
+  { value: 'person', label: 'Person' },
+  { value: 'home', label: 'Home' },
+  { value: 'article', label: 'Article' },
+  { value: 'inventory_2', label: 'Archive' },
+  { value: 'folder', label: 'Category' },
+  { value: 'sell', label: 'Tag' },
+  { value: 'link', label: 'Link' },
+  { value: 'travel_explore', label: 'Explore' },
+  { value: 'deployed_code', label: 'Work' },
+  { value: 'bolt', label: 'Moment' },
+  { value: 'favorite', label: 'Favorite' },
+  { value: 'smart_toy', label: 'AI' },
+] as const
+
+const HOME_PROFILE_LINK_FALLBACKS: SiteProfile['homeProfileLinks'] = [
+  { id: 'github', label: 'GitHub', href: 'https://github.com', icon: 'code' },
+  { id: 'email', label: '\u90ae\u7bb1', href: 'mailto:hello@lihuahai.dev', icon: 'mail' },
+  { id: 'rss', label: 'RSS', href: '/rss.xml', icon: 'rss_feed' },
+  { id: 'about', label: '\u5173\u4e8e', href: '/about', icon: 'person' },
+]
+
+function ensureHomeProfileLinks(
+  items?: SiteProfile['homeProfileLinks'] | null
+): SiteProfile['homeProfileLinks'] {
+  return Array.from({ length: 4 }, (_, index) => {
+    const fallback = HOME_PROFILE_LINK_FALLBACKS[index]
+    const current = items?.[index]
+
+    return {
+      id: current?.id || fallback.id,
+      label: current?.label || fallback.label,
+      href: current?.href || fallback.href,
+      icon: current?.icon || fallback.icon,
+    }
+  })
+}
+
 function normalizeSiteAssetUrl(url?: string | null, siteUrl?: string | null) {
   const value = (url ?? '').trim()
   if (!value) return ''
@@ -256,7 +297,10 @@ export default function SettingsPage() {
 
   useEffect(() => {
     if (profileRequest.data) {
-      setProfileForm(profileRequest.data)
+      setProfileForm({
+        ...profileRequest.data,
+        homeProfileLinks: ensureHomeProfileLinks(profileRequest.data.homeProfileLinks),
+      })
       setHomeGreetingText(serializeGreetingPool(profileRequest.data.homeGreetingPool))
       setHomeQuoteText(serializeQuotePool(profileRequest.data.homeQuotePool))
     }
@@ -273,6 +317,25 @@ export default function SettingsPage() {
 
   function updateProfile<Key extends keyof SiteProfile>(key: Key, value: SiteProfile[Key]) {
     setProfileForm((current) => (current ? { ...current, [key]: value } : current))
+  }
+
+  function updateHomeProfileLink(
+    index: number,
+    key: keyof SiteProfile['homeProfileLinks'][number],
+    value: string
+  ) {
+    setProfileForm((current) => {
+      if (!current) return current
+
+      const nextLinks = ensureHomeProfileLinks(current.homeProfileLinks).map((item, itemIndex) =>
+        itemIndex === index ? { ...item, [key]: value } : item
+      )
+
+      return {
+        ...current,
+        homeProfileLinks: nextLinks,
+      }
+    })
   }
 
   async function handleSaveScene() {
@@ -300,6 +363,7 @@ export default function SettingsPage() {
     try {
       const next = await saveSiteProfile({
         ...profileForm,
+        homeProfileLinks: ensureHomeProfileLinks(profileForm.homeProfileLinks),
         avatarUrl: normalizeSiteAssetUrl(profileForm.avatarUrl, profileForm.siteUrl) || null,
         defaultPostCoverUrl:
           normalizeSiteAssetUrl(profileForm.defaultPostCoverUrl, profileForm.siteUrl) || null,
@@ -310,7 +374,10 @@ export default function SettingsPage() {
           .filter(Boolean),
       })
       profileRequest.mutate(next, false)
-      setProfileForm(next)
+      setProfileForm({
+        ...next,
+        homeProfileLinks: ensureHomeProfileLinks(next.homeProfileLinks),
+      })
       setSuccess('站点资料已保存。')
     } catch (err) {
       setError(err instanceof Error ? err.message : '保存站点资料失败')
@@ -1164,6 +1231,72 @@ export default function SettingsPage() {
                       {profileForm.homeQuotePool[0]?.from || '站点备忘'}
                     </p>
                   </div>
+                </div>
+              </div>
+              <div className="space-y-3">
+                <div>
+                  <p className="text-sm font-semibold text-foreground">
+                    {'\u9996\u9875\u8d44\u6599\u5361\u5feb\u6377\u5165\u53e3'}
+                  </p>
+                  <p className="mt-1 text-sm leading-6 text-muted-foreground">
+                    {
+                      '\u56fe\u6807\u3001\u540d\u79f0\u548c\u94fe\u63a5\u90fd\u53ef\u4ee5\u5355\u72ec\u914d\u7f6e\u3002\u524d\u53f0\u4f1a\u76f4\u63a5\u4ece\u8fd9\u91cc\u8bfb\u53d6\u3002'
+                    }
+                  </p>
+                </div>
+
+                <div className="grid gap-4 xl:grid-cols-2">
+                  {ensureHomeProfileLinks(profileForm.homeProfileLinks).map((item, index) => (
+                    <div key={item.id} className={`${ADMIN_MUTED_PANEL_CLASS} space-y-4 p-4`}>
+                      <div className="flex items-center gap-3">
+                        <span className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-border/70 bg-background/48 text-foreground">
+                          <MaterialSymbol icon={item.icon} size={18} />
+                        </span>
+                        <div>
+                          <p className="text-sm font-semibold text-foreground">
+                            {`\u5165\u53e3 ${index + 1}`}
+                          </p>
+                          <p className="text-xs text-muted-foreground">{item.label || item.href}</p>
+                        </div>
+                      </div>
+
+                      <div className="grid gap-4 md:grid-cols-2">
+                        <AdminField label={'\u540d\u79f0'}>
+                          <input
+                            value={item.label}
+                            onChange={(event) => updateHomeProfileLink(index, 'label', event.target.value)}
+                            className={ADMIN_INPUT_CLASS}
+                            placeholder={'\u4f8b\u5982\uff1aGitHub'}
+                          />
+                        </AdminField>
+                        <AdminField label={'\u56fe\u6807'}>
+                          <select
+                            value={item.icon}
+                            onChange={(event) => updateHomeProfileLink(index, 'icon', event.target.value)}
+                            className={ADMIN_INPUT_CLASS}
+                          >
+                            {HOME_PROFILE_ICON_OPTIONS.map((option) => (
+                              <option key={option.value} value={option.value}>
+                                {option.label}
+                              </option>
+                            ))}
+                          </select>
+                        </AdminField>
+                      </div>
+
+                      <AdminField
+                        label={'\u94fe\u63a5'}
+                        hint={'\u652f\u6301 /about\u3001https://example.com \u6216 mailto:hello@example.com'}
+                      >
+                        <input
+                          value={item.href}
+                          onChange={(event) => updateHomeProfileLink(index, 'href', event.target.value)}
+                          className={ADMIN_INPUT_CLASS}
+                          placeholder={index === 0 ? 'https://github.com/your-name' : '/about'}
+                        />
+                      </AdminField>
+                    </div>
+                  ))}
                 </div>
               </div>
             </div>

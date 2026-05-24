@@ -15,13 +15,7 @@ interface SceneBackgroundProps {
 }
 
 function isWeatherEnabled(scene: BackgroundSceneSettings, page: SceneEnabledPage) {
-  if (page === 'works') return false
-  if (page === 'moments') return scene.weather.preset !== 'none'
-
-  return (
-    scene.weather.preset !== 'none' &&
-    (scene.weather.enabledPages.includes('all') || scene.weather.enabledPages.includes(page))
-  )
+  return page === 'moments' && scene.weather.preset !== 'none'
 }
 
 export function SceneBackground({
@@ -33,8 +27,8 @@ export function SceneBackground({
   style,
 }: SceneBackgroundProps) {
   const weatherEnabled = isWeatherEnabled(scene, page)
-  const hasImage = Boolean(scene.image.url) && page !== 'moments'
-  const filterEnabled = page !== 'moments'
+  const hasImage = Boolean(scene.image.url) && page !== 'moments' && page !== 'home'
+  const filterEnabled = page !== 'moments' && page !== 'home'
   const weatherIntensity =
     page === 'moments' ? Math.max(scene.weather.intensity, 0.58) : scene.weather.intensity
 

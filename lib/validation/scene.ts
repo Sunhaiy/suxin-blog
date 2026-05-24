@@ -1,7 +1,5 @@
 import { z } from 'zod'
 
-const enabledPageSchema = z.enum(['all', 'home', 'moments', 'works-detail'])
-
 function isUrl(value: string | null | undefined) {
   if (!value) return true
   if (value.startsWith('/')) return true
@@ -23,7 +21,6 @@ export const backgroundSceneSchema = z.object({
   weather: z.object({
     preset: z.enum(['none', 'storm']),
     intensity: z.number().min(0).max(1),
-    enabledPages: z.array(enabledPageSchema),
   }),
   filter: z.object({
     overlay: z.number().min(0).max(1),

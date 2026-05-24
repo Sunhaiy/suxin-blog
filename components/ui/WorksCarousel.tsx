@@ -25,7 +25,7 @@ const timeFormatter = new Intl.DateTimeFormat('en-US', {
 })
 
 export function WorksCarousel({ works, siteUrl }: Props) {
-  const [active, setActive] = useState(0)
+  const [active, setActive] = useState(() => resolveActiveIndexFromHash(works))
   const [transitionKey, setTransitionKey] = useState(0)
   const directionRef = useRef<1 | -1>(1)
   const initialRenderRef = useRef(true)
@@ -186,6 +186,18 @@ export function WorksCarousel({ works, siteUrl }: Props) {
   }, [active, transitionKey])
 
   useEffect(() => {
+    const applyHashSelection = () => {
+      const targetIndex = resolveActiveIndexFromHash(works)
+      setActive(targetIndex)
+    }
+
+    applyHashSelection()
+    window.addEventListener('hashchange', applyHashSelection)
+
+    return () => window.removeEventListener('hashchange', applyHashSelection)
+  }, [works])
+
+  useEffect(() => {
     if (works.length <= 1) return
 
     const onKey = (event: KeyboardEvent) => {
@@ -264,13 +276,19 @@ export function WorksCarousel({ works, siteUrl }: Props) {
 
   function navigateTo(targetIndex: number, direction: 1 | -1) {
     directionRef.current = direction
-    setActive((targetIndex + works.length) % works.length)
+    const normalizedIndex = (targetIndex + works.length) % works.length
+    setActive(normalizedIndex)
     setTransitionKey((current) => current + 1)
+    updateWorkHash(works[normalizedIndex]?.slug)
   }
 
   function step(direction: 1 | -1) {
     directionRef.current = direction
-    setActive((current) => (current + direction + works.length) % works.length)
+    setActive((current) => {
+      const nextIndex = (current + direction + works.length) % works.length
+      updateWorkHash(works[nextIndex]?.slug)
+      return nextIndex
+    })
     setTransitionKey((current) => current + 1)
   }
 
@@ -642,6 +660,28 @@ export function WorksCarousel({ works, siteUrl }: Props) {
       </div>
     </section>
   )
+}
+
+function resolveActiveIndexFromHash(works: WorkListItem[]) {
+  if (typeof window === 'undefined') return 0
+
+  const hash = window.location.hash.trim()
+  if (!hash) return 0
+
+  const normalizedHash = hash.startsWith('#') ? hash.slice(1) : hash
+  const slug = normalizedHash.startsWith('work-') ? normalizedHash.slice(5) : normalizedHash
+  const matchIndex = works.findIndex((work) => work.slug === slug)
+  return matchIndex >= 0 ? matchIndex : 0
+}
+
+function updateWorkHash(slug?: string) {
+  if (typeof window === 'undefined' || !slug) return
+
+  const nextHash = `#work-${slug}`
+  if (window.location.hash === nextHash) return
+
+  const nextUrl = `${window.location.pathname}${window.location.search}${nextHash}`
+  window.history.replaceState(null, '', nextUrl)
 }
 
 function formatTicketDate(work: WorkListItem) {

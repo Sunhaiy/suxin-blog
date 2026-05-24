@@ -11,7 +11,6 @@ export interface BackgroundSceneSettings {
   weather: {
     preset: WeatherPreset
     intensity: number
-    enabledPages: SceneEnabledPage[]
   }
   filter: {
     overlay: number

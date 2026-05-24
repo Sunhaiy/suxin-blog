@@ -1,6 +1,7 @@
 ﻿import type { Metadata } from 'next'
 import Link from 'next/link'
 import { MaterialSymbol } from '@/components/ui/MaterialSymbol'
+import { SceneFilterLayer } from '@/components/scene/SceneFilterLayer'
 import { ActivityHeatmap } from '@/components/ui/ActivityHeatmap'
 import { HomeSidebarVisitorCard } from '@/components/ui/HomeSidebarVisitorCard'
 import { PostCard } from '@/components/ui/PostCard'
@@ -8,7 +9,6 @@ import { getActivityHeatmap } from '@/lib/db/dao/activityDao'
 import { findMoments } from '@/lib/db/dao/momentDao'
 import { findAllTags, findPosts, findPostsForArchive } from '@/lib/db/dao/postDao'
 import { getBackgroundSceneSettings } from '@/lib/scene'
-import { toRgba } from '@/lib/scene-color'
 import { getSiteProfile } from '@/lib/site'
 import { extractPlainTextFromRichContent } from '@/lib/utils/extractHeadings'
 import type { MomentRow } from '@/types/moment'
@@ -154,40 +154,13 @@ export default async function HomePage({
               backgroundPosition: scene.image.position,
               backgroundSize: scene.image.size,
               opacity: scene.image.opacity,
-              filter: `saturate(0.94) brightness(${1 - scene.image.opacity * 0.12})`,
             }}
           />
         ) : null}
 
-        <div
-          aria-hidden
-          className="absolute inset-0"
-          style={{
-            background: hasSceneImage
-              ? 'linear-gradient(180deg, hsl(var(--background) / 0.16) 0%, hsl(var(--background) / 0.32) 26%, hsl(var(--background) / 0.88) 100%)'
-              : 'linear-gradient(180deg, hsl(var(--background) / 0.1) 0%, hsl(var(--background) / 0.2) 40%, hsl(var(--background) / 0.96) 100%)',
-          }}
-        />
-
-        <div
-          aria-hidden
-          className="absolute inset-0"
-          style={{
-            background:
-              'radial-gradient(circle at top, hsl(var(--primary) / 0.16), transparent 36%), linear-gradient(180deg, transparent 0%, hsl(var(--background) / 0.08) 48%, hsl(var(--background) / 0.16) 100%)',
-          }}
-        />
-
-        <div
-          aria-hidden
-          className="absolute left-1/2 top-24 h-72 w-72 -translate-x-1/2 rounded-full blur-[140px]"
-          style={{
-            background: `radial-gradient(circle, ${toRgba(
-              '#10b981',
-              hasSceneImage ? 0.18 : 0.1
-            )}, transparent 70%)`,
-          }}
-        />
+        <div aria-hidden className="pointer-events-none absolute inset-0 overflow-hidden">
+          <SceneFilterLayer scene={scene} />
+        </div>
 
         <div className="relative mx-auto flex w-full max-w-6xl flex-1 flex-col justify-center px-6 pb-20 pt-28 sm:px-8 md:justify-start lg:px-10">
           <div className="mx-auto max-w-3xl -translate-y-8 text-center md:translate-y-0">
@@ -217,17 +190,17 @@ export default async function HomePage({
 
           {momentsResult.data.length > 0 ? (
             <div className="mt-auto hidden pt-16 md:block">
-              <div className="mx-auto max-w-5xl overflow-hidden rounded-[32px] border border-primary/8 bg-background/74 p-5 shadow-[0_16px_36px_rgba(15,23,42,0.035)] backdrop-blur-[22px] dark:border-white/[0.05] dark:bg-card/60 dark:shadow-[0_16px_36px_rgba(0,0,0,0.14)] sm:p-6">
+              <div className="scene-panel mx-auto max-w-5xl overflow-hidden rounded-[32px] p-5 sm:p-6">
                 <div className="mb-5 flex items-center justify-between gap-4">
                   <div className="flex items-center gap-2.5">
-                    <span className="scene-icon-badge h-8 w-8 rounded-2xl border border-primary/10 bg-background/64 text-primary dark:border-white/[0.06] dark:bg-background/50">
+                    <span className="scene-icon-badge h-8 w-8 rounded-2xl text-primary">
                       <MaterialSymbol icon="chat_bubble" size={16} />
                     </span>
                     <span className="text-sm font-medium text-foreground">瞬间</span>
                   </div>
                   <Link
                     href="/moments"
-                    className="inline-flex h-8 w-8 items-center justify-center rounded-full border border-primary/10 bg-background/62 text-muted-foreground transition-colors hover:border-primary/26 hover:text-primary dark:border-white/[0.06] dark:bg-background/48"
+                    className="scene-action h-8 w-8 justify-center rounded-full p-0 text-muted-foreground hover:text-primary"
                     aria-label="查看全部瞬间"
                   >
                     <MaterialSymbol icon="arrow_forward" size={16} />
@@ -242,13 +215,12 @@ export default async function HomePage({
                       <Link
                         key={moment.id}
                         href="/moments"
-                        className="group relative flex min-h-[172px] w-[18rem] flex-shrink-0 flex-col justify-between overflow-hidden rounded-[24px] border border-primary/8 bg-background/62 p-4 shadow-[0_10px_20px_rgba(15,23,42,0.03)] backdrop-blur-xl transition-all duration-300 hover:-translate-y-0.5 hover:border-primary/14 hover:bg-background/68 dark:border-white/[0.04] dark:bg-card/54 dark:shadow-[0_12px_24px_rgba(0,0,0,0.12)] dark:hover:bg-card/60 sm:w-[19rem]"
+                        className="scene-panel-soft group relative flex min-h-[172px] w-[18rem] flex-shrink-0 flex-col justify-between overflow-hidden rounded-[24px] p-4 transition-all duration-300 hover:-translate-y-0.5 sm:w-[19rem]"
                       >
-                        <div className="scene-terminal-grid absolute inset-0 opacity-[0.03]" />
-                        <div className="absolute inset-0 bg-gradient-to-br from-primary/[0.04] via-transparent to-primary/[0.01] opacity-70" />
+                        <div className="scene-terminal-grid absolute inset-0 opacity-[0.025]" />
                         <div className="relative z-10">
                           {moment.images.length > 0 ? (
-                              <div className="mb-3 aspect-[16/9] overflow-hidden rounded-[18px] border border-primary/8 bg-background/42 dark:border-white/[0.05] dark:bg-black/10">
+                              <div className="mb-3 aspect-[16/9] overflow-hidden rounded-[18px] border border-border/45 bg-background/20 dark:bg-black/10">
                               <img
                                 src={moment.images[0]}
                                 alt=""
@@ -282,7 +254,7 @@ export default async function HomePage({
                               minute: '2-digit',
                             })}
                           </span>
-                            <span className="inline-flex h-7 w-7 items-center justify-center rounded-full border border-primary/10 bg-background/56 text-muted-foreground transition-colors group-hover:border-primary/24 group-hover:text-primary dark:border-white/[0.05] dark:bg-card/48">
+                            <span className="scene-action inline-flex h-7 w-7 items-center justify-center rounded-full p-0 text-muted-foreground group-hover:text-primary">
                             <MaterialSymbol icon="arrow_outward" size={13} />
                           </span>
                         </div>
@@ -487,4 +459,5 @@ export default async function HomePage({
     </>
   )
 }
+
 

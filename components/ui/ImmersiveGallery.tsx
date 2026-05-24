@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { useEffect, useMemo, useRef, useState, type TouchEvent as ReactTouchEvent } from 'react'
 import { gsap } from 'gsap'
 import { MaterialSymbol } from '@/components/ui/MaterialSymbol'
 import { useGsapScope } from '@/hooks/useGsapScope'
@@ -9,6 +9,7 @@ import type { GalleryAlbumRow, GalleryItemRow } from '@/types/gallery'
 type ImmersiveGalleryProps = {
   items: GalleryItemRow[]
   albums: GalleryAlbumRow[]
+  initialMobileLayout?: boolean
 }
 
 type GallerySlide = {
@@ -26,14 +27,21 @@ type GalleryCollection = {
   slides: GallerySlide[]
 }
 
-export function ImmersiveGallery({ items, albums }: ImmersiveGalleryProps) {
+export function ImmersiveGallery({
+  items,
+  albums,
+  initialMobileLayout = false,
+}: ImmersiveGalleryProps) {
   const slides = useMemo(() => buildSlides(items), [items])
   const collections = useMemo(() => buildCollections(slides, items, albums), [albums, items, slides])
   const [activeCollectionId, setActiveCollectionId] = useState(collections[0]?.id ?? '')
   const activeCollection = collections.find((item) => item.id === activeCollectionId) ?? collections[0]
   const activeSlides = activeCollection?.slides ?? []
   const [virtualIndex, setVirtualIndex] = useState(0)
+  const [isMobileLayout, setIsMobileLayout] = useState(initialMobileLayout)
   const initialRenderRef = useRef(true)
+  const mobileTouchStartRef = useRef<{ x: number; y: number } | null>(null)
+  const thumbsRef = useRef<HTMLDivElement>(null)
 
   const safeIndex = normalizeIndex(virtualIndex, activeSlides.length)
   const activeSlide = activeSlides[safeIndex]
@@ -81,6 +89,15 @@ export function ImmersiveGallery({ items, albums }: ImmersiveGalleryProps) {
   )
 
   useEffect(() => {
+    const media = window.matchMedia('(max-width: 1023px)')
+    const sync = () => setIsMobileLayout(media.matches)
+
+    sync()
+    media.addEventListener('change', sync)
+    return () => media.removeEventListener('change', sync)
+  }, [])
+
+  useEffect(() => {
     setActiveCollectionId((current) =>
       collections.some((item) => item.id === current) ? current : (collections[0]?.id ?? '')
     )
@@ -91,6 +108,15 @@ export function ImmersiveGallery({ items, albums }: ImmersiveGalleryProps) {
   }, [activeCollectionId])
 
   useEffect(() => {
+    if (isMobileLayout || !thumbsRef.current) return
+
+    const activeThumb = thumbsRef.current.querySelector<HTMLElement>('[data-thumb-active="true"]')
+    activeThumb?.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' })
+  }, [isMobileLayout, safeIndex, activeCollectionId])
+
+  useEffect(() => {
+    if (isMobileLayout) return
+
     const html = document.documentElement
     const body = document.body
     const previousHtmlOverflowY = html.style.overflowY
@@ -107,10 +133,10 @@ export function ImmersiveGallery({ items, albums }: ImmersiveGalleryProps) {
       body.style.overflowY = previousBodyOverflowY
       body.style.overscrollBehaviorY = previousBodyOverscrollY
     }
-  }, [])
+  }, [isMobileLayout])
 
   useEffect(() => {
-    if (!scopeRef.current || !activeSlide || prefersReducedMotion) return
+    if (!scopeRef.current || !activeSlide || prefersReducedMotion || isMobileLayout) return
 
     const activeCard = scopeRef.current.querySelector('[data-gallery-card-active="true"]')
     const description = scopeRef.current.querySelector('[data-gallery-slide-description]')
@@ -124,10 +150,10 @@ export function ImmersiveGallery({ items, albums }: ImmersiveGalleryProps) {
     return () => {
       tl.kill()
     }
-  }, [activeSlide, prefersReducedMotion, safeIndex, scopeRef])
+  }, [activeSlide, isMobileLayout, prefersReducedMotion, safeIndex, scopeRef])
 
   useEffect(() => {
-    if (activeSlides.length <= 1) return
+    if (isMobileLayout || activeSlides.length <= 1) return
 
     function handleKeyDown(event: KeyboardEvent) {
       if (event.key === 'ArrowLeft') step(-1)
@@ -136,11 +162,11 @@ export function ImmersiveGallery({ items, albums }: ImmersiveGalleryProps) {
 
     window.addEventListener('keydown', handleKeyDown)
     return () => window.removeEventListener('keydown', handleKeyDown)
-  }, [activeSlides.length])
+  }, [activeSlides.length, isMobileLayout])
 
   useEffect(() => {
     const node = scopeRef.current
-    if (!node || activeSlides.length <= 1) return
+    if (!node || activeSlides.length <= 1 || isMobileLayout) return
 
     let touchStartX = 0
     let touchStartY = 0
@@ -206,7 +232,7 @@ export function ImmersiveGallery({ items, albums }: ImmersiveGalleryProps) {
       node.removeEventListener('touchmove', onTouchMove)
       node.removeEventListener('touchend', onTouchEnd)
     }
-  }, [activeSlides.length, scopeRef])
+  }, [activeSlides.length, isMobileLayout, scopeRef])
 
   function step(direction: 1 | -1) {
     if (activeSlides.length <= 1) return
@@ -220,6 +246,153 @@ export function ImmersiveGallery({ items, albums }: ImmersiveGalleryProps) {
     setVirtualIndex(target)
   }
 
+  function handleMobileTouchStart(event: ReactTouchEvent<HTMLDivElement>) {
+    const touch = event.touches[0]
+    if (!touch) return
+    mobileTouchStartRef.current = { x: touch.clientX, y: touch.clientY }
+  }
+
+  function handleMobileTouchEnd(event: ReactTouchEvent<HTMLDivElement>) {
+    if (!mobileTouchStartRef.current || activeSlides.length <= 1) return
+
+    const touch = event.changedTouches[0]
+    if (!touch) return
+
+    const deltaX = touch.clientX - mobileTouchStartRef.current.x
+    const deltaY = touch.clientY - mobileTouchStartRef.current.y
+    mobileTouchStartRef.current = null
+
+    if (Math.abs(deltaX) < 40 || Math.abs(deltaX) <= Math.abs(deltaY) * 1.1) return
+    step(deltaX < 0 ? 1 : -1)
+  }
+
+  if (slides.length === 0) {
+    return (
+      <section className="relative min-h-[calc(100svh-4rem)] overflow-x-hidden bg-background text-foreground">
+        <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_24%_24%,hsl(var(--primary)/0.08),transparent_24%),radial-gradient(circle_at_72%_28%,hsl(var(--primary)/0.12),transparent_18%),linear-gradient(180deg,hsl(var(--background))_0%,hsl(var(--background)/0.98)_100%)]" />
+        <GalleryEmptyState />
+      </section>
+    )
+  }
+
+  if (isMobileLayout) {
+    return (
+      <section className="relative min-h-[calc(100svh-4rem)] overflow-x-hidden bg-background text-foreground">
+        <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_24%_24%,hsl(var(--primary)/0.08),transparent_24%),radial-gradient(circle_at_72%_28%,hsl(var(--primary)/0.12),transparent_18%),linear-gradient(180deg,hsl(var(--background))_0%,hsl(var(--background)/0.98)_100%)]" />
+        <div className="pointer-events-none absolute bottom-[-10rem] left-1/2 h-64 w-[26rem] -translate-x-1/2 rounded-full bg-primary/10 blur-[140px]" />
+
+        <div className="relative mx-auto flex min-h-[calc(100svh-4rem)] w-full max-w-xl flex-col px-4 pb-20 pt-5 sm:px-5">
+          <div className="mb-4 flex gap-2 overflow-x-auto pb-1 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+            {collections.map((collection) => {
+              const active = collection.id === activeCollectionId
+              return (
+                <button
+                  key={collection.id}
+                  type="button"
+                  onClick={() => setActiveCollectionId(collection.id)}
+                  className={`shrink-0 rounded-full border px-3.5 py-2 text-sm font-medium transition-colors ${
+                    active
+                      ? 'border-primary/30 bg-primary/12 text-primary'
+                      : 'border-border/70 bg-card/70 text-muted-foreground'
+                  }`}
+                >
+                  {collection.label}
+                </button>
+              )
+            })}
+          </div>
+
+          <div className="rounded-[2rem] border border-border/70 bg-card/84 p-3 shadow-[0_18px_42px_rgba(0,0,0,0.16)] backdrop-blur-xl">
+            <div
+              className="overflow-hidden rounded-[1.7rem] border border-border/70 bg-background/70"
+              onTouchStart={handleMobileTouchStart}
+              onTouchEnd={handleMobileTouchEnd}
+            >
+              {activeSlide ? (
+                <img
+                  src={activeSlide.imageUrl}
+                  alt={activeSlide.title}
+                  className="aspect-[4/5] w-full object-cover"
+                />
+              ) : (
+                <div className="aspect-[4/5] w-full bg-muted/60" />
+              )}
+            </div>
+
+            <div className="mt-4">
+              <div className="flex items-start justify-between gap-3">
+                <div className="min-w-0">
+                  <p className="text-[11px] font-mono uppercase tracking-[0.22em] text-muted-foreground">
+                    {activeCollection?.subtitle ?? 'Gallery'}
+                  </p>
+                  <h1 className="mt-2 text-3xl font-semibold tracking-[-0.05em] text-foreground">
+                    {activeSlide?.title ?? '相册'}
+                  </h1>
+                </div>
+                <div className="flex items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={() => step(-1)}
+                    disabled={activeSlides.length <= 1}
+                    className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-border/70 bg-background/62 text-foreground transition-colors disabled:cursor-not-allowed disabled:opacity-40"
+                    aria-label="上一张"
+                  >
+                    <MaterialSymbol icon="arrow_back" size={18} />
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => step(1)}
+                    disabled={activeSlides.length <= 1}
+                    className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-border/70 bg-background/62 text-foreground transition-colors disabled:cursor-not-allowed disabled:opacity-40"
+                    aria-label="下一张"
+                  >
+                    <MaterialSymbol icon="arrow_forward" size={18} />
+                  </button>
+                </div>
+              </div>
+
+              {activeSlide?.description?.trim() ? (
+                <p className="mt-3 text-sm leading-7 text-muted-foreground">{activeSlide.description.trim()}</p>
+              ) : null}
+
+              <div className="mt-4 flex items-center justify-between text-xs font-mono uppercase tracking-[0.16em] text-muted-foreground">
+                <span>{activeCollection?.label ?? '最近照片'}</span>
+                <span>
+                  {activeSlides.length > 0 ? `${safeIndex + 1} / ${activeSlides.length}` : '0 / 0'}
+                </span>
+              </div>
+            </div>
+          </div>
+
+          <div
+            ref={thumbsRef}
+            className="mt-4 flex gap-3 overflow-x-auto pb-2 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+          >
+            {activeSlides.map((slide, index) => {
+              const selected = index === safeIndex
+              return (
+                <button
+                  key={slide.id}
+                  type="button"
+                  onClick={() => jumpTo(index)}
+                  data-thumb-active={selected ? 'true' : 'false'}
+                  className={`shrink-0 overflow-hidden rounded-[1.1rem] border transition-all ${
+                    selected
+                      ? 'border-primary/36 ring-2 ring-primary/18'
+                      : 'border-border/70 opacity-72'
+                  }`}
+                  aria-label={slide.title}
+                >
+                  <img src={slide.thumbUrl} alt="" className="h-20 w-20 object-cover sm:h-24 sm:w-24" />
+                </button>
+              )
+            })}
+          </div>
+        </div>
+      </section>
+    )
+  }
+
   return (
     <section className="relative isolate h-[calc(100svh-4rem)] overflow-hidden bg-background text-foreground">
       <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_24%_24%,hsl(var(--primary)/0.08),transparent_24%),radial-gradient(circle_at_72%_28%,hsl(var(--primary)/0.12),transparent_18%),linear-gradient(180deg,hsl(var(--background))_0%,hsl(var(--background)/0.98)_100%)]" />
@@ -229,88 +402,90 @@ export function ImmersiveGallery({ items, albums }: ImmersiveGalleryProps) {
         ref={scopeRef}
         className="relative mx-auto flex h-full max-w-[1520px] items-center px-5 py-8 sm:px-8 md:py-6 xl:px-12"
       >
-        {slides.length === 0 ? (
-          <div className="flex min-h-[60vh] w-full flex-col items-center justify-center text-center">
-            <div className="flex h-16 w-16 items-center justify-center rounded-full border border-border/70 bg-card/72">
-              <MaterialSymbol icon="photo_library" size={30} className="text-primary/80" />
-            </div>
-            <h1 className="mt-6 text-2xl font-semibold">相册里还没有图片</h1>
-            <p className="mt-3 text-sm text-muted-foreground">
-              先去后台上传几张照片，这里就会变成横向沉浸画廊。
-            </p>
-          </div>
-        ) : (
-          <div className="grid w-full items-center gap-8 xl:grid-cols-[360px_minmax(0,1fr)] xl:gap-10">
-            <aside
-              className="max-h-[calc(100svh-8rem)] space-y-6 overflow-y-auto overscroll-contain pr-3 [mask-image:linear-gradient(180deg,transparent_0%,black_4%,black_96%,transparent_100%)] [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden"
-              data-gallery-sidebar
-              data-gallery-scroll-area
-            >
-              {collections.map((collection, index) => {
-                const active = collection.id === activeCollectionId
-                const preview = collection.slides[0]
+        <div className="grid w-full items-center gap-8 xl:grid-cols-[360px_minmax(0,1fr)] xl:gap-10">
+          <aside
+            className="max-h-[calc(100svh-8rem)] space-y-6 overflow-y-auto overscroll-contain pr-3 [mask-image:linear-gradient(180deg,transparent_0%,black_4%,black_96%,transparent_100%)] [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden"
+            data-gallery-sidebar
+            data-gallery-scroll-area
+          >
+            {collections.map((collection, index) => {
+              const active = collection.id === activeCollectionId
+              const preview = collection.slides[0]
 
-                return (
-                  <button
-                    key={collection.id}
-                    type="button"
-                    onClick={() => setActiveCollectionId(collection.id)}
-                    className="block w-full text-left"
-                    data-gallery-intro
-                  >
-                    <AlbumCollectionCard
-                      active={active}
-                      index={index}
-                      label={collection.label}
-                      subtitle={collection.subtitle}
-                      count={collection.slides.length}
-                      imageUrl={preview?.thumbUrl}
-                    />
-                  </button>
-                )
-              })}
-            </aside>
-
-            <div className="flex min-w-0 items-center justify-center">
-              <div className="flex w-full max-w-[980px] flex-col items-center justify-center">
-                <div
-                  className="relative flex h-[clamp(19rem,34vw,30rem)] w-full items-center justify-center overflow-visible"
-                  data-gallery-stage
+              return (
+                <button
+                  key={collection.id}
+                  type="button"
+                  onClick={() => setActiveCollectionId(collection.id)}
+                  className="block w-full text-left"
+                  data-gallery-intro
                 >
-                  <div className="relative h-full w-full max-w-[760px]">
-                    {activeSlides.map((slide, index) => {
-                      const offset = getVirtualOffset(index, virtualIndex, activeSlides.length)
-                      return (
-                        <GalleryCard
-                          key={slide.id}
-                          slide={slide}
-                          offset={offset}
-                          isActive={offset === 0}
-                          onClick={() => jumpTo(index)}
-                        />
-                      )
-                    })}
-                  </div>
-                </div>
+                  <AlbumCollectionCard
+                    active={active}
+                    index={index}
+                    label={collection.label}
+                    subtitle={collection.subtitle}
+                    count={collection.slides.length}
+                    imageUrl={preview?.thumbUrl}
+                  />
+                </button>
+              )
+            })}
+          </aside>
 
-                <div className="mt-4 w-full max-w-[760px] text-center" data-gallery-info>
-                  {activeSlide?.description?.trim() ? (
-                    <p
-                      className="mx-auto max-w-2xl text-sm leading-7 text-muted-foreground"
-                      data-gallery-slide-description
-                    >
-                      {activeSlide.description.trim()}
-                    </p>
-                  ) : null}
+          <div className="flex min-w-0 items-center justify-center">
+            <div className="flex w-full max-w-[980px] flex-col items-center justify-center">
+              <div
+                className="relative flex h-[clamp(19rem,34vw,30rem)] w-full items-center justify-center overflow-visible"
+                data-gallery-stage
+              >
+                <div className="relative h-full w-full max-w-[760px]">
+                  {activeSlides.map((slide, index) => {
+                    const offset = getVirtualOffset(index, virtualIndex, activeSlides.length)
+                    return (
+                      <GalleryCard
+                        key={slide.id}
+                        slide={slide}
+                        offset={offset}
+                        isActive={offset === 0}
+                        onClick={() => jumpTo(index)}
+                      />
+                    )
+                  })}
                 </div>
-
-                <TickRuler total={activeSlides.length} virtualIndex={virtualIndex} onSelect={jumpTo} />
               </div>
+
+              <div className="mt-4 w-full max-w-[760px] text-center" data-gallery-info>
+                {activeSlide?.description?.trim() ? (
+                  <p
+                    className="mx-auto max-w-2xl text-sm leading-7 text-muted-foreground"
+                    data-gallery-slide-description
+                  >
+                    {activeSlide.description.trim()}
+                  </p>
+                ) : null}
+              </div>
+
+              <TickRuler total={activeSlides.length} virtualIndex={virtualIndex} onSelect={jumpTo} />
             </div>
           </div>
-        )}
+        </div>
       </div>
     </section>
+  )
+}
+
+function GalleryEmptyState() {
+  return (
+    <div className="relative z-10 flex min-h-[60vh] w-full flex-col items-center justify-center px-6 text-center">
+      <div className="flex h-16 w-16 items-center justify-center rounded-full border border-border/70 bg-card/72">
+        <MaterialSymbol icon="photo_library" size={30} className="text-primary/80" />
+      </div>
+      <h1 className="mt-6 text-2xl font-semibold">相册里还没有图片</h1>
+      <p className="mt-3 text-sm text-muted-foreground">
+        先去后台上传几张照片，这里就会变成沉浸式画廊。
+      </p>
+    </div>
   )
 }
 

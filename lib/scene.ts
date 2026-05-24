@@ -1,10 +1,9 @@
-import { revalidateTag, unstable_cache } from 'next/cache'
+import { revalidatePath, revalidateTag } from 'next/cache'
 import { SETTINGS_KEYS } from '@/lib/constants/settings'
 import { getSettings, setSetting } from '@/lib/db/dao/settingsDao'
 import { normalizeHexColor } from '@/lib/scene-color'
 import type {
   BackgroundSceneSettings,
-  SceneEnabledPage,
   WeatherPreset,
 } from '@/types/work'
 
@@ -18,7 +17,6 @@ export const DEFAULT_BACKGROUND_SCENE: BackgroundSceneSettings = {
   weather: {
     preset: 'storm',
     intensity: 0.62,
-    enabledPages: ['all'],
   },
   filter: {
     overlay: 0.34,
@@ -36,10 +34,6 @@ function clamp(value: number, min: number, max: number) {
 
 function isWeatherPreset(value: unknown): value is WeatherPreset {
   return value === 'none' || value === 'storm'
-}
-
-function isEnabledPage(value: unknown): value is SceneEnabledPage {
-  return value === 'all' || value === 'home' || value === 'moments' || value === 'works'
 }
 
 export function normalizeBackgroundSceneSettings(
@@ -63,12 +57,6 @@ export function normalizeBackgroundSceneSettings(
       ? legacyHeroUrl
       : DEFAULT_BACKGROUND_SCENE.image.url
 
-  const enabledPages = Array.isArray(weather.enabledPages)
-    ? weather.enabledPages
-        .map((page) => (page === 'works-detail' ? 'works' : page))
-        .filter(isEnabledPage)
-    : DEFAULT_BACKGROUND_SCENE.weather.enabledPages
-
   return {
     image: {
       url,
@@ -87,7 +75,6 @@ export function normalizeBackgroundSceneSettings(
         0,
         1
       ),
-      enabledPages: enabledPages.length > 0 ? enabledPages : DEFAULT_BACKGROUND_SCENE.weather.enabledPages,
     },
     filter: {
       overlay: clamp(
@@ -123,7 +110,7 @@ export function normalizeBackgroundSceneSettings(
   }
 }
 
-const getBackgroundSceneSettingsCached = unstable_cache(async (): Promise<BackgroundSceneSettings> => {
+async function readBackgroundSceneSettings(): Promise<BackgroundSceneSettings> {
   const settings = await getSettings<unknown>([
     SETTINGS_KEYS.BACKGROUND_SCENE,
     SETTINGS_KEYS.HERO_BG,
@@ -136,13 +123,10 @@ const getBackgroundSceneSettingsCached = unstable_cache(async (): Promise<Backgr
     scene,
     typeof legacyHero?.url === 'string' ? legacyHero.url : null
   )
-}, ['background-scene'], {
-  revalidate: 300,
-  tags: ['background-scene', 'settings'],
-})
+}
 
 export async function getBackgroundSceneSettings(): Promise<BackgroundSceneSettings> {
-  return getBackgroundSceneSettingsCached()
+  return readBackgroundSceneSettings()
 }
 
 export async function persistBackgroundSceneSettings(scene: BackgroundSceneSettings) {
@@ -161,16 +145,9 @@ export async function persistBackgroundSceneSettings(scene: BackgroundSceneSetti
 
   revalidateTag('background-scene')
   revalidateTag('settings')
+  revalidatePath('/')
+  revalidatePath('/moments')
+  revalidatePath('/dashboard/settings')
 
   return scene
-}
-
-export function isSceneWeatherEnabled(
-  scene: BackgroundSceneSettings,
-  page: SceneEnabledPage
-) {
-  return (
-    scene.weather.preset !== 'none' &&
-    (scene.weather.enabledPages.includes('all') || scene.weather.enabledPages.includes(page))
-  )
 }

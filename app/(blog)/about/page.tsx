@@ -10,6 +10,14 @@ import { getSiteProfile } from '@/lib/site'
 import type { SiteProfile } from '@/types/site'
 import type { WorkListItem } from '@/types/work'
 
+type AboutProjectCard = {
+  title: string
+  subtitle: string
+  imageUrl: string
+  lines: string[]
+  slug?: string
+}
+
 export const metadata: Metadata = {
   title: '关于',
   description: '孙海洋的个人介绍、核心能力、精选项目与生活方式。',
@@ -17,7 +25,7 @@ export const metadata: Metadata = {
 
 export const revalidate = 60
 
-const FALLBACK_PROJECTS = [
+const FALLBACK_PROJECTS: AboutProjectCard[] = [
   {
     title: '素心',
     subtitle: '个人全栈博客',
@@ -90,18 +98,19 @@ function projectLines(work: WorkListItem) {
   return [summary, ...tagLines].slice(0, 4)
 }
 
-function buildProjectCards(works: WorkListItem[], selectedIds: number[]) {
+function buildProjectCards(works: WorkListItem[], selectedIds: number[]): AboutProjectCard[] {
   const selectedWorks = selectedIds
     .map((id) => works.find((work) => work.id === id))
     .filter((work): work is WorkListItem => Boolean(work))
   const selectedIdSet = new Set(selectedWorks.map((work) => work.id))
   const fallbackWorks = works.filter((work) => !selectedIdSet.has(work.id))
 
-  const workCards = [...selectedWorks, ...fallbackWorks].slice(0, 4).map((work) => ({
+  const workCards: AboutProjectCard[] = [...selectedWorks, ...fallbackWorks].slice(0, 4).map((work) => ({
     title: work.title,
     subtitle: work.subtitle || work.summary || 'Featured project',
     imageUrl: resolveMediaUrl(work.cover_url, work.hero_image_url) || '/hero.png',
     lines: projectLines(work),
+    slug: work.slug,
   }))
 
   return [...workCards, ...FALLBACK_PROJECTS].slice(0, 4)
@@ -277,28 +286,33 @@ export default async function AboutPage() {
                 className="group"
                 style={{ '--stagger-index': index } as React.CSSProperties}
               >
-                <p className="mb-2 font-mono text-xl font-bold text-white">
-                  {String(index + 1).padStart(2, '0')}
-                </p>
-                <div className="about-project-card border border-white/[0.42] bg-black">
-                  <div className="aspect-[4/3] overflow-hidden border-b border-white/[0.22] bg-white/[0.04]">
-                    <img
-                      src={project.imageUrl}
-                      alt={project.title}
-                      className="h-full w-full object-cover grayscale transition duration-500 group-hover:scale-[1.03] group-hover:grayscale-0"
-                    />
-                  </div>
-                  <div className="min-h-[185px] px-5 py-5">
-                    <h3 className="text-3xl font-black tracking-[-0.08em] text-white">
-                      {project.title}
-                    </h3>
-                    <div className="mt-4 space-y-1 text-base leading-6 text-white/72">
-                      {project.lines.map((line) => (
-                        <p key={line}>/ {line}</p>
-                      ))}
+                <Link
+                  href={project.slug ? `/works#work-${project.slug}` : '/works'}
+                  className="block focus:outline-none"
+                >
+                  <p className="mb-2 font-mono text-xl font-bold text-white">
+                    {String(index + 1).padStart(2, '0')}
+                  </p>
+                  <div className="about-project-card border border-white/[0.42] bg-black transition-colors duration-300 group-hover:border-white group-focus-visible:border-white">
+                    <div className="aspect-[4/3] overflow-hidden border-b border-white/[0.22] bg-white/[0.04]">
+                      <img
+                        src={project.imageUrl}
+                        alt={project.title}
+                        className="h-full w-full object-cover grayscale transition duration-500 group-hover:scale-[1.03] group-hover:grayscale-0"
+                      />
+                    </div>
+                    <div className="min-h-[185px] px-5 py-5">
+                      <h3 className="text-3xl font-black tracking-[-0.08em] text-white">
+                        {project.title}
+                      </h3>
+                      <div className="mt-4 space-y-1 text-base leading-6 text-white/72">
+                        {project.lines.map((line) => (
+                          <p key={line}>/ {line}</p>
+                        ))}
+                      </div>
                     </div>
                   </div>
-                </div>
+                </Link>
               </article>
             ))}
           </div>

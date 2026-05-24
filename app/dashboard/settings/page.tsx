@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import { useEffect, useRef, useState, type ChangeEvent, type ReactNode } from 'react'
 import useSWR from 'swr'
@@ -14,36 +14,13 @@ import {
   ADMIN_TEXTAREA_CLASS,
 } from '@/components/admin/AdminPrimitives'
 import { MediaLibraryPicker } from '@/components/admin/MediaLibraryPicker'
+import { SceneFilterLayer } from '@/components/scene/SceneFilterLayer'
 import { Button } from '@/components/ui/Button'
 import { MaterialSymbol } from '@/components/ui/MaterialSymbol'
-import { toRgba } from '@/lib/scene-color'
 import type { SiteProfile } from '@/types/site'
-import type { BackgroundSceneSettings, SceneEnabledPage } from '@/types/work'
+import type { BackgroundSceneSettings } from '@/types/work'
 
 const fetcher = (url: string) => fetch(url).then((response) => response.json())
-
-const ENABLED_PAGES: Array<{ key: SceneEnabledPage; label: string; description: string }> = [
-  {
-    key: 'all',
-    label: '全站预留',
-    description: '保留未来扩展位，方便之后统一切回全站场景层。',
-  },
-  {
-    key: 'home',
-    label: '首页 Hero',
-    description: '当前前台真正生效的范围，首页大图会直接读取这里的配置。',
-  },
-  {
-    key: 'moments',
-    label: '瞬间',
-    description: '为 moments 保留独立场景数据，后续可以继续单独强化气氛。',
-  },
-  {
-    key: 'works',
-    label: '作品详情',
-    description: '先存住详细页的预设，等下一轮再决定是否真正接到前台。',
-  },
-]
 
 function readApiError(payload: unknown, fallback: string) {
   if (!payload || typeof payload !== 'object') return fallback
@@ -290,16 +267,25 @@ export default function SettingsPage() {
   const defaultCoverFileRef = useRef<HTMLInputElement>(null)
   const postCoverPoolFileRef = useRef<HTMLInputElement>(null)
   const gamesHeroFileRef = useRef<HTMLInputElement>(null)
+  const sceneFormRef = useRef<BackgroundSceneSettings | null>(null)
+  const profileFormRef = useRef<SiteProfile | null>(null)
 
   useEffect(() => {
-    if (sceneRequest.data) setSceneForm(sceneRequest.data)
+    if (sceneRequest.data) {
+      sceneFormRef.current = sceneRequest.data
+      setSceneForm(sceneRequest.data)
+    }
   }, [sceneRequest.data])
 
   useEffect(() => {
     if (profileRequest.data) {
-      setProfileForm({
+      const nextProfile = {
         ...profileRequest.data,
         homeProfileLinks: ensureHomeProfileLinks(profileRequest.data.homeProfileLinks),
+      }
+      profileFormRef.current = nextProfile
+      setProfileForm({
+        ...nextProfile,
       })
       setHomeGreetingText(serializeGreetingPool(profileRequest.data.homeGreetingPool))
       setHomeQuoteText(serializeQuotePool(profileRequest.data.homeQuotePool))
@@ -312,11 +298,21 @@ export default function SettingsPage() {
   }
 
   function updateScene(updater: (current: BackgroundSceneSettings) => BackgroundSceneSettings) {
-    setSceneForm((current) => (current ? updater(current) : current))
+    setSceneForm((current) => {
+      if (!current) return current
+      const next = updater(current)
+      sceneFormRef.current = next
+      return next
+    })
   }
 
   function updateProfile<Key extends keyof SiteProfile>(key: Key, value: SiteProfile[Key]) {
-    setProfileForm((current) => (current ? { ...current, [key]: value } : current))
+    setProfileForm((current) => {
+      if (!current) return current
+      const next = { ...current, [key]: value }
+      profileFormRef.current = next
+      return next
+    })
   }
 
   function updateHomeProfileLink(
@@ -331,23 +327,69 @@ export default function SettingsPage() {
         itemIndex === index ? { ...item, [key]: value } : item
       )
 
-      return {
+      const next = {
         ...current,
         homeProfileLinks: nextLinks,
       }
+      profileFormRef.current = next
+      return next
     })
   }
 
+  async function persistScene(showSuccessMessage = true) {
+    const currentScene = sceneFormRef.current
+    if (!currentScene) return null
+
+    const next = await saveScene(currentScene)
+    sceneRequest.mutate(next, false)
+    sceneFormRef.current = next
+    setSceneForm(next)
+
+    if (showSuccessMessage) {
+      setSuccess('首页 Hero 场景已保存，前台首页会同步读取新参数。')
+    }
+
+    return next
+  }
+
+  async function persistProfile(showSuccessMessage = true) {
+    const currentProfile = profileFormRef.current
+    if (!currentProfile) return null
+
+    const next = await saveSiteProfile({
+      ...currentProfile,
+      homeProfileLinks: ensureHomeProfileLinks(currentProfile.homeProfileLinks),
+      avatarUrl: normalizeSiteAssetUrl(currentProfile.avatarUrl, currentProfile.siteUrl) || null,
+      defaultPostCoverUrl:
+        normalizeSiteAssetUrl(currentProfile.defaultPostCoverUrl, currentProfile.siteUrl) || null,
+      gamesHeroImageUrl:
+        normalizeSiteAssetUrl(currentProfile.gamesHeroImageUrl, currentProfile.siteUrl) || null,
+      postCoverPoolUrls: (currentProfile.postCoverPoolUrls ?? [])
+        .map((item) => normalizeSiteAssetUrl(item, currentProfile.siteUrl))
+        .filter(Boolean),
+    })
+
+    profileRequest.mutate(next, false)
+    const normalizedNext = {
+      ...next,
+      homeProfileLinks: ensureHomeProfileLinks(next.homeProfileLinks),
+    }
+    profileFormRef.current = normalizedNext
+    setProfileForm(normalizedNext)
+
+    if (showSuccessMessage) {
+      setSuccess('站点资料已保存。')
+    }
+
+    return next
+  }
+
   async function handleSaveScene() {
-    if (!sceneForm) return
     setSavingScene(true)
     resetNotice()
 
     try {
-      const next = await saveScene(sceneForm)
-      sceneRequest.mutate(next, false)
-      setSceneForm(next)
-      setSuccess('前台场景设置已保存。')
+      await persistScene(true)
     } catch (err) {
       setError(err instanceof Error ? err.message : '保存场景设置失败')
     } finally {
@@ -356,32 +398,31 @@ export default function SettingsPage() {
   }
 
   async function handleSaveProfile() {
-    if (!profileForm) return
     setSavingProfile(true)
     resetNotice()
 
     try {
-      const next = await saveSiteProfile({
-        ...profileForm,
-        homeProfileLinks: ensureHomeProfileLinks(profileForm.homeProfileLinks),
-        avatarUrl: normalizeSiteAssetUrl(profileForm.avatarUrl, profileForm.siteUrl) || null,
-        defaultPostCoverUrl:
-          normalizeSiteAssetUrl(profileForm.defaultPostCoverUrl, profileForm.siteUrl) || null,
-        gamesHeroImageUrl:
-          normalizeSiteAssetUrl(profileForm.gamesHeroImageUrl, profileForm.siteUrl) || null,
-        postCoverPoolUrls: (profileForm.postCoverPoolUrls ?? [])
-          .map((item) => normalizeSiteAssetUrl(item, profileForm.siteUrl))
-          .filter(Boolean),
-      })
-      profileRequest.mutate(next, false)
-      setProfileForm({
-        ...next,
-        homeProfileLinks: ensureHomeProfileLinks(next.homeProfileLinks),
-      })
-      setSuccess('站点资料已保存。')
+      await persistProfile(true)
     } catch (err) {
       setError(err instanceof Error ? err.message : '保存站点资料失败')
     } finally {
+      setSavingProfile(false)
+    }
+  }
+
+  async function handleSaveAll() {
+    setSavingScene(true)
+    setSavingProfile(true)
+    resetNotice()
+
+    try {
+      await persistScene(false)
+      await persistProfile(false)
+      setSuccess('首页 Hero 和站点资料都已保存。')
+    } catch (err) {
+      setError(err instanceof Error ? err.message : '保存设置失败')
+    } finally {
+      setSavingScene(false)
       setSavingProfile(false)
     }
   }
@@ -396,6 +437,7 @@ export default function SettingsPage() {
     try {
       const next = await uploadSceneImage(file)
       sceneRequest.mutate(next, false)
+      sceneFormRef.current = next
       setSceneForm(next)
       setSuccess('首页背景图已更新。')
     } catch (err) {
@@ -522,6 +564,7 @@ export default function SettingsPage() {
     try {
       const next = await clearSceneImage()
       sceneRequest.mutate(next, false)
+      sceneFormRef.current = next
       setSceneForm(next)
       setSuccess('首页背景图已清除。')
     } catch (err) {
@@ -548,35 +591,30 @@ export default function SettingsPage() {
     )
   }
 
-  const previewBackground = sceneForm.image.url
-    ? `linear-gradient(180deg, rgba(0,0,0,${sceneForm.filter.overlay}) 0%, rgba(0,0,0,${Math.min(
-        0.92,
-        sceneForm.filter.overlay + sceneForm.filter.gradient * 0.22
-      )}) 100%), url(${sceneForm.image.url})`
-    : `radial-gradient(circle at top, ${toRgba(sceneForm.filter.tintColor, 0.18)}, transparent 38%)`
+  const previewHasImage = Boolean(sceneForm.image.url)
 
   return (
     <div className="space-y-6">
       <AdminPageHeader
         eyebrow="Site Console"
         title="全局设置"
-        description="维护站点资料、媒体资产和首页场景。文章默认封面也统一放在这里，编辑器留空时会自动回退。"
+        description="统一维护站点资料、媒体资源、首页 Hero、默认文章封面和首页卡片内容。这里的修改会直接影响前台展示。"
         meta={
           <>
-            <AdminStatusBadge tone="accent">媒体资产</AdminStatusBadge>
+            <AdminStatusBadge tone="accent">媒体资源</AdminStatusBadge>
             <AdminStatusBadge tone="neutral">默认封面</AdminStatusBadge>
             <AdminStatusBadge tone="neutral">首页场景</AdminStatusBadge>
           </>
         }
         actions={
           <>
-            <Button variant="secondary" onClick={handleSaveScene} loading={savingScene}>
+            <Button variant="secondary" onClick={handleSaveScene} loading={savingScene || savingProfile}>
               <MaterialSymbol icon="wallpaper" size={18} />
-              保存场景
+              保存首页 Hero
             </Button>
-            <Button onClick={handleSaveProfile} loading={savingProfile}>
+            <Button onClick={handleSaveAll} loading={savingScene || savingProfile}>
               <MaterialSymbol icon="save" size={18} />
-              保存站点资料
+              保存全部
             </Button>
           </>
         }
@@ -586,8 +624,8 @@ export default function SettingsPage() {
       {success ? <AdminNotice tone="success">{success}</AdminNotice> : null}
 
       <AdminPanel
-        title="品牌与媒体资产"
-        description="把站点身份、头像和文章默认封面放在同一套媒体工作流里，后面维护会轻松很多。"
+        title="品牌与媒体资源"
+        description="把站点身份、头像、默认文章封面和游戏页 Hero 放在同一套媒体工作流里维护，后面会轻松很多。"
         icon="imagesmode"
       >
         <div className="space-y-6">
@@ -744,7 +782,7 @@ export default function SettingsPage() {
                       }
                       buttonLabel="从相册选择"
                       dialogTitle="选择站点头像"
-                      description="优先复用相册里的资源，也可以在弹窗中继续补传。"
+                      description="优先复用相册里的资源，也可以在弹窗里继续补传。"
                     />
                     <Button
                       variant="secondary"
@@ -771,7 +809,7 @@ export default function SettingsPage() {
               <MediaAssetCard
                 eyebrow="Default Cover"
                 title="默认文章封面"
-                description="当文章本身没有设置封面时，前台文章列表、推荐位和正文页都会自动回退到这里。"
+                description="当文章本身没有设置封面时，前台列表、推荐位和正文页都会自动回退到这里。"
                 preview={
                   profileForm.defaultPostCoverUrl ? (
                     <img
@@ -825,7 +863,7 @@ export default function SettingsPage() {
               <MediaAssetCard
                 eyebrow="Games Hero"
                 title="游戏页 Hero 背景"
-                description="会直接作为游戏页面顶部 Hero 背景图，风格建议和动漫页保持一致。"
+                description="会直接作为游戏页顶部 Hero 背景图，风格建议和动漫页保持一致。"
                 preview={
                   profileForm.gamesHeroImageUrl ? (
                     <img
@@ -951,8 +989,8 @@ export default function SettingsPage() {
       </AdminPanel>
 
       <AdminPanel
-        title="首页场景与天气预设"
-        description="当前前台真正启用的是首页 Hero 背景。天气和页面范围继续保留配置，后面可以直接接回去。"
+        title="首页 Hero 场景"
+        description="首页 Hero 会直接读取这里的背景、滤镜和雾感参数。这里保存后，前台首页会同步刷新。"
         icon="wallpaper"
         actions={
           <>
@@ -966,7 +1004,7 @@ export default function SettingsPage() {
             </Button>
             <Button variant="ghost" onClick={handleClearSceneImage} disabled={clearingScene || !sceneForm.image.url}>
               <MaterialSymbol icon="delete" size={18} />
-              {clearingScene ? '清除中' : '清除背景图'}
+              {clearingScene ? '清除中...' : '清除背景图'}
             </Button>
           </>
         }
@@ -974,19 +1012,27 @@ export default function SettingsPage() {
         <div className="space-y-6">
           <AdminSection
             title="首页 Hero 预览"
-            description="这里模拟前台首页首屏的背景层叠关系，方便你直观看图、滤镜和亮度。"
+            description="这里直接模拟首页首屏的真实叠层效果，滤镜、雾感和背景图会按前台同一套逻辑渲染。"
           >
             <div className="space-y-4">
               <div className="overflow-hidden rounded-[24px] border border-border/70 bg-background/40">
-                <div
-                  className="relative aspect-[16/8] overflow-hidden"
-                  style={{
-                    backgroundImage: previewBackground,
-                    backgroundPosition: sceneForm.image.position,
-                    backgroundSize: sceneForm.image.size,
-                  }}
-                >
-                  <div className="absolute inset-0 bg-gradient-to-b from-transparent via-black/10 to-black/68" />
+                <div className="relative aspect-[16/8] overflow-hidden bg-background/70">
+                  {previewHasImage ? (
+                    <div
+                      className="absolute inset-0 bg-cover bg-center"
+                      style={{
+                        backgroundImage: `url(${sceneForm.image.url})`,
+                        backgroundPosition: sceneForm.image.position,
+                        backgroundSize: sceneForm.image.size,
+                        opacity: sceneForm.image.opacity,
+                      }}
+                    />
+                  ) : (
+                    <div className="absolute inset-0 bg-gradient-to-b from-background/30 to-background/80" />
+                  )}
+                  <div className="absolute inset-0 overflow-hidden">
+                    <SceneFilterLayer scene={sceneForm} />
+                  </div>
                   <div className="absolute inset-x-0 bottom-0 px-6 pb-6">
                     <p className="text-[11px] font-mono uppercase tracking-[0.28em] text-white/45">
                       Front Hero
@@ -1042,7 +1088,7 @@ export default function SettingsPage() {
 
           <AdminSection
             title="滤镜与氛围"
-            description="把对比度、蒙层和渐变控制放在一起，便于压住图片同时保留层次。"
+            description="首页 Hero 现在直接复用这套滤镜。想压住雾感、亮部和边缘发白，就在这里调整蒙层、模糊和暗角。"
           >
             <div className="grid gap-4 md:grid-cols-2">
               <RangeField
@@ -1079,6 +1125,19 @@ export default function SettingsPage() {
                 />
               </AdminField>
               <RangeField
+                label="模糊强度"
+                value={sceneForm.filter.blur}
+                min={0}
+                max={24}
+                step={1}
+                onChange={(value) =>
+                  updateScene((current) => ({
+                    ...current,
+                    filter: { ...current.filter, blur: value },
+                  }))
+                }
+              />
+              <RangeField
                 label="边缘暗角"
                 value={sceneForm.filter.vignette}
                 onChange={(value) =>
@@ -1088,95 +1147,31 @@ export default function SettingsPage() {
                   }))
                 }
               />
+              <RangeField
+                label="噪点强度"
+                value={sceneForm.filter.noise}
+                onChange={(value) =>
+                  updateScene((current) => ({
+                    ...current,
+                    filter: { ...current.filter, noise: value },
+                  }))
+                }
+              />
             </div>
           </AdminSection>
 
-          <AdminSection
-            title="天气层预设"
-            description="先把天气层的数据维护好。后面需要重新启用时，不用再回头补结构。"
-            aside={<AdminStatusBadge tone="neutral">Preset Ready</AdminStatusBadge>}
-          >
-            <div className="space-y-4">
-              <div className="grid gap-4 md:grid-cols-2">
-                <AdminField label="天气预设">
-                  <select
-                    value={sceneForm.weather.preset}
-                    onChange={(event) =>
-                      updateScene((current) => ({
-                        ...current,
-                        weather: {
-                          ...current.weather,
-                          preset: event.target.value as BackgroundSceneSettings['weather']['preset'],
-                        },
-                      }))
-                    }
-                    className={ADMIN_INPUT_CLASS}
-                  >
-                    <option value="none">none</option>
-                    <option value="storm">storm</option>
-                  </select>
-                </AdminField>
-                <RangeField
-                  label="天气强度"
-                  value={sceneForm.weather.intensity}
-                  onChange={(value) =>
-                    updateScene((current) => ({
-                      ...current,
-                      weather: { ...current.weather, intensity: value },
-                    }))
-                  }
-                />
-              </div>
-
-              <div className="grid gap-3">
-                {ENABLED_PAGES.map((page) => {
-                  const checked = sceneForm.weather.enabledPages.includes(page.key)
-
-                  return (
-                    <label
-                      key={page.key}
-                      className="flex cursor-pointer items-start gap-3 rounded-[22px] border border-border/70 bg-background/38 px-4 py-4 transition-colors hover:border-border hover:bg-background/48"
-                    >
-                      <input
-                        type="checkbox"
-                        checked={checked}
-                        onChange={() =>
-                          updateScene((current) => ({
-                            ...current,
-                            weather: {
-                              ...current.weather,
-                              enabledPages: checked
-                                ? current.weather.enabledPages.filter((item) => item !== page.key)
-                                : [...current.weather.enabledPages, page.key],
-                            },
-                          }))
-                        }
-                        className="mt-1 h-4 w-4 rounded border-border bg-background"
-                      />
-                      <span>
-                        <span className="block text-sm font-medium text-foreground">{page.label}</span>
-                        <span className="mt-1 block text-sm leading-6 text-muted-foreground">
-                          {page.description}
-                        </span>
-                      </span>
-                    </label>
-                  )
-                })}
-              </div>
-            </div>
-          </AdminSection>
         </div>
 
           <AdminSection
             title="首页卡片配置"
-            description="配置首页侧边栏的一言卡片和资料卡顶部问候语，前台会从这里随机抽取。"
+            description="维护首页侧边栏的一言卡片、问候气泡和资料卡快捷入口。前台会直接从这里读取并随机展示。"
             aside={<AdminStatusBadge tone="accent">Homepage</AdminStatusBadge>}
           >
             <div className="space-y-5">
               <div className="grid gap-4 xl:grid-cols-2">
                 <AdminField
                   label="问候语池"
-                  hint="一行一句，资料卡顶部气泡会随机展示其中一条。"
+                  hint="一行一句，资料卡顶部气泡会随机显示其中一条。"
                 >
                   <textarea
                     value={homeGreetingText}
@@ -1193,7 +1188,7 @@ export default function SettingsPage() {
 
                 <AdminField
                   label="一言句库"
-                  hint="一行一条，格式为“句子 | 来源”。来源不写时会默认显示为站点备忘。"
+                  hint="一行一条，格式是“句子 | 来源”。来源不填时会默认显示为站点备忘。"
                 >
                   <textarea
                     value={homeQuoteText}
@@ -1204,7 +1199,7 @@ export default function SettingsPage() {
                     }}
                     rows={6}
                     className={ADMIN_TEXTAREA_CLASS}
-                    placeholder={'慢一点没关系，重要的是一直在靠近。 | 站点备忘\n风会记得每一条认真走过的路。 | 站点备忘'}
+                    placeholder={'慢一点没关系，重要的是一直在靠近。| 站点备忘\n风会记得每一条认真走过的路。| 站点备忘'}
                   />
                 </AdminField>
               </div>
@@ -1356,8 +1351,7 @@ export default function SettingsPage() {
                 </div>
               ) : (
                 <div className={`${ADMIN_MUTED_PANEL_CLASS} p-5 text-sm text-muted-foreground`}>
-                  还没有可用的随机封面。上传几张后，文章在未单独设置封面时就会自动从这里抽取。
-                </div>
+                  还没有可用的随机封面。上传几张后，文章在未单独设置封面时就会自动从这里抽取。                </div>
               )}
             </div>
           </AdminSection>
@@ -1416,10 +1410,16 @@ function RangeField({
   label,
   value,
   onChange,
+  min = 0,
+  max = 1,
+  step = 0.01,
 }: {
   label: string
   value: number
   onChange: (value: number) => void
+  min?: number
+  max?: number
+  step?: number
 }) {
   return (
     <div className="space-y-2.5">
@@ -1431,9 +1431,9 @@ function RangeField({
       </div>
       <input
         type="range"
-        min={0}
-        max={1}
-        step={0.01}
+        min={min}
+        max={max}
+        step={step}
         value={value}
         onChange={(event) => onChange(Number(event.target.value))}
         className="h-11 w-full accent-[hsl(var(--primary))]"
@@ -1441,3 +1441,5 @@ function RangeField({
     </div>
   )
 }
+
+

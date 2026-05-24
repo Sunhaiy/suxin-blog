@@ -4,6 +4,7 @@ import { useMemo, useRef, useState, type CSSProperties, type MouseEvent } from '
 import type { ActivityDay } from '@/lib/db/dao/activityDao'
 
 const COLUMN_WIDTH = 14
+const GRID_MIN_WIDTH = 728
 
 const LEVEL_STYLES: CSSProperties[] = [
   { backgroundColor: 'hsl(var(--border) / 0.5)' },
@@ -64,10 +65,10 @@ export function ActivityHeatmap({ data }: Props) {
     let nextActiveDays = 0
     let nextTotal = 0
 
-    for (let col = 0; col < 52; col++) {
+    for (let col = 0; col < 52; col += 1) {
       const week: Cell[] = []
 
-      for (let row = 0; row < 7; row++) {
+      for (let row = 0; row < 7; row += 1) {
         const date = new Date(start)
         date.setDate(date.getDate() + col * 7 + row)
 
@@ -119,69 +120,81 @@ export function ActivityHeatmap({ data }: Props) {
     setTooltip({
       left: clampedLeft,
       top: cellRect.top - containerRect.top - 10,
-      text: cell.count > 0 ? `${formatDate(cell.date)} · ${cell.count} 条` : formatDate(cell.date),
+      text:
+        cell.count > 0
+          ? `${formatDate(cell.date)} · ${cell.count} 条`
+          : formatDate(cell.date),
     })
   }
 
   return (
-    <div
-      ref={containerRef}
-      className="relative overflow-x-auto overflow-y-visible pb-2 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]"
-    >
-      <div className="flex w-max flex-col">
-        <div className="mb-3 flex items-center justify-between">
-          <h2 className="text-xl font-bold text-foreground">创作活跃度</h2>
-          <p className="text-sm text-muted-foreground">
-            过去一年 · <span className="font-medium text-foreground">{total}</span> 条 ·{' '}
-            <span className="font-medium text-foreground">{activeDays}</span> 天活跃
-          </p>
-        </div>
-
-        <div className="relative h-[14px]">
-          {monthLabels.map(({ label, col }) => (
-            <span
-              key={col}
-              className="absolute whitespace-nowrap text-[9px] text-muted-foreground"
-              style={{ left: col * COLUMN_WIDTH }}
-            >
-              {label}
-            </span>
-          ))}
-        </div>
-
-        <div className="mt-[3px] flex gap-[3px]">
-          {weeks.map((week, weekIndex) => (
-            <div key={weekIndex} className="flex flex-col gap-[3px]">
-              {week.map((cell, dayIndex) => (
-                <div
-                  key={dayIndex}
-                  className="h-[11px] w-[11px] cursor-default rounded-[2px] transition-transform duration-150 hover:scale-[1.18]"
-                  style={cell.future ? { backgroundColor: 'hsl(var(--border) / 0.2)' } : LEVEL_STYLES[getLevel(cell.count)]}
-                  onMouseEnter={(event) => showTooltip(event, cell)}
-                  onMouseLeave={() => setTooltip(null)}
-                />
-              ))}
-            </div>
-          ))}
-        </div>
-
-        <div className="mt-2 flex items-center justify-end gap-1.5">
-          <span className="text-[10px] text-muted-foreground">少</span>
-          {LEVEL_STYLES.map((style, index) => (
-            <div key={index} className="h-[10px] w-[10px] rounded-[2px]" style={style} />
-          ))}
-          <span className="text-[10px] text-muted-foreground">多</span>
-        </div>
+    <div className="relative max-w-full overflow-hidden">
+      <div className="mb-3 flex flex-wrap items-end justify-between gap-3">
+        <h2 className="text-xl font-bold text-foreground">创作活跃度</h2>
+        <p className="text-sm text-muted-foreground">
+          过去一年 · <span className="font-medium text-foreground">{total}</span> 条 ·{' '}
+          <span className="font-medium text-foreground">{activeDays}</span> 天活跃
+        </p>
       </div>
 
-      {tooltip ? (
+      <div
+        ref={containerRef}
+        className="relative max-w-full overflow-x-auto overflow-y-visible pb-2 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+      >
         <div
-          className="pointer-events-none absolute z-20 -translate-x-1/2 -translate-y-full whitespace-nowrap rounded-xl border border-border/80 bg-background/88 px-3 py-1.5 text-xs font-medium text-foreground backdrop-blur-xl"
-          style={{ left: tooltip.left, top: tooltip.top }}
+          className="inline-flex min-w-full flex-col"
+          style={{ minWidth: `${GRID_MIN_WIDTH}px` }}
         >
-          {tooltip.text}
+          <div className="relative h-[14px]">
+            {monthLabels.map(({ label, col }) => (
+              <span
+                key={`${label}-${col}`}
+                className="absolute whitespace-nowrap text-[9px] text-muted-foreground"
+                style={{ left: col * COLUMN_WIDTH }}
+              >
+                {label}
+              </span>
+            ))}
+          </div>
+
+          <div className="mt-[3px] flex gap-[3px]">
+            {weeks.map((week, weekIndex) => (
+              <div key={weekIndex} className="flex flex-col gap-[3px]">
+                {week.map((cell, dayIndex) => (
+                  <div
+                    key={`${cell.date}-${dayIndex}`}
+                    className="h-[11px] w-[11px] cursor-default rounded-[2px] transition-transform duration-150 hover:scale-[1.18]"
+                    style={
+                      cell.future
+                        ? { backgroundColor: 'hsl(var(--border) / 0.2)' }
+                        : LEVEL_STYLES[getLevel(cell.count)]
+                    }
+                    onMouseEnter={(event) => showTooltip(event, cell)}
+                    onMouseLeave={() => setTooltip(null)}
+                  />
+                ))}
+              </div>
+            ))}
+          </div>
+
+          <div className="mt-2 flex items-center justify-end gap-1.5">
+            <span className="text-[10px] text-muted-foreground">少</span>
+            {LEVEL_STYLES.map((style, index) => (
+              <div key={index} className="h-[10px] w-[10px] rounded-[2px]" style={style} />
+            ))}
+            <span className="text-[10px] text-muted-foreground">多</span>
+          </div>
         </div>
-      ) : null}
+
+        {tooltip ? (
+          <div
+            className="pointer-events-none absolute z-20 -translate-x-1/2 -translate-y-full whitespace-nowrap rounded-xl border border-border/80 bg-background/88 px-3 py-1.5 text-xs font-medium text-foreground backdrop-blur-xl"
+            style={{ left: tooltip.left, top: tooltip.top }}
+          >
+            {tooltip.text}
+          </div>
+        ) : null}
+      </div>
     </div>
   )
 }

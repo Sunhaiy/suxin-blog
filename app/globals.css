@@ -415,7 +415,7 @@
     -moz-osx-font-smoothing: grayscale;
     font-family: var(--font-inter);
     max-width: 100%;
-    overflow-x: hidden;
+    overflow-x: clip;
   }
 
   .dark {
@@ -426,7 +426,7 @@
     @apply bg-background text-foreground font-sans;
     min-height: 100vh;
     max-width: 100%;
-    overflow-x: hidden;
+    overflow-x: clip;
     font-size: 16px;
     line-height: 1.75;
     background-image:
@@ -634,7 +634,7 @@
     position: relative;
     isolation: isolate;
     transform-origin: 50% 2rem;
-    animation: page-route-enter 520ms cubic-bezier(0.16, 1, 0.3, 1) both;
+    animation: page-route-enter 520ms cubic-bezier(0.16, 1, 0.3, 1) backwards;
     will-change: opacity, transform, filter;
   }
 
@@ -1415,13 +1415,13 @@
 
   58% {
     opacity: 1;
-    filter: blur(0);
+    filter: none;
   }
 
   100% {
     opacity: 1;
-    filter: blur(0);
-    transform: translate3d(0, 0, 0) scale(1);
+    filter: none;
+    transform: none;
   }
 }
 

@@ -84,6 +84,7 @@ cp .env.local.example .env.local
 - `PGUSER`
 - `PGPASSWORD`
 - `AUTH_SECRET`
+- `AUTH_URL`
 - `ADMIN_EMAIL`
 - `ADMIN_PASSWORD`
 - `NEXT_PUBLIC_BASE_URL`
@@ -111,6 +112,7 @@ npm run dev
 
 ```bash
 npm run dev
+npm run lint
 npm run build
 npm run start
 npm run db:migrate
@@ -118,6 +120,51 @@ npm run db:seed
 npm run content:editor-showcase
 npm run backup:export
 ```
+
+## SEO Auto Submission
+
+- This project can auto-submit published post URLs to IndexNow and Baidu after create, update, delete, or slug change.
+- Google does not provide a general-purpose indexing API for normal blog posts, so Google should still be handled through sitemap plus Search Console.
+- IndexNow key file is exposed at `/indexnow-key.txt` when `INDEXNOW_KEY` is configured.
+- Manual resubmission endpoint: `POST /api/seo/submit` (requires admin session).
+
+Example request body:
+
+```json
+{
+  "allPublished": true
+}
+```
+
+You can also submit a subset:
+
+```json
+{
+  "slugs": ["my-post-slug"],
+  "ids": [12],
+  "urls": ["https://example.com/posts/my-post-slug"]
+}
+```
+
+Useful env vars:
+
+- `SEARCH_SUBMIT_ENABLED`
+- `INDEXNOW_KEY`
+- `INDEXNOW_ENDPOINT`
+- `INDEXNOW_KEY_LOCATION`
+- `BAIDU_TOKEN`
+- `BAIDU_SITE`
+- `BAIDU_SUBMIT_ENDPOINT`
+- `BAIDU_SUBMIT_TYPE`
+
+## Migration Notes
+
+- Docker can package the app, but data still lives outside the image.
+- To move the site cleanly to another server, you need all three parts together:
+- PostgreSQL data
+- `public/uploads`
+- production env vars
+- `npm run db:seed` is for local demo/init only and will clear existing business tables before inserting sample data.
 
 ## 文章编辑器 V2 说明
 
@@ -176,6 +223,12 @@ npm run backup:export
 - 不会提交 `.env.local`
 - 不会提交 `.next`、`.next-dev` 等构建缓存
 - 初始数据库内容与站点数据不在本次目录清理范围内
+
+## Deployment Notes
+
+- Set `AUTH_URL` to your production origin, for example `https://your-site.com`.
+- `AUTH_URL` should match the public site origin used by visitors and admin login.
+- Run `npm run lint` and `npm run build` before each release.
 
 ## License
 

@@ -114,7 +114,7 @@ export function WorkDetailShowcase({ work, siteUrl }: WorkDetailShowcaseProps) {
         <header className="project-header anim-fade-up">
           <div className="header-shell">
             <div className="header-copy">
-              <div className="meta-header">// CLASSIFIED_ARCHIVE_V.2026</div>
+              <div className="meta-header">{'// CLASSIFIED_ARCHIVE_V.2026'}</div>
               <h1 className="title">{project.name}</h1>
               <p className="subtitle">{project.subtitle}</p>
               {project.tags.length > 0 ? (

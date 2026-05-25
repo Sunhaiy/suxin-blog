@@ -5,6 +5,7 @@ import { generateArticleFromMaterials } from '@/lib/ai/articleWriter'
 import { getDeepSeekPublicStatus } from '@/lib/ai/deepseek'
 import { findPostBySlug, insertPost } from '@/lib/db/dao/postDao'
 import { pickDeterministicMediaUrl } from '@/lib/media'
+import { syncPostSearchIndex } from '@/lib/seo/submission'
 import { slugify } from '@/lib/slugify'
 import { getSiteProfile } from '@/lib/site'
 
@@ -29,11 +30,13 @@ function createFallbackSlug(title: string) {
 }
 
 function normalizePublishedAt(value?: string | null) {
-  if (!value?.trim()) return new Date().toISOString()
+  if (!value?.trim()) return null
+
   const date = new Date(value)
   if (Number.isNaN(date.getTime())) {
     throw new Error('发布时间格式不正确')
   }
+
   return date.toISOString()
 }
 
@@ -95,6 +98,10 @@ export async function POST(req: NextRequest) {
       coverUrl: autoCoverUrl,
       coverAlt: autoCoverUrl ? `${generated.title} 封面` : null,
     })
+
+    if (post.status === 'published') {
+      void syncPostSearchIndex({ after: post })
+    }
 
     const deepSeekStatus = await getDeepSeekPublicStatus()
 

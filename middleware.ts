@@ -1,11 +1,14 @@
 /**
  * middleware.ts
  *
- * Next.js 中间件 — 保护 /dashboard/* 路由。
- * 未登录时重定向到 /admin/login。
+ * Next.js 涓棿浠?鈥?淇濇姢 /dashboard/* 璺敱銆?
+ * 鏈櫥褰曟椂閲嶅畾鍚戝埌 /admin/login銆?
  */
 
-export { auth as middleware } from '@/auth'
+import NextAuth from 'next-auth'
+import { authConfig } from '@/lib/auth/config'
+
+export const { auth: middleware } = NextAuth(authConfig)
 
 export const config = {
   matcher: ['/dashboard/:path*'],

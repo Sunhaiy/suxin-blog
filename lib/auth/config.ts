@@ -1,13 +1,22 @@
 import type { NextAuthConfig } from 'next-auth'
-import Credentials from 'next-auth/providers/credentials'
-import { z } from 'zod'
 
-const loginSchema = z.object({
-  email: z.string().email(),
-  password: z.string().min(6),
-})
+function applyAuthEnvFallback() {
+  const canonicalUrl =
+    process.env.AUTH_URL?.trim() ||
+    process.env.NEXTAUTH_URL?.trim() ||
+    process.env.NEXT_PUBLIC_BASE_URL?.trim()
+
+  if (!canonicalUrl) return
+
+  process.env.AUTH_URL ??= canonicalUrl
+  process.env.NEXTAUTH_URL ??= canonicalUrl
+}
+
+applyAuthEnvFallback()
 
 export const authConfig: NextAuthConfig = {
+  providers: [],
+
   session: { strategy: 'jwt' },
 
   pages: {
@@ -39,22 +48,4 @@ export const authConfig: NextAuthConfig = {
       return session
     },
   },
-
-  providers: [
-    Credentials({
-      name: 'Credentials',
-      credentials: {
-        email: { label: 'Email', type: 'email' },
-        password: { label: 'Password', type: 'password' },
-      },
-      async authorize(credentials) {
-        const parsed = loginSchema.safeParse(credentials)
-        if (!parsed.success) return null
-
-        const { email, password } = parsed.data
-        const { authenticateAdmin } = await import('@/lib/auth/adminCredentials')
-        return authenticateAdmin(email, password)
-      },
-    }),
-  ],
 }

@@ -9,6 +9,7 @@ import {
   incrementViewCount,
   updatePost,
 } from '@/lib/db/dao/postDao'
+import { syncPostSearchIndex } from '@/lib/seo/submission'
 
 const updateSchema = z.object({
   title: z.string().min(1).max(200).optional(),
@@ -50,6 +51,9 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
   if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
   const { id } = await params
+  const existingPost = await findPostById(Number(id))
+  if (!existingPost) return NextResponse.json({ error: 'Not found' }, { status: 404 })
+
   const body = await req.json()
   const parsed = updateSchema.safeParse(body)
   if (!parsed.success) {
@@ -59,6 +63,8 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
   const post = await updatePost(Number(id), parsed.data)
   if (!post) return NextResponse.json({ error: 'Not found' }, { status: 404 })
 
+  void syncPostSearchIndex({ before: existingPost, after: post })
+
   return NextResponse.json(post)
 }
 
@@ -67,8 +73,13 @@ export async function DELETE(_: NextRequest, { params }: { params: Promise<{ id:
   if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
   const { id } = await params
+  const existingPost = await findPostById(Number(id))
+  if (!existingPost) return NextResponse.json({ error: 'Not found' }, { status: 404 })
+
   const ok = await deletePost(Number(id))
   if (!ok) return NextResponse.json({ error: 'Not found' }, { status: 404 })
+
+  void syncPostSearchIndex({ before: existingPost, after: null })
 
   return new NextResponse(null, { status: 204 })
 }

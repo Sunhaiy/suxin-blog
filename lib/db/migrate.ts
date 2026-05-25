@@ -23,7 +23,7 @@ function loadEnv(filePath: string) {
     const match = trimmed.match(/^([^=]+)=(.*)$/)
     if (match) {
       const key = match[1].trim()
-      let value = match[2].trim()
+      const value = match[2].trim()
         .replace(/^["']|["']$/g, '')  // 移除首尾引号
         .replace(/\\n/g, '\n')             // 处理转义序列
         .replace(/\\t/g, '\t')

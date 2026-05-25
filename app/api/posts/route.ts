@@ -3,6 +3,7 @@ import { z } from 'zod'
 import { auth } from '@/auth'
 import { articleDocSchema } from '@/lib/articles/document'
 import { findPosts, insertPost } from '@/lib/db/dao/postDao'
+import { syncPostSearchIndex } from '@/lib/seo/submission'
 
 const createSchema = z.object({
   title: z.string().min(1).max(200),
@@ -54,10 +55,12 @@ export async function POST(req: NextRequest) {
   }
 
   try {
-    const post = await insertPost({
-      ...parsed.data,
-      publishedAt: parsed.data.publishedAt ?? new Date().toISOString(),
-    })
+    const post = await insertPost(parsed.data)
+
+    if (post.status === 'published') {
+      void syncPostSearchIndex({ after: post })
+    }
+
     return NextResponse.json(post, { status: 201 })
   } catch (err: unknown) {
     const message = err instanceof Error ? err.message : 'Unknown error'

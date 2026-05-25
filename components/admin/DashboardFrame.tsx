@@ -57,7 +57,7 @@ export function DashboardFrame({
                 <MaterialSymbol icon="dashboard_customize" size={20} fill />
               </span>
               <div className="min-w-0">
-                <span className="block truncate text-lg font-semibold text-foreground">Lihua Console</span>
+                <span className="block truncate text-lg font-semibold text-foreground">Suxin Blog Console</span>
                 <span className="mt-1 block text-[11px] font-mono uppercase tracking-[0.24em] text-muted-foreground">
                   Unified Admin System
                 </span>

@@ -41,7 +41,7 @@ export async function generateMetadata({
     post.cover_url,
     pickDeterministicMediaUrl(siteProfile.postCoverPoolUrls, post.slug || post.id, siteProfile.defaultPostCoverUrl)
   )
-  const canonicalUrl = `${(siteProfile.siteUrl || 'https://lihuahai.dev').replace(/\/$/, '')}/posts/${post.slug}`
+  const canonicalUrl = `${(siteProfile.siteUrl || 'https://haiy.space').replace(/\/$/, '')}/posts/${post.slug}`
   const publishedTime = toIsoDateString(post.published_at)
 
   return {
@@ -99,7 +99,7 @@ export default async function PostPage({
   )
   const optimizedCoverUrl = getOptimizedMediaUrl(coverUrl, { width: 1920, quality: 72 })
   const optimizedAvatarUrl = getOptimizedMediaUrl(siteProfile.avatarUrl, { width: 256, quality: 76 })
-  const canonicalUrl = `${(siteProfile.siteUrl || 'https://lihuahai.dev').replace(/\/$/, '')}/posts/${post.slug}`
+  const canonicalUrl = `${(siteProfile.siteUrl || 'https://haiy.space').replace(/\/$/, '')}/posts/${post.slug}`
   const licenseName = 'CC BY-NC-SA 4.0'
   const publishedAtIso = toIsoDateString(post.published_at)
   const publishedAtLabel = formatZhDate(post.published_at)

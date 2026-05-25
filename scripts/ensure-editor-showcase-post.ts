@@ -76,7 +76,7 @@ async function main() {
   const { query } = await import('../lib/db')
 
   const coverUrl = dataUriPreview()
-  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://lihuahai.dev'
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://haiy.space'
 
   const content = {
     type: 'doc',

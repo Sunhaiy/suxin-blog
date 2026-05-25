@@ -8,7 +8,7 @@ import type { Metadata } from 'next'
 import Link from 'next/link'
 import { findPostsForArchive } from '@/lib/db/dao/postDao'
 
-export const metadata: Metadata = { title: '归档 · 梨花海' }
+export const metadata: Metadata = { title: '归档 · 素心' }
 export const revalidate = 60
 
 interface GroupedPost {

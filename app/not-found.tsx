@@ -21,7 +21,7 @@ export default function NotFound() {
       <div className="-mt-8 space-y-3">
         <h1 className="text-2xl font-bold text-foreground">页面不存在</h1>
         <p className="text-muted-foreground text-sm max-w-xs">
-          这个页面已飘散在梨花海中，或许它从未存在过。
+          这个页面已飘散在素心的风里，或许它从未存在过。
         </p>
       </div>
 

@@ -90,7 +90,7 @@ function buildDefaultHomeProfileLinks(source?: {
   rssUrl?: string
 }): SiteProfile['homeProfileLinks'] {
   const githubUrl = cleanText(source?.githubUrl) || 'https://github.com'
-  const email = cleanText(source?.email) || 'hello@lihuahai.dev'
+  const email = cleanText(source?.email) || 'hello@haiy.space'
   const rssUrl = cleanText(source?.rssUrl) || '/rss.xml'
 
   return [
@@ -103,7 +103,7 @@ function buildDefaultHomeProfileLinks(source?: {
 
 export const DEFAULT_SITE_PROFILE: SiteProfile = {
   siteName: '素心',
-  siteNameEn: 'LIHUA HAI',
+  siteNameEn: 'SUXIN BLOG',
   ownerName: '素心',
   ownerInitial: '素',
   themeColor: '#10b981',
@@ -117,18 +117,18 @@ export const DEFAULT_SITE_PROFILE: SiteProfile = {
   homeQuotePool: DEFAULT_HOME_QUOTES,
   homeProfileLinks: buildDefaultHomeProfileLinks({
     githubUrl: 'https://github.com',
-    email: 'hello@lihuahai.dev',
+    email: 'hello@haiy.space',
     rssUrl: '/rss.xml',
   }),
   gamesHeroImageUrl: null,
-  siteUrl: 'https://lihuahai.dev',
+  siteUrl: 'https://haiy.space',
   rssUrl: '/rss.xml',
   friendLinkIntro:
     '如果你也在认真维护自己的站点，欢迎把信息留在这里。看到合适的站点后，我会尽快回访并补上链接。',
   friendLinkRequirements:
     '1. 站点可以稳定访问\n2. 有持续更新的内容\n3. 优先博客、作品集、个人主页或有明确主题的工具站\n4. 简介尽量简洁，方便我快速了解你的站点',
   githubUrl: 'https://github.com',
-  email: 'hello@lihuahai.dev',
+  email: 'hello@haiy.space',
   footerIcpNumber: '',
   footerIcpUrl: '',
   footerPoliceNumber: '',

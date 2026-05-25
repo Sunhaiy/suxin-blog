@@ -13,7 +13,7 @@ import {
   RiGitBranchLine, RiFolderLine, RiArrowRightUpLine,
 } from '@remixicon/react'
 
-export const metadata: Metadata = { title: '分类 · 梨花海' }
+export const metadata: Metadata = { title: '分类 · 素心' }
 export const revalidate = 60
 
 type RemixIcon = React.ComponentType<{ size?: number | string; className?: string }>

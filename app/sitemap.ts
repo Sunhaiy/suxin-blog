@@ -10,7 +10,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     findWorkDetails(),
   ])
 
-  const siteUrl = (siteProfile.siteUrl || 'https://lihuahai.dev').replace(/\/$/, '')
+  const siteUrl = (siteProfile.siteUrl || 'https://haiy.space').replace(/\/$/, '')
   const now = new Date()
 
   const staticRoutes: MetadataRoute.Sitemap = [

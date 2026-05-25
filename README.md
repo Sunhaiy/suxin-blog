@@ -1,6 +1,6 @@
 <div align="center">
 
-# Lihuahaimax
+# Suxin Blog
 
 一个基于 `Next.js 15`、`React 19`、`PostgreSQL` 的个人内容站与后台管理系统。
 

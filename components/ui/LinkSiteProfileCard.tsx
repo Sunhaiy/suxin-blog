@@ -27,7 +27,7 @@ function toAbsoluteAssetUrl(url?: string | null, baseUrl?: string) {
     return value
   }
 
-  const base = (baseUrl || 'https://lihuahai.dev').replace(/\/+$/, '')
+  const base = (baseUrl || 'https://haiy.space').replace(/\/+$/, '')
   return value.startsWith('/') ? `${base}${value}` : `${base}/${value.replace(/^\/+/, '')}`
 }
 
@@ -42,9 +42,9 @@ function normalizeCardAvatarUrl(url?: string | null, siteUrl?: string) {
     const host = brokenSameHost[1]?.toLowerCase()
     const siteHost = (() => {
       try {
-        return new URL((siteUrl || 'https://lihuahai.dev').trim()).host.toLowerCase()
+        return new URL((siteUrl || 'https://haiy.space').trim()).host.toLowerCase()
       } catch {
-        return 'lihuahai.dev'
+        return 'haiy.space'
       }
     })()
 
@@ -55,7 +55,7 @@ function normalizeCardAvatarUrl(url?: string | null, siteUrl?: string) {
 
   try {
     const target = new URL(value)
-    const base = new URL((siteUrl || 'https://lihuahai.dev').trim())
+    const base = new URL((siteUrl || 'https://haiy.space').trim())
     if (target.host === base.host && target.pathname.startsWith('/uploads/')) {
       return `${target.pathname}${target.search}${target.hash}`
     }
@@ -70,7 +70,7 @@ export function LinkSiteProfileCard({ siteProfile, stats }: LinkSiteProfileCardP
   const [copiedKey, setCopiedKey] = useState<string | null>(null)
   const [avatarFailed, setAvatarFailed] = useState(false)
   const timerRef = useRef<number | null>(null)
-  const siteUrl = siteProfile.siteUrl || 'https://lihuahai.dev'
+  const siteUrl = siteProfile.siteUrl || 'https://haiy.space'
   const siteUrlBase = siteUrl.replace(/\/+$/, '')
 
   const avatarDisplayUrl = useMemo(

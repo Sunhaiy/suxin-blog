@@ -780,7 +780,7 @@ export default function DashboardLinksPage() {
                       value={profileForm.siteUrl}
                       onChange={(event) => updateProfile('siteUrl', event.target.value)}
                       className={INPUT_CLASS}
-                      placeholder="https://lihuahai.dev"
+                      placeholder="https://haiy.space"
                     />
                   </Field>
                   <Field label="RSS 链接">

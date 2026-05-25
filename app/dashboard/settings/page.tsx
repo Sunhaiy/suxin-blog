@@ -192,7 +192,7 @@ const HOME_PROFILE_ICON_OPTIONS = [
 
 const HOME_PROFILE_LINK_FALLBACKS: SiteProfile['homeProfileLinks'] = [
   { id: 'github', label: 'GitHub', href: 'https://github.com', icon: 'code' },
-  { id: 'email', label: '\u90ae\u7bb1', href: 'mailto:hello@lihuahai.dev', icon: 'mail' },
+  { id: 'email', label: '\u90ae\u7bb1', href: 'mailto:hello@haiy.space', icon: 'mail' },
   { id: 'rss', label: 'RSS', href: '/rss.xml', icon: 'rss_feed' },
   { id: 'about', label: '\u5173\u4e8e', href: '/about', icon: 'person' },
 ]

@@ -23,7 +23,7 @@ export async function GET() {
     findPosts({ status: 'published', pageSize: 1000 }),
   ])
 
-  const siteUrl = (siteProfile.siteUrl || 'https://lihuahai.dev').replace(/\/$/, '')
+  const siteUrl = (siteProfile.siteUrl || 'https://haiy.space').replace(/\/$/, '')
   const latestDate = toUtcString(postResult.data[0]?.published_at)
 
   const items = postResult.data

@@ -1,7 +1,7 @@
 services:
   db:
     image: docker.m.daocloud.io/library/postgres:16
-    container_name: lihuahaimax-db
+    container_name: suxin-blog-db
     restart: unless-stopped
     environment:
       POSTGRES_DB: ${POSTGRES_DB}
@@ -19,7 +19,7 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
-    container_name: lihuahaimax-app
+    container_name: suxin-blog-app
     restart: unless-stopped
     env_file:
       - .env
@@ -42,7 +42,7 @@ services:
 
   caddy:
     image: docker.m.daocloud.io/library/caddy:2-alpine
-    container_name: lihuahaimax-caddy
+    container_name: suxin-blog-caddy
     restart: unless-stopped
     depends_on:
       - app

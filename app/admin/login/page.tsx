@@ -41,7 +41,7 @@ export default function LoginPage() {
             <p className="text-[11px] font-mono uppercase tracking-[0.28em] text-muted-foreground">
               Admin Console
             </p>
-            <h1 className="mt-4 text-4xl font-semibold tracking-[-0.05em] text-foreground">梨花海后台</h1>
+            <h1 className="mt-4 text-4xl font-semibold tracking-[-0.05em] text-foreground">素心后台</h1>
             <p className="mt-4 max-w-md text-sm leading-7 text-muted-foreground">
               统一管理文章、瞬间、评论、设置和作品资料。配色、边框和材质和前台保持同源，但整套交互更克制、更像工作台。
             </p>
@@ -87,7 +87,7 @@ export default function LoginPage() {
                   value={email}
                   onChange={(event) => setEmail(event.target.value)}
                   className="h-11 w-full rounded-[18px] border border-border/70 bg-background/55 px-4 text-sm text-foreground outline-none transition-colors placeholder:text-muted-foreground/55 focus:border-primary/28 focus:ring-2 focus:ring-primary/14"
-                  placeholder="admin@lihuahai.com"
+                  placeholder="admin@haiy.space"
                 />
               </div>
 

@@ -88,7 +88,7 @@ idf.py --version  # 期望输出: ESP-IDF v5.x.x`
     switch (event->event_id) {
         case MQTT_EVENT_CONNECTED:
             ESP_LOGI(TAG, "MQTT 已连接");
-            esp_mqtt_client_subscribe(client, "/lihuahai/sensor", 0);
+            esp_mqtt_client_subscribe(client, "/suxin-blog/sensor", 0);
             break;
         case MQTT_EVENT_DATA:
             ESP_LOGI(TAG, "收到数据: topic=%.*s, data=%.*s",
@@ -774,7 +774,7 @@ async function seed() {
     await client.query(`
       INSERT INTO works (slug, title, subtitle, description, cover_url, tags, url, github_url, year, sort_order)
       VALUES
-        ('lihuahai-stack', 'Lihuahai Stack', 'Personal digital operating system', 'A Next.js 15 full-stack site that combines writing, moments, ACG tracking, gallery modules, and project storytelling in one cohesive platform.', '/hero.png', ARRAY['Next.js 15', 'TypeScript', 'PostgreSQL', 'Tiptap', 'NextAuth'], NULL, 'https://github.com', 2024, 1),
+        ('suxin-blog-stack', 'Suxin Blog Stack', 'Personal digital operating system', 'A Next.js 15 full-stack site that combines writing, moments, ACG tracking, gallery modules, and project storytelling in one cohesive platform.', '/hero.png', ARRAY['Next.js 15', 'TypeScript', 'PostgreSQL', 'Tiptap', 'NextAuth'], NULL, 'https://github.com', 2024, 1),
         ('esp32-home-gateway', 'ESP32 Home Gateway', 'MQTT + Home Assistant local bridge', 'A low-power ESP32-C3 gateway that links edge sensors through MQTT and keeps the automation stack local-first and resilient.', '/hero.png', ARRAY['ESP32', 'C/C++', 'MQTT', 'FreeRTOS', 'Home Assistant'], NULL, 'https://github.com', 2024, 2),
         ('arch-linux-dotfiles', 'Arch Linux Dotfiles', 'Automated workstation bootstrap', 'A reproducible Arch Linux setup with Hyprland, Waybar, Neovim, and scripts that make a fresh machine usable fast.', '/hero.png', ARRAY['Bash', 'Lua', 'Hyprland', 'Neovim', 'Arch Linux'], NULL, 'https://github.com', 2023, 3),
         ('bangumi-cli', 'Bangumi CLI', 'Terminal-first watch tracker', 'A Go-based CLI for tracking anime progress with Bangumi sync, SQLite cache, ratings, and shell-friendly workflows.', '/hero.png', ARRAY['Go', 'SQLite', 'Bangumi API', 'CLI', 'zsh'], NULL, 'https://github.com', 2023, 4),
@@ -785,7 +785,7 @@ async function seed() {
       UPDATE works
       SET
         slug = CASE sort_order
-          WHEN 1 THEN 'lihuahai-stack'
+          WHEN 1 THEN 'suxin-blog-stack'
           WHEN 2 THEN 'esp32-home-gateway'
           WHEN 3 THEN 'arch-linux-dotfiles'
           WHEN 4 THEN 'bangumi-cli'
@@ -869,11 +869,11 @@ async function seed() {
         secondary_label = 'Source code / external link',
         hero_image_url = COALESCE(NULLIF(cover_url, ''), '/hero.png'),
         contributors_json = CASE sort_order
-          WHEN 1 THEN '[{"name":"Lihua Hai","role":"Design / Full-stack","avatar_url":null}]'::jsonb
-          WHEN 2 THEN '[{"name":"Lihua Hai","role":"Firmware","avatar_url":null},{"name":"Aze","role":"Automation","avatar_url":null}]'::jsonb
-          WHEN 3 THEN '[{"name":"Lihua Hai","role":"Maintainer","avatar_url":null}]'::jsonb
-          WHEN 4 THEN '[{"name":"Lihua Hai","role":"Go / Product","avatar_url":null}]'::jsonb
-          WHEN 5 THEN '[{"name":"Lihua Hai","role":"Infra","avatar_url":null},{"name":"Faye","role":"Ops Review","avatar_url":null}]'::jsonb
+          WHEN 1 THEN '[{"name":"Suxin","role":"Design / Full-stack","avatar_url":null}]'::jsonb
+          WHEN 2 THEN '[{"name":"Suxin","role":"Firmware","avatar_url":null},{"name":"Aze","role":"Automation","avatar_url":null}]'::jsonb
+          WHEN 3 THEN '[{"name":"Suxin","role":"Maintainer","avatar_url":null}]'::jsonb
+          WHEN 4 THEN '[{"name":"Suxin","role":"Go / Product","avatar_url":null}]'::jsonb
+          WHEN 5 THEN '[{"name":"Suxin","role":"Infra","avatar_url":null},{"name":"Faye","role":"Ops Review","avatar_url":null}]'::jsonb
           ELSE contributors_json
         END,
         milestones_json = CASE sort_order
@@ -891,13 +891,13 @@ async function seed() {
     console.log('[seed] inserting settings...')
     await client.query(`
       INSERT INTO settings (key, value, description) VALUES
-        ('site.name',      '"Lihua Hai"', 'Site name'),
+        ('site.name',      '"Suxin Blog"', 'Site name'),
         ('site.slogan',    '"Build a life in public"', 'Site slogan'),
         ('site.bio',       '"Embedded engineer, full-stack builder, and open-source tinkerer."', 'Short biography'),
         ('site.avatar',    'null', 'Avatar URL'),
         ('site.hero_bg',   'null', 'Legacy hero background image URL'),
         ('site.github',    '"https://github.com"', 'GitHub profile URL'),
-        ('site.email',     '"hello@lihuahai.dev"', 'Contact email')
+        ('site.email',     '"hello@haiy.space"', 'Contact email')
       ON CONFLICT (key) DO UPDATE SET value = EXCLUDED.value, updated_at = NOW()
     `)
 

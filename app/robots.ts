@@ -3,7 +3,7 @@ import { getSiteProfile } from '@/lib/site'
 
 export default async function robots(): Promise<MetadataRoute.Robots> {
   const siteProfile = await getSiteProfile()
-  const siteUrl = (siteProfile.siteUrl || 'https://lihuahai.dev').replace(/\/$/, '')
+  const siteUrl = (siteProfile.siteUrl || 'https://haiy.space').replace(/\/$/, '')
 
   return {
     rules: {

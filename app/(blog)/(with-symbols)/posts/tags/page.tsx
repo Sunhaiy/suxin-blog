@@ -8,7 +8,7 @@ import type { Metadata } from 'next'
 import Link from 'next/link'
 import { findAllTags } from '@/lib/db/dao/postDao'
 
-export const metadata: Metadata = { title: '标签 · 梨花海' }
+export const metadata: Metadata = { title: '标签 · 素心' }
 export const revalidate = 60
 
 /** 根据 count 计算标签云字号（px），线性映射到 [12, 28] */

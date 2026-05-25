@@ -35,9 +35,27 @@ function loadEnv(filePath: string) {
   }
 }
 
+function getSslConfig() {
+  const mode = (process.env.PGSSLMODE ?? '').toLowerCase()
+  const url = (process.env.DATABASE_URL ?? '').toLowerCase()
+  const enabled =
+    process.env.DATABASE_SSL === 'true' ||
+    url.includes('sslmode=require') ||
+    url.includes('ssl=true') ||
+    ['require', 'verify-ca', 'verify-full'].includes(mode)
+
+  if (!enabled) return false
+
+  return {
+    rejectUnauthorized: process.env.PGSSL_REJECT_UNAUTHORIZED === 'true',
+  }
+}
+
 async function migrate() {
   const envPath = path.join(process.cwd(), '.env.local')
   loadEnv(envPath)
+  loadEnv(path.join(process.cwd(), '.env'))
+  loadEnv(path.join(process.cwd(), '.env.production'))
 
   const schemaPath = path.join(process.cwd(), 'lib', 'db', 'schema.sql')
 
@@ -58,9 +76,7 @@ async function migrate() {
 
   const pool = new Pool({
     connectionString: databaseUrl,
-    ssl: process.env.NODE_ENV === 'production'
-      ? { rejectUnauthorized: false }
-      : false,
+    ssl: getSslConfig(),
   })
 
   const client = await pool.connect()

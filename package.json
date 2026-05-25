@@ -11,7 +11,9 @@
     "db:migrate": "npx tsx lib/db/migrate.ts",
     "db:seed": "npx tsx lib/db/seed.ts",
     "content:editor-showcase": "npx tsx scripts/ensure-editor-showcase-post.ts",
-    "backup:export": "npx tsx scripts/export-site-backup.ts"
+    "backup:export": "npx tsx scripts/export-site-backup.ts",
+    "backup:import": "npx tsx scripts/import-site-backup.ts",
+    "site:set-url": "npx tsx scripts/set-site-url.ts"
   },
   "dependencies": {
     "@fontsource-variable/inter": "^5.2.8",

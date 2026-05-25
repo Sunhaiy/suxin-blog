@@ -9,10 +9,13 @@ node_modules/
 out/
 output/
 backups/
+data/
+deploy-assets/
 
 # Environment files
 .env
 .env.local
+.env.production
 .env.*.local
 
 # Local uploads and generated media

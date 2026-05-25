@@ -28,6 +28,7 @@ async function main() {
 
   const tables = [
     'settings',
+    'link_categories',
     'posts',
     'moments',
     'moment_likes',
@@ -45,6 +46,7 @@ async function main() {
   const result: Record<string, unknown> = {
     exportedAt: new Date().toISOString(),
     source: 'lihuahaimax',
+    tableOrder: tables,
     tables: {},
   }
 

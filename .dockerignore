@@ -1,0 +1,17 @@
+node_modules
+.git
+.next
+.next-dev
+.playwright-cli
+backups
+data
+deploy-assets
+output
+out
+*.log
+*.out
+*.err
+.env.local
+.env
+.env.production
+public/uploads

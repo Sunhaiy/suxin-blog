@@ -8,8 +8,8 @@ export const revalidate = 3600
 
 export default async function AcgPage() {
   const [{ data: animes }, { data: games }] = await Promise.all([
-    findAnimes({ pageSize: 100 }),
-    findGames({ pageSize: 100 }),
+    findAnimes({ pageSize: 100, includeTotal: false }),
+    findGames({ pageSize: 100, includeTotal: false }),
   ])
 
   return (

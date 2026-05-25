@@ -27,8 +27,13 @@ Thumbs.db
 *.swp
 *.swo
 .idea/
-.vscode/settings.json
+.vscode/
 .playwright-cli/
+playwright-report/
+test-results/
+coverage/
+.turbo/
+.cache/
 
 # TypeScript build cache
 *.tsbuildinfo

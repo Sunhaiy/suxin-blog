@@ -1,6 +1,7 @@
 'use client'
 
 import { useMemo, useState } from 'react'
+import { getOptimizedMediaUrl } from '@/lib/media'
 import { MaterialSymbol } from '@/components/ui/MaterialSymbol'
 import type { AnimeRow } from '@/types/acg'
 
@@ -91,6 +92,8 @@ export function AnimeGrid({ animes }: Props) {
             const episodeText = getEpisodeText(anime)
             const title = anime.title_cn ?? anime.title
             const rating = anime.rating != null ? Number(anime.rating) : null
+            const optimizedCoverUrl =
+              getOptimizedMediaUrl(anime.cover_url, { width: 640, quality: 70 }) ?? anime.cover_url
 
             return (
               <article
@@ -98,10 +101,13 @@ export function AnimeGrid({ animes }: Props) {
                 className="group flex h-full flex-col overflow-hidden rounded-[24px] border border-border/70 bg-[hsl(var(--card)/0.82)] shadow-[0_18px_50px_rgba(15,23,42,0.06)] backdrop-blur-sm transition-all duration-300 hover:-translate-y-1 hover:border-primary/30 dark:shadow-[0_18px_50px_rgba(0,0,0,0.22)]"
               >
                 <div className="relative aspect-[2/3] overflow-hidden">
-                  {anime.cover_url ? (
+                  {optimizedCoverUrl ? (
                     <img
-                      src={anime.cover_url}
+                      src={optimizedCoverUrl}
                       alt={title}
+                      loading="lazy"
+                      decoding="async"
+                      fetchPriority="low"
                       className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-[1.04]"
                     />
                   ) : (

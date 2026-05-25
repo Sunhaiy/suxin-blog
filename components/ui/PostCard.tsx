@@ -1,5 +1,5 @@
 import Link from 'next/link'
-import { pickDeterministicMediaUrl, resolveMediaUrl } from '@/lib/media'
+import { getOptimizedMediaUrl, pickDeterministicMediaUrl, resolveMediaUrl } from '@/lib/media'
 import type { PostRow } from '@/types/post'
 
 interface PostCardProps {
@@ -16,6 +16,7 @@ export function PostCard({ post, fallbackCoverUrl, fallbackCoverPool }: PostCard
     post.cover_url,
     pickDeterministicMediaUrl(fallbackCoverPool, post.slug || post.id, fallbackCoverUrl)
   )
+  const optimizedCoverUrl = getOptimizedMediaUrl(coverUrl, { width: 828, quality: 72 })
 
   return (
     <Link href={`/posts/${post.slug}`} className="group block h-full">
@@ -24,10 +25,13 @@ export function PostCard({ post, fallbackCoverUrl, fallbackCoverPool }: PostCard
                       transition-all duration-300 hover:-translate-y-0.5 hover:border-border/90`}
       >
         <div className="relative aspect-[16/9] flex-shrink-0 overflow-hidden">
-          {coverUrl ? (
+          {optimizedCoverUrl ? (
             <img
-              src={coverUrl}
+              src={optimizedCoverUrl}
               alt={post.title}
+              loading="lazy"
+              decoding="async"
+              fetchPriority="low"
               className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
             />
           ) : (

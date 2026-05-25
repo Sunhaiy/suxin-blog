@@ -1,6 +1,6 @@
 ﻿import type { Metadata } from 'next'
 import Link from 'next/link'
-import { MaterialSymbol } from '@/components/ui/MaterialSymbol'
+import { PublicSymbol } from '@/components/ui/PublicSymbol'
 import { SceneFilterLayer } from '@/components/scene/SceneFilterLayer'
 import { ActivityHeatmap } from '@/components/ui/ActivityHeatmap'
 import { HomeSidebarVisitorCard } from '@/components/ui/HomeSidebarVisitorCard'
@@ -8,6 +8,7 @@ import { PostCard } from '@/components/ui/PostCard'
 import { getActivityHeatmap } from '@/lib/db/dao/activityDao'
 import { findMoments } from '@/lib/db/dao/momentDao'
 import { findAllTags, findPosts, findPostsForArchive } from '@/lib/db/dao/postDao'
+import { getOptimizedMediaUrl } from '@/lib/media'
 import { getBackgroundSceneSettings } from '@/lib/scene'
 import { getSiteProfile } from '@/lib/site'
 import { extractPlainTextFromRichContent } from '@/lib/utils/extractHeadings'
@@ -71,16 +72,6 @@ function getYearProgress(year: number) {
   return progress
 }
 
-function getSidebarGreeting() {
-  const hour = new Date().getHours()
-
-  if (hour < 5) return '\u51cc\u6668\u597d\uff0c\u522b\u7184\u5566\uff01'
-  if (hour < 11) return '\u65e9\u4e0a\u597d\uff0c\u4eca\u5929\u4e5f\u6162\u6162\u6765\u3002'
-  if (hour < 14) return '\u4e2d\u5348\u597d\uff0c\u8bb0\u5f97\u4f11\u606f\u3002'
-  if (hour < 18) return '\u4e0b\u5348\u597d\uff0c\u7ee7\u7eed\u5411\u524d\u3002'
-  return '\u665a\u4e0a\u597d\uff0c\u6b22\u8fce\u56de\u6765\u3002'
-}
-
 function getArchivePreview(posts: Array<{ published_at: Date | string | null }>) {
   const buckets = new Map<string, { label: string; count: number; href: string }>()
 
@@ -115,16 +106,9 @@ function pickSidebarGreeting(pool: string[]) {
   return source[Math.floor(Math.random() * source.length)]
 }
 
-export default async function HomePage({
-  searchParams,
-}: {
-  searchParams: Promise<{ page?: string }>
-}) {
-  const { page: pageParam } = await searchParams
-  const page = Math.max(1, parseInt(pageParam ?? '1', 10) || 1)
-
+export default async function HomePage() {
   const [postsResult, momentsResult, scene, activityData, siteProfile, tags, archivePosts] = await Promise.all([
-    findPosts({ status: 'published', pageSize: 6, page }),
+    findPosts({ status: 'published', pageSize: 6, page: 1 }),
     findMoments({ publicOnly: true, pageSize: 10 }),
     getBackgroundSceneSettings(),
     getActivityHeatmap(365),
@@ -141,16 +125,19 @@ export default async function HomePage({
   ).size
   const yearProgress = getYearProgress(2026)
   const sidebarGreeting = pickSidebarGreeting(siteProfile.homeGreetingPool)
+  const heroSceneUrl = getOptimizedMediaUrl(scene.image.url, { width: 1920, quality: 68 }) ?? scene.image.url
+  const heroAvatarUrl = getOptimizedMediaUrl(siteProfile.avatarUrl, { width: 256, quality: 80 })
+  const sidebarAvatarUrl = getOptimizedMediaUrl(siteProfile.avatarUrl, { width: 256, quality: 76 })
 
   return (
     <>
       <section className="relative -mt-16 flex min-h-[100svh] flex-col overflow-hidden bg-background">
-        {hasSceneImage ? (
+        {hasSceneImage && heroSceneUrl ? (
           <div
             aria-hidden
             className="absolute inset-0"
             style={{
-              backgroundImage: `url(${scene.image.url})`,
+              backgroundImage: `url(${heroSceneUrl})`,
               backgroundPosition: scene.image.position,
               backgroundSize: scene.image.size,
               opacity: scene.image.opacity,
@@ -167,10 +154,14 @@ export default async function HomePage({
             <p className="scene-copy-subtle text-xs tracking-[0.14em]">与世隔绝</p>
             <h1 className="sr-only">{siteProfile.siteName}</h1>
             <div className="scene-copy mx-auto mt-5 flex h-24 w-24 items-center justify-center overflow-hidden rounded-full border border-hero-border/70 bg-hero-panel/55 p-1.5 shadow-[0_18px_56px_rgba(0,0,0,0.22)] backdrop-blur-xl sm:h-32 sm:w-32">
-              {siteProfile.avatarUrl ? (
+              {heroAvatarUrl ? (
                 <img
-                  src={siteProfile.avatarUrl}
+                  src={heroAvatarUrl}
                   alt={siteProfile.ownerName}
+                  width={128}
+                  height={128}
+                  decoding="async"
+                  fetchPriority="high"
                   className="h-full w-full rounded-full object-cover"
                 />
               ) : (
@@ -194,7 +185,7 @@ export default async function HomePage({
                 <div className="mb-5 flex items-center justify-between gap-4">
                   <div className="flex items-center gap-2.5">
                     <span className="scene-icon-badge h-8 w-8 rounded-2xl text-primary">
-                      <MaterialSymbol icon="chat_bubble" size={16} />
+                      <PublicSymbol icon="chat_bubble" size={16} />
                     </span>
                     <span className="text-sm font-medium text-foreground">瞬间</span>
                   </div>
@@ -203,7 +194,7 @@ export default async function HomePage({
                     className="scene-action h-8 w-8 justify-center rounded-full p-0 text-muted-foreground hover:text-primary"
                     aria-label="查看全部瞬间"
                   >
-                    <MaterialSymbol icon="arrow_forward" size={16} />
+                    <PublicSymbol icon="arrow_forward" size={16} />
                   </Link>
                 </div>
 
@@ -220,10 +211,13 @@ export default async function HomePage({
                         <div className="scene-terminal-grid absolute inset-0 opacity-[0.025]" />
                         <div className="relative z-10">
                           {moment.images.length > 0 ? (
-                              <div className="mb-3 aspect-[16/9] overflow-hidden rounded-[18px] border border-border/45 bg-background/20 dark:bg-black/10">
+                            <div className="mb-3 aspect-[16/9] overflow-hidden rounded-[18px] border border-border/45 bg-background/20 dark:bg-black/10">
                               <img
-                                src={moment.images[0]}
+                                src={getOptimizedMediaUrl(moment.images[0], { width: 828, quality: 70 }) ?? moment.images[0]}
                                 alt=""
+                                loading="lazy"
+                                decoding="async"
+                                fetchPriority="low"
                                 className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-[1.04]"
                               />
                             </div>
@@ -246,7 +240,7 @@ export default async function HomePage({
 
                         <div className="relative z-10 mt-5 flex items-center justify-between text-[10px] font-mono uppercase tracking-[0.12em] text-muted-foreground">
                           <span className="inline-flex items-center gap-1.5">
-                            <MaterialSymbol icon="schedule" size={13} />
+                            <PublicSymbol icon="schedule" size={13} />
                             {new Date(moment.created_at).toLocaleString('zh-CN', {
                               month: '2-digit',
                               day: '2-digit',
@@ -255,7 +249,7 @@ export default async function HomePage({
                             })}
                           </span>
                             <span className="scene-action inline-flex h-7 w-7 items-center justify-center rounded-full p-0 text-muted-foreground group-hover:text-primary">
-                            <MaterialSymbol icon="arrow_outward" size={13} />
+                            <PublicSymbol icon="arrow_outward" size={13} />
                           </span>
                         </div>
                       </Link>
@@ -284,7 +278,7 @@ export default async function HomePage({
                     className="inline-flex items-center gap-1.5 text-sm text-primary transition-colors hover:text-primary/75"
                   >
                     查看全部
-                    <MaterialSymbol icon="arrow_forward" size={16} />
+                    <PublicSymbol icon="arrow_forward" size={16} />
                   </Link>
                 </div>
 
@@ -306,22 +300,14 @@ export default async function HomePage({
                     </div>
 
                     {postsResult.total > 6 ? (
-                      <div className="mt-8 flex justify-center gap-2">
-                        {Array.from({ length: Math.ceil(postsResult.total / 6) }, (_, index) => index + 1).map(
-                          (current) => (
-                            <Link
-                              key={current}
-                              href={`/?page=${current}#latest-posts`}
-                              className={`flex h-9 w-9 items-center justify-center rounded-lg border text-sm transition-colors ${
-                                current === page
-                                  ? 'border-foreground bg-foreground text-background'
-                                  : 'border-border text-muted-foreground hover:border-primary/40 hover:text-primary'
-                              }`}
-                            >
-                              {current}
-                            </Link>
-                          )
-                        )}
+                      <div className="mt-8 flex justify-center">
+                        <Link
+                          href="/posts"
+                          className="inline-flex items-center gap-2 rounded-full border border-border px-4 py-2 text-sm text-muted-foreground transition-colors hover:border-primary/40 hover:text-primary"
+                        >
+                          浏览更多文章
+                          <PublicSymbol icon="arrow_forward" size={16} />
+                        </Link>
                       </div>
                     ) : null}
                   </>
@@ -339,10 +325,14 @@ export default async function HomePage({
                 </div>
 
                 <div className="mx-auto mt-5 flex h-20 w-20 items-center justify-center overflow-hidden rounded-full border-2 border-primary/22 bg-primary/8">
-                  {siteProfile.avatarUrl ? (
+                  {sidebarAvatarUrl ? (
                     <img
-                      src={siteProfile.avatarUrl}
+                      src={sidebarAvatarUrl}
                       alt={siteProfile.ownerName}
+                      width={80}
+                      height={80}
+                      loading="lazy"
+                      decoding="async"
                       className="h-full w-full object-cover"
                     />
                   ) : (
@@ -388,7 +378,7 @@ export default async function HomePage({
                         rel={item.href.startsWith('http') ? 'noreferrer' : undefined}
                         className="inline-flex h-8 w-8 items-center justify-center rounded-full border border-border/70 bg-background/42 transition-colors hover:border-primary/32 hover:text-primary"
                       >
-                        <MaterialSymbol icon={item.icon} size={16} />
+                        <PublicSymbol icon={item.icon} size={16} />
                       </a>
                     ))}
                 </div>

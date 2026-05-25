@@ -1,3 +1,4 @@
+import { getOptimizedMediaUrl } from '@/lib/media'
 import { MaterialSymbol } from '@/components/ui/MaterialSymbol'
 import type { GameRow } from '@/types/acg'
 
@@ -50,6 +51,8 @@ export function GameGrid({ games }: Props) {
         const status = STATUS_META[game.status] ?? STATUS_META.completed
         const platform = PLATFORM_META[game.platform] ?? PLATFORM_META.other
         const rating = game.rating != null ? Number(game.rating) : null
+        const optimizedCoverUrl =
+          getOptimizedMediaUrl(game.cover_url, { width: 640, quality: 70 }) ?? game.cover_url
 
         return (
           <article
@@ -57,10 +60,13 @@ export function GameGrid({ games }: Props) {
             className="group flex h-full flex-col overflow-hidden rounded-[24px] border border-border/70 bg-[hsl(var(--card)/0.82)] shadow-[0_18px_50px_rgba(15,23,42,0.06)] backdrop-blur-sm transition-all duration-300 hover:-translate-y-1 hover:border-primary/30 dark:shadow-[0_18px_50px_rgba(0,0,0,0.22)]"
           >
             <div className="relative aspect-square overflow-hidden">
-              {game.cover_url ? (
+              {optimizedCoverUrl ? (
                 <img
-                  src={game.cover_url}
+                  src={optimizedCoverUrl}
                   alt={game.title}
+                  loading="lazy"
+                  decoding="async"
+                  fetchPriority="low"
                   className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-[1.04]"
                 />
               ) : (

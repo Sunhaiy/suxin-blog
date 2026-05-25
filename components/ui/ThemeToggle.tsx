@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import { useTheme } from 'next-themes'
-import { MaterialSymbol } from '@/components/ui/MaterialSymbol'
+import { PublicSymbol } from '@/components/ui/PublicSymbol'
 
 export function ThemeToggle({ className = '' }: { className?: string }) {
   const { theme, setTheme } = useTheme()
@@ -28,9 +28,9 @@ export function ThemeToggle({ className = '' }: { className?: string }) {
       `}
     >
       {isDark ? (
-        <MaterialSymbol icon="light_mode" size={19} />
+        <PublicSymbol icon="light_mode" size={19} />
       ) : (
-        <MaterialSymbol icon="dark_mode" size={19} />
+        <PublicSymbol icon="dark_mode" size={19} />
       )}
     </button>
   )

@@ -2,6 +2,28 @@ export function resolveMediaUrl(primary?: string | null, fallback?: string | nul
   return primary || fallback || null
 }
 
+export function isLocalMediaUrl(url?: string | null) {
+  return Boolean(url && url.startsWith('/'))
+}
+
+export function getOptimizedMediaUrl(
+  url?: string | null,
+  options?: { width?: number; quality?: number }
+) {
+  if (!url) return null
+  if (!isLocalMediaUrl(url)) return url
+
+  const width = options?.width ?? 1200
+  const quality = options?.quality ?? 75
+  const params = new URLSearchParams({
+    url,
+    w: String(width),
+    q: String(quality),
+  })
+
+  return `/_next/image?${params.toString()}`
+}
+
 export function pickDeterministicMediaUrl(
   pool: Array<string | null | undefined> | null | undefined,
   seed: string | number,

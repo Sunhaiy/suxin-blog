@@ -1,6 +1,7 @@
 import type { Metadata } from 'next'
 import { GameGrid } from '@/components/ui/GameGrid'
 import { findGames } from '@/lib/db/dao/acgDao'
+import { getOptimizedMediaUrl } from '@/lib/media'
 import { getSiteProfile } from '@/lib/site'
 
 export const metadata: Metadata = {
@@ -15,12 +16,15 @@ export const revalidate = 3600
 
 export default async function GamesPage() {
   const [{ data: games }, siteProfile] = await Promise.all([
-    findGames({ pageSize: 200 }),
+    findGames({ pageSize: 200, includeTotal: false }),
     getSiteProfile(),
   ])
 
   const coverPool = games.filter((game) => game.cover_url)
   const heroBg = siteProfile.gamesHeroImageUrl || coverPool[0]?.cover_url || null
+  const optimizedHeroBg = heroBg
+    ? (getOptimizedMediaUrl(heroBg, { width: 1600, quality: 68 }) ?? heroBg)
+    : null
 
   const completed = games.filter(
     (game) => game.status === 'completed' || game.status === 'platinum'
@@ -32,9 +36,11 @@ export default async function GamesPage() {
       <section className="relative isolate flex min-h-[22rem] items-center overflow-hidden border-b border-border/45 sm:min-h-[24rem]">
         {heroBg ? (
           <img
-            src={heroBg}
+            src={optimizedHeroBg ?? heroBg}
             alt=""
             aria-hidden
+            decoding="async"
+            fetchPriority="high"
             className="pointer-events-none absolute -inset-6 h-[calc(100%+3rem)] w-[calc(100%+3rem)] object-cover opacity-[0.62] blur-md saturate-[1.08] dark:opacity-[0.5]"
           />
         ) : (

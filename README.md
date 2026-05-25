@@ -1,65 +1,84 @@
+<div align="center">
+
 # Lihuahaimax
 
-一个围绕「文章、瞬间、作品、ACG、相册、友链」构建的个人内容站点与后台管理系统。  
-当前版本基于 Next.js App Router，包含自定义文章编辑器 V2、媒体上传、首页卡片配置、标签/分类管理以及项目与资源展示能力。
+一个基于 `Next.js 15`、`React 19`、`PostgreSQL` 的个人内容站与后台管理系统。
+
+前台内容站、后台控制台、SEO 自动提交通道、Docker 部署链路都在同一个仓库里。
+
+<p>
+  <img alt="Next.js" src="https://img.shields.io/badge/Next.js-15-111111?style=flat-square&logo=nextdotjs&logoColor=white" />
+  <img alt="React" src="https://img.shields.io/badge/React-19-149ECA?style=flat-square&logo=react&logoColor=white" />
+  <img alt="TypeScript" src="https://img.shields.io/badge/TypeScript-5-3178C6?style=flat-square&logo=typescript&logoColor=white" />
+  <img alt="PostgreSQL" src="https://img.shields.io/badge/PostgreSQL-16-336791?style=flat-square&logo=postgresql&logoColor=white" />
+  <img alt="Tailwind CSS" src="https://img.shields.io/badge/Tailwind_CSS-3-06B6D4?style=flat-square&logo=tailwindcss&logoColor=white" />
+  <img alt="Docker" src="https://img.shields.io/badge/Docker-Compose-2496ED?style=flat-square&logo=docker&logoColor=white" />
+</p>
+
+<p>
+  <a href="#功能亮点">功能亮点</a> ·
+  <a href="#快速开始">快速开始</a> ·
+  <a href="#仓库结构">仓库结构</a> ·
+  <a href="docs/deployment.md">部署迁移</a> ·
+  <a href="docs/seo.md">SEO 说明</a>
+</p>
+
+</div>
 
 ## 项目定位
 
-- 前台：个人博客与内容展示站
-- 后台：统一内容管理台
-- 内容类型：文章、瞬间、作品、动漫、游戏、相册、友链
-- 风格目标：干净、规整、偏设计化的内容体验
+这个仓库适合这几类场景：
 
-## 主要功能
+- 想做一个有后台的个人博客，而不是只有静态展示页
+- 想把文章、瞬间、作品、ACG、相册、友链放进同一套内容系统
+- 想自己掌控部署、数据、SEO 和后续迁移
 
-### 前台
+## 功能亮点
 
-- 首页 Hero、资料卡、一言卡片、创作活跃度
-- 文章列表、文章详情、归档、分类、标签
-- 瞬间页面与动态卡片
-- 作品项目页与翻转卡片
-- ACG 页面：动漫 / 游戏
-- 相册与图库资源
-- 友情链接展示与申请
+| 模块 | 当前能力 |
+| --- | --- |
+| 文章系统 | 富文本编辑器、分类、标签、SEO 字段、封面池、发布链路 |
+| 瞬间系统 | 动态流、点赞、评论、分享统计 |
+| 作品系统 | 项目展示、封面管理、详情展示 |
+| ACG | 动漫追番、游戏收藏、后台录入维护 |
+| 友链系统 | 前台申请、后台审核、分类管理 |
+| 相册系统 | 相册与媒体资源管理 |
+| 站点设置 | 头像、站名、主题色、首页背景、游戏 Hero 图等 |
+| SEO | `sitemap`、`robots`、RSS、IndexNow、百度推送 |
+| 运维 | Docker Compose、Caddy HTTPS、备份导入导出 |
 
-### 后台
+## 技术架构
 
-- 文章编辑器 V2
-  - 结构化正文模型
-  - 标题、列表、引用、代码块、表格
-  - 提示块、步骤流、FAQ、时间线、文件树、终端演示
-  - 图片粘贴上传、拖拽上传、相册复用
-- 文章分类管理
-- 文章标签管理
-- 首页资料卡 / 一言池 / 问候语池配置
-- 作品管理与封面上传
-- 动漫、游戏、相册、友链等内容管理
-
-## 技术栈
-
-- Next.js 15
-- React 19
-- TypeScript
-- Tailwind CSS
-- PostgreSQL
-- NextAuth
-- SWR
-- Tiptap / ProseMirror
-- Zod
-
-## 目录结构
-
-```text
-app/                  路由、页面、API
-components/           通用组件、后台组件、前台组件
-features/             业务模块
-lib/                  数据库、校验、站点配置、文章模型
-public/               静态资源
-scripts/              可复用脚本
-types/                全局类型定义
+```mermaid
+flowchart LR
+  A[Visitor / Admin Browser] --> B[Caddy]
+  B --> C[Next.js App]
+  C --> D[(PostgreSQL)]
+  C --> E[Local Uploads / Volume]
+  C --> F[IndexNow / Baidu]
 ```
 
-## 本地开发
+## 仓库结构
+
+```text
+app/                    App Router 页面、路由组、API 路由
+components/             通用 UI、后台组件、场景组件
+features/               面向业务的客户端模块封装
+lib/                    数据库、认证、SEO、存储、校验、编辑器能力
+public/                 静态资源
+scripts/                备份、导入、站点配置等脚本
+deploy/                 反向代理配置
+types/                  全局类型定义
+docs/                   仓库说明、部署与 SEO 文档
+```
+
+进一步阅读：
+
+- [仓库结构说明](docs/repository-structure.md)
+- [部署与迁移说明](docs/deployment.md)
+- [SEO 配置说明](docs/seo.md)
+
+## 快速开始
 
 ### 1. 安装依赖
 
@@ -69,13 +88,11 @@ npm install
 
 ### 2. 配置环境变量
 
-复制一份示例文件：
-
 ```bash
 cp .env.local.example .env.local
 ```
 
-至少需要配置：
+最少需要确认这些变量：
 
 - `DATABASE_URL`
 - `PGHOST`
@@ -91,11 +108,19 @@ cp .env.local.example .env.local
 - `UPLOAD_DIR`
 - `UPLOAD_PUBLIC_PATH`
 
-### 3. 数据库迁移
+### 3. 初始化数据库
 
 ```bash
 npm run db:migrate
 ```
+
+如果只是本地演示，再执行：
+
+```bash
+npm run db:seed
+```
+
+`db:seed` 会清空并重建演示数据，不要在正式环境使用。
 
 ### 4. 启动开发环境
 
@@ -103,133 +128,93 @@ npm run db:migrate
 npm run dev
 ```
 
-默认访问：
+默认入口：
 
-- 前台：[http://localhost:3000](http://localhost:3000)
-- 后台登录：[http://localhost:3000/admin/login](http://localhost:3000/admin/login)
+- 前台：`http://localhost:3000`
+- 后台登录：`http://localhost:3000/admin/login`
 
 ## 常用脚本
 
+| 命令 | 说明 |
+| --- | --- |
+| `npm run dev` | 启动开发环境 |
+| `npm run lint` | 运行 ESLint |
+| `npm run build` | 构建生产版本 |
+| `npm run start` | 启动生产服务 |
+| `npm run db:migrate` | 执行数据库迁移 |
+| `npm run db:seed` | 写入演示数据 |
+| `npm run backup:export` | 导出站点业务备份 |
+| `npm run backup:import` | 导入站点业务备份 |
+| `npm run site:set-url` | 写入站点 URL |
+
+## 生产部署
+
+仓库内置的部署文件：
+
+- [Dockerfile](Dockerfile)
+- [docker-compose.prod.yml](docker-compose.prod.yml)
+- [deploy/Caddyfile](deploy/Caddyfile)
+
+基础启动方式：
+
 ```bash
-npm run dev
-npm run lint
-npm run build
-npm run start
-npm run db:migrate
-npm run db:seed
-npm run content:editor-showcase
-npm run backup:export
+docker compose -f docker-compose.prod.yml up -d --build
 ```
 
-## SEO Auto Submission
+当前生产方案默认包含：
 
-- This project can auto-submit published post URLs to IndexNow and Baidu after create, update, delete, or slug change.
-- Google does not provide a general-purpose indexing API for normal blog posts, so Google should still be handled through sitemap plus Search Console.
-- IndexNow key file is exposed at `/indexnow-key.txt` when `INDEXNOW_KEY` is configured.
-- Manual resubmission endpoint: `POST /api/seo/submit` (requires admin session).
+- `PostgreSQL` 独立容器
+- `Next.js` 应用容器
+- `Caddy` 自动 HTTPS 与证书续签
+- 上传目录卷挂载持久化
 
-Example request body:
+详细流程见 [部署与迁移说明](docs/deployment.md)。
 
-```json
-{
-  "allPublished": true
-}
-```
+## SEO
 
-You can also submit a subset:
+仓库已经内置：
 
-```json
-{
-  "slugs": ["my-post-slug"],
-  "ids": [12],
-  "urls": ["https://example.com/posts/my-post-slug"]
-}
-```
+- `sitemap.xml`
+- `robots.txt`
+- RSS
+- 文章页 canonical / Open Graph / Twitter Card
+- IndexNow 自动提交
+- 百度普通收录推送
+- 后台手动补提接口 `POST /api/seo/submit`
 
-Useful env vars:
+平台接入与变量说明见 [SEO 配置说明](docs/seo.md)。
 
-- `SEARCH_SUBMIT_ENABLED`
-- `INDEXNOW_KEY`
-- `INDEXNOW_ENDPOINT`
-- `INDEXNOW_KEY_LOCATION`
-- `BAIDU_TOKEN`
-- `BAIDU_SITE`
-- `BAIDU_SUBMIT_ENDPOINT`
-- `BAIDU_SUBMIT_TYPE`
+## 数据与迁移
 
-## Migration Notes
+这个项目的迁移不只是“把代码拉到另一台机器”。
 
-- Docker can package the app, but data still lives outside the image.
-- To move the site cleanly to another server, you need all three parts together:
-- PostgreSQL data
-- `public/uploads`
-- production env vars
-- `npm run db:seed` is for local demo/init only and will clear existing business tables before inserting sample data.
+正式迁移时要一起带走：
 
-## 文章编辑器 V2 说明
+- PostgreSQL 数据
+- `public/uploads` 或对应的持久卷
+- 生产环境变量
 
-当前文章编辑器走的是新的结构化正文体系，不再兼容旧的宽松正文结构。
+如果域名不变，通常流程就是：
 
-支持的核心块包括：
+1. 恢复数据库
+2. 恢复上传文件
+3. 启动新容器
+4. 把域名解析切到新 IP
 
-- Paragraph
-- H1 - H6
-- List
-- Quote
-- Divider
-- Code Block
-- Table
-- Image Figure
-- Callout
-- Step Flow
-- FAQ
-- Timeline
-- Two Column
-- File Tree
-- Terminal Demo
+## 仓库约定
 
-## 上传与持久化说明
+- `.env`、`.env.local`、`public/uploads`、`data/`、`backups/` 不会提交
+- `.next/`、`*.tsbuildinfo`、`coverage/` 等本地产物不会提交
+- 提交前建议至少运行一次 `npm run lint` 和 `npm run build`
 
-项目默认把上传文件写入本地：
+## 文档导航
 
-- `public/uploads/`
-
-这适合：
-
-- 本地开发
-- 自有服务器
-- 有持久化磁盘的 Docker / VPS 环境
-
-如果你部署到无本地持久化的平台，需要先把上传改到对象存储，否则文章封面、作品封面、相册资源、视频等文件无法长期保留。
-
-## 上线建议
-
-建议上线前确认以下几点：
-
-1. 生产环境变量已经补齐
-2. PostgreSQL 连接正常
-3. `public/uploads` 已做持久化挂载或备份
-4. 已跑过一次 `npm run build`
-5. 已手测以下链路：
-   - 文章发布
-   - 文章封面上传 / 清空
-   - 作品封面上传
-   - 首页一言随机
-   - 标签管理重命名 / 删除
-
-## 仓库说明
-
-- 本仓库不会提交本地上传资源
-- 不会提交 `.env.local`
-- 不会提交 `.next`、`.next-dev` 等构建缓存
-- 初始数据库内容与站点数据不在本次目录清理范围内
-
-## Deployment Notes
-
-- Set `AUTH_URL` to your production origin, for example `https://your-site.com`.
-- `AUTH_URL` should match the public site origin used by visitors and admin login.
-- Run `npm run lint` and `npm run build` before each release.
+- [仓库结构说明](docs/repository-structure.md)
+- [部署与迁移说明](docs/deployment.md)
+- [SEO 配置说明](docs/seo.md)
 
 ## License
 
-当前仓库默认按私有项目方式维护。如需公开发布，建议补充正式 License。
+当前仓库按私有项目方式维护。
+
+如果后续准备公开发布，建议补充正式的 `LICENSE` 文件与开源边界说明。

@@ -1,3 +1,4 @@
+import '@fontsource-variable/material-symbols-rounded'
 import { redirect } from 'next/navigation'
 import { auth } from '@/auth'
 import { DashboardFrame } from '@/components/admin/DashboardFrame'

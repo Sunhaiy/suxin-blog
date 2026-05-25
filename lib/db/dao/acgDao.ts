@@ -16,23 +16,36 @@ function serializeListParams<T extends Record<string, unknown>>(params: T) {
   return JSON.stringify(params)
 }
 
+type AnimeListParams = {
+  status?: string
+  page?: number
+  pageSize?: number
+  includeTotal?: boolean
+}
+
 async function findAnimesUncached(params: {
   status?: string
   page?: number
   pageSize?: number
+  includeTotal?: boolean
 } = {}): Promise<{ data: AnimeRow[]; total: number }> {
-  const { page = 1, pageSize = 50, status } = params
+  const { page = 1, pageSize = 50, status, includeTotal = true } = params
   const values: unknown[] = []
   let idx = 1
   const where = status ? `WHERE status = $${idx++}` : ''
   if (status) values.push(status)
   const offset = (page - 1) * pageSize
 
+  const dataSql = `SELECT * FROM animes ${where} ORDER BY updated_at DESC LIMIT $${idx++} OFFSET $${idx++}`
+  const dataParams = [...values, pageSize, offset]
+
+  if (!includeTotal) {
+    const dataResult = await query<AnimeRow>(dataSql, dataParams)
+    return { data: dataResult.rows, total: dataResult.rows.length }
+  }
+
   const [dataResult, countResult] = await Promise.all([
-    query<AnimeRow>(
-      `SELECT * FROM animes ${where} ORDER BY updated_at DESC LIMIT $${idx++} OFFSET $${idx++}`,
-      [...values, pageSize, offset]
-    ),
+    query<AnimeRow>(dataSql, dataParams),
     query<{ count: string }>(`SELECT COUNT(*) as count FROM animes ${where}`, values),
   ])
 
@@ -42,7 +55,7 @@ async function findAnimesUncached(params: {
 const findAnimesCached = unstable_cache(
   async (serializedParams: string): Promise<{ data: AnimeRow[]; total: number }> => {
     return findAnimesUncached(
-      JSON.parse(serializedParams) as { status?: string; page?: number; pageSize?: number }
+      JSON.parse(serializedParams) as AnimeListParams
     )
   },
   ['animes-list'],
@@ -56,6 +69,7 @@ export async function findAnimes(params: {
   status?: string
   page?: number
   pageSize?: number
+  includeTotal?: boolean
 } = {}): Promise<{ data: AnimeRow[]; total: number }> {
   return findAnimesCached(serializeListParams(params))
 }
@@ -139,8 +153,9 @@ async function findGamesUncached(params: {
   platform?: string
   page?: number
   pageSize?: number
+  includeTotal?: boolean
 } = {}): Promise<{ data: GameRow[]; total: number }> {
-  const { page = 1, pageSize = 50, status, platform } = params
+  const { page = 1, pageSize = 50, status, platform, includeTotal = true } = params
   const conditions: string[] = []
   const values: unknown[] = []
   let idx = 1
@@ -157,11 +172,16 @@ async function findGamesUncached(params: {
   const where = conditions.length ? `WHERE ${conditions.join(' AND ')}` : ''
   const offset = (page - 1) * pageSize
 
+  const dataSql = `SELECT * FROM games ${where} ORDER BY updated_at DESC LIMIT $${idx++} OFFSET $${idx++}`
+  const dataParams = [...values, pageSize, offset]
+
+  if (!includeTotal) {
+    const dataResult = await query<GameRow>(dataSql, dataParams)
+    return { data: dataResult.rows, total: dataResult.rows.length }
+  }
+
   const [dataResult, countResult] = await Promise.all([
-    query<GameRow>(
-      `SELECT * FROM games ${where} ORDER BY updated_at DESC LIMIT $${idx++} OFFSET $${idx++}`,
-      [...values, pageSize, offset]
-    ),
+    query<GameRow>(dataSql, dataParams),
     query<{ count: string }>(`SELECT COUNT(*) as count FROM games ${where}`, values),
   ])
 
@@ -191,6 +211,7 @@ export async function findGames(params: {
   platform?: string
   page?: number
   pageSize?: number
+  includeTotal?: boolean
 } = {}): Promise<{ data: GameRow[]; total: number }> {
   return findGamesCached(serializeListParams(params))
 }

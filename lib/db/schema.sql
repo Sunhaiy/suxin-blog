@@ -119,6 +119,8 @@ CREATE TABLE IF NOT EXISTS animes (
 );
 
 CREATE INDEX IF NOT EXISTS idx_animes_status ON animes (status);
+CREATE INDEX IF NOT EXISTS idx_animes_updated ON animes (updated_at DESC);
+CREATE INDEX IF NOT EXISTS idx_animes_status_updated ON animes (status, updated_at DESC);
 
 -- ============================================================
 -- 游戏表
@@ -141,6 +143,9 @@ CREATE TABLE IF NOT EXISTS games (
 );
 
 CREATE INDEX IF NOT EXISTS idx_games_status ON games (status);
+CREATE INDEX IF NOT EXISTS idx_games_updated ON games (updated_at DESC);
+CREATE INDEX IF NOT EXISTS idx_games_status_updated ON games (status, updated_at DESC);
+CREATE INDEX IF NOT EXISTS idx_games_platform_updated ON games (platform, updated_at DESC);
 
 -- ============================================================
 -- 相册表

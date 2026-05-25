@@ -1,6 +1,7 @@
 import type { Metadata } from 'next'
 import { AnimeGrid } from '@/components/ui/AnimeGrid'
 import { findAnimes } from '@/lib/db/dao/acgDao'
+import { getOptimizedMediaUrl } from '@/lib/media'
 
 export const metadata: Metadata = {
   title: '追番列表 · 素心',
@@ -9,13 +10,16 @@ export const metadata: Metadata = {
 export const revalidate = 3600
 
 export default async function AnimePage() {
-  const { data: animes } = await findAnimes({ pageSize: 200 })
+  const { data: animes } = await findAnimes({ pageSize: 200, includeTotal: false })
 
   const coverPool = animes.filter((anime) => anime.cover_url)
   const heroBg =
     coverPool.length > 0
       ? coverPool[Math.floor(Math.random() * coverPool.length)].cover_url!
       : null
+  const optimizedHeroBg = heroBg
+    ? (getOptimizedMediaUrl(heroBg, { width: 1600, quality: 68 }) ?? heroBg)
+    : null
 
   const total = animes.length
   const completed = animes.filter((anime) => anime.status === 'completed').length
@@ -26,9 +30,11 @@ export default async function AnimePage() {
       <section className="relative isolate flex min-h-[22rem] items-center overflow-hidden border-b border-border/45 sm:min-h-[24rem]">
         {heroBg ? (
           <img
-            src={heroBg}
+            src={optimizedHeroBg ?? heroBg}
             alt=""
             aria-hidden
+            decoding="async"
+            fetchPriority="high"
             className="pointer-events-none absolute -inset-6 h-[calc(100%+3rem)] w-[calc(100%+3rem)] object-cover opacity-[0.62] blur-md saturate-[1.08] dark:opacity-[0.5]"
           />
         ) : (

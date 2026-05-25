@@ -7,7 +7,7 @@ import {
 } from '@remixicon/react'
 import { auth } from '@/auth'
 import { TOC } from '@/components/ui/TOC'
-import { pickDeterministicMediaUrl, resolveMediaUrl } from '@/lib/media'
+import { getOptimizedMediaUrl, pickDeterministicMediaUrl, resolveMediaUrl } from '@/lib/media'
 import {
   findPostBySlug,
   findPosts,
@@ -97,6 +97,8 @@ export default async function PostPage({
     post.cover_url,
     pickDeterministicMediaUrl(siteProfile.postCoverPoolUrls, post.slug || post.id, siteProfile.defaultPostCoverUrl)
   )
+  const optimizedCoverUrl = getOptimizedMediaUrl(coverUrl, { width: 1920, quality: 72 })
+  const optimizedAvatarUrl = getOptimizedMediaUrl(siteProfile.avatarUrl, { width: 256, quality: 76 })
   const canonicalUrl = `${(siteProfile.siteUrl || 'https://lihuahai.dev').replace(/\/$/, '')}/posts/${post.slug}`
   const licenseName = 'CC BY-NC-SA 4.0'
   const publishedAtIso = toIsoDateString(post.published_at)
@@ -105,10 +107,12 @@ export default async function PostPage({
   return (
     <>
       <section className="relative overflow-hidden" style={{ minHeight: '420px' }}>
-        {coverUrl ? (
+        {optimizedCoverUrl ? (
           <img
-            src={coverUrl}
+            src={optimizedCoverUrl}
             alt={post.cover_alt || post.title}
+            decoding="async"
+            fetchPriority="high"
             className="absolute inset-0 h-full w-full object-cover brightness-[0.62] saturate-[0.94]"
           />
         ) : (
@@ -189,11 +193,15 @@ export default async function PostPage({
             <div className="mb-8 mt-12 border-t border-border" />
 
             <div className="flex items-center gap-5 rounded-2xl border border-border bg-card p-6">
-              <div className="flex h-14 w-14 shrink-0 items-center justify-center overflow-hidden rounded-full border border-primary/25 bg-gradient-to-br from-primary/30 to-primary/8">
-                {siteProfile.avatarUrl ? (
+                <div className="flex h-14 w-14 shrink-0 items-center justify-center overflow-hidden rounded-full border border-primary/25 bg-gradient-to-br from-primary/30 to-primary/8">
+                {optimizedAvatarUrl ? (
                   <img
-                    src={siteProfile.avatarUrl}
+                    src={optimizedAvatarUrl}
                     alt={siteProfile.ownerName}
+                    width={56}
+                    height={56}
+                    loading="lazy"
+                    decoding="async"
                     className="h-full w-full object-cover"
                   />
                 ) : (

@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from 'react'
 import Link from 'next/link'
-import { MaterialSymbol } from '@/components/ui/MaterialSymbol'
+import { PublicSymbol } from '@/components/ui/PublicSymbol'
 import { ThemeToggle } from '@/components/ui/ThemeToggle'
 
 interface Category {
@@ -138,7 +138,7 @@ export function NavBar({ categories, siteProfile }: NavBarProps) {
 
           <div className="hidden items-center gap-1 sm:flex">
             <Link href="/" className={navLinkClass}>
-              <MaterialSymbol icon="home" size={16} />
+              <PublicSymbol icon="home" size={16} />
               首页
             </Link>
 
@@ -156,18 +156,18 @@ export function NavBar({ categories, siteProfile }: NavBarProps) {
                     : 'text-muted-foreground hover:bg-muted hover:text-foreground'
                 }`}
               >
-                <MaterialSymbol icon="article" size={16} />
+                <PublicSymbol icon="article" size={16} />
                 文章
               </Link>
             </div>
 
             <Link href="/moments" className={navLinkClass}>
-              <MaterialSymbol icon="bolt" size={16} fill />
+              <PublicSymbol icon="bolt" size={16} />
               瞬间
             </Link>
 
             <Link href="/works" className={navLinkClass}>
-              <MaterialSymbol icon="deployed_code" size={16} />
+              <PublicSymbol icon="deployed_code" size={16} />
               项目
             </Link>
 
@@ -185,18 +185,18 @@ export function NavBar({ categories, siteProfile }: NavBarProps) {
                     : 'text-muted-foreground hover:bg-muted hover:text-foreground'
                 }`}
               >
-                <MaterialSymbol icon="star" size={16} />
+                <PublicSymbol icon="star" size={16} />
                 收藏
               </button>
             </div>
 
             <Link href="/links" className={navLinkClass}>
-              <MaterialSymbol icon="link" size={16} />
+              <PublicSymbol icon="link" size={16} />
               友情链接
             </Link>
 
             <Link href="/about" className={navLinkClass}>
-              <MaterialSymbol icon="person" size={16} />
+              <PublicSymbol icon="person" size={16} />
               关于
             </Link>
           </div>
@@ -219,7 +219,7 @@ export function NavBar({ categories, siteProfile }: NavBarProps) {
                   : 'text-muted-foreground hover:bg-muted hover:text-foreground'
               }`}
             >
-              <MaterialSymbol icon={mobileMenuOpen ? 'close' : 'menu'} size={18} />
+              <PublicSymbol icon={mobileMenuOpen ? 'close' : 'menu'} size={18} />
             </button>
           </div>
         </nav>
@@ -247,7 +247,7 @@ export function NavBar({ categories, siteProfile }: NavBarProps) {
                     className={mobileMenuItemClass}
                   >
                     <span className="text-muted-foreground transition-colors group-hover:text-primary">
-                      <MaterialSymbol icon={item.icon} size={16} />
+                      <PublicSymbol icon={item.icon} size={16} />
                     </span>
                     <span>{item.label}</span>
                   </Link>
@@ -267,7 +267,7 @@ export function NavBar({ categories, siteProfile }: NavBarProps) {
                     className={mobileMenuItemClass}
                   >
                     <span className="text-muted-foreground transition-colors group-hover:text-primary">
-                      <MaterialSymbol icon={item.icon} size={16} />
+                      <PublicSymbol icon={item.icon} size={16} />
                     </span>
                     <span className="min-w-0">
                       <span className="block">{item.label}</span>
@@ -292,7 +292,7 @@ export function NavBar({ categories, siteProfile }: NavBarProps) {
                     className={mobileMenuItemClass}
                   >
                     <span className="text-muted-foreground transition-colors group-hover:text-primary">
-                      <MaterialSymbol icon={item.icon} size={16} />
+                      <PublicSymbol icon={item.icon} size={16} />
                     </span>
                     <span>{item.label}</span>
                   </Link>
@@ -314,7 +314,7 @@ export function NavBar({ categories, siteProfile }: NavBarProps) {
                         className={mobileMenuItemClass}
                       >
                         <span className="text-muted-foreground transition-colors group-hover:text-primary">
-                          <MaterialSymbol icon={getCategoryIcon(category)} size={16} />
+                          <PublicSymbol icon={getCategoryIcon(category)} size={16} />
                         </span>
                         <span className="min-w-0 flex-1 truncate">{category}</span>
                         <span className="text-xs font-normal text-muted-foreground">{count}</span>
@@ -350,7 +350,7 @@ export function NavBar({ categories, siteProfile }: NavBarProps) {
                     className={postMenuItemClass}
                   >
                     <span className="text-muted-foreground transition-colors group-hover:text-foreground">
-                      <MaterialSymbol icon={item.icon} size={15} />
+                      <PublicSymbol icon={item.icon} size={15} />
                     </span>
                     <span className="whitespace-nowrap text-[11px] font-medium text-muted-foreground transition-colors group-hover:text-foreground">
                       {item.label}
@@ -374,7 +374,7 @@ export function NavBar({ categories, siteProfile }: NavBarProps) {
                         className={postCategoryItemClass}
                       >
                         <span className="flex-shrink-0 text-muted-foreground transition-colors group-hover:text-foreground">
-                          <MaterialSymbol icon={getCategoryIcon(category)} size={15} />
+                          <PublicSymbol icon={getCategoryIcon(category)} size={15} />
                         </span>
                         <span className="min-w-0 flex-1">
                           <span className="block truncate text-xs font-medium text-foreground">
@@ -416,7 +416,7 @@ export function NavBar({ categories, siteProfile }: NavBarProps) {
                     className={collectionMenuItemClass}
                   >
                     <span className="flex-shrink-0 text-muted-foreground transition-colors group-hover:text-foreground">
-                      <MaterialSymbol icon={item.icon} size={16} />
+                      <PublicSymbol icon={item.icon} size={16} />
                     </span>
                     <span>
                       <span className="block text-xs font-medium text-foreground">{item.label}</span>

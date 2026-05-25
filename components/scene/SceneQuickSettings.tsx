@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { Button } from '@/components/ui/Button'
-import { MaterialSymbol } from '@/components/ui/MaterialSymbol'
+import { PublicSymbol } from '@/components/ui/PublicSymbol'
 import type { BackgroundSceneSettings } from '@/types/work'
 
 interface SceneQuickSettingsProps {
@@ -49,7 +49,7 @@ export function SceneQuickSettings({
             className="flex h-12 min-w-[9.5rem] items-center justify-between rounded-full border border-border/45 bg-background/74 px-4 text-sm font-medium text-foreground shadow-none backdrop-blur-xl transition-all hover:border-primary/24 hover:bg-background/84 hover:text-primary dark:border-white/8 dark:bg-background/62 dark:hover:bg-background/74"
           >
             <span>返回顶部</span>
-            <MaterialSymbol icon="arrow_upward" size={18} />
+            <PublicSymbol icon="arrow_upward" size={18} />
           </button>
 
           {showCustomAction ? (
@@ -60,7 +60,7 @@ export function SceneQuickSettings({
               className="flex h-12 min-w-[9.5rem] items-center justify-between rounded-full border border-border/45 bg-background/74 px-4 text-sm font-medium text-foreground shadow-none backdrop-blur-xl transition-all hover:border-primary/24 hover:bg-background/84 hover:text-primary dark:border-white/8 dark:bg-background/62 dark:hover:bg-background/74"
             >
               <span>{quickActionLabel}</span>
-              <MaterialSymbol icon="open_in_new" size={18} />
+              <PublicSymbol icon="open_in_new" size={18} />
             </Link>
           ) : null}
 
@@ -83,7 +83,7 @@ export function SceneQuickSettings({
         onClick={() => setOpen((current) => !current)}
         className="flex h-14 w-14 items-center justify-center rounded-full border border-border/45 bg-background/76 text-primary shadow-none backdrop-blur-xl transition-all duration-200 hover:-translate-y-1 hover:border-primary/24 hover:bg-background/86 dark:border-white/8 dark:bg-background/64 dark:hover:bg-background/76"
       >
-        <MaterialSymbol icon={open ? 'close' : 'widgets'} size={22} />
+        <PublicSymbol icon={open ? 'close' : 'widgets'} size={22} />
       </button>
     </div>
   )

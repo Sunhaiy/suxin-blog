@@ -9,37 +9,6 @@ import type {
 } from '@/types/post'
 
 const POSTS_TAG = 'posts'
-let publishedPostsSnapshotPromise: Promise<PostRow[]> | null = null
-
-const findPublishedPostsSnapshotCached = unstable_cache(
-  async (): Promise<PostRow[]> => {
-    const result = await query<PostRow>(
-      `SELECT *
-       FROM posts
-       WHERE status = 'published'
-       ORDER BY published_at DESC NULLS LAST, created_at DESC, id DESC`
-    )
-
-    return result.rows
-  },
-  ['published-posts-snapshot'],
-  {
-    revalidate: 180,
-    tags: [POSTS_TAG],
-  }
-)
-
-async function getPublishedPostsSnapshot() {
-  if (!publishedPostsSnapshotPromise) {
-    publishedPostsSnapshotPromise = findPublishedPostsSnapshotCached()
-  }
-
-  return publishedPostsSnapshotPromise
-}
-
-function resetPublishedPostsSnapshot() {
-  publishedPostsSnapshotPromise = null
-}
 
 export async function findPostById(id: number): Promise<PostRow | null> {
   const result = await query<PostRow>('SELECT * FROM posts WHERE id = $1', [id])
@@ -63,10 +32,6 @@ const findPostBySlugCached = unstable_cache(
 )
 
 export async function findPostBySlug(slug: string): Promise<PostRow | null> {
-  const publishedPosts = await getPublishedPostsSnapshot()
-  const publishedMatch = publishedPosts.find((post) => post.slug === slug)
-  if (publishedMatch) return publishedMatch
-
   return findPostBySlugCached(slug)
 }
 
@@ -208,17 +173,7 @@ const findCategoriesCached = unstable_cache(
 )
 
 export async function findCategories(): Promise<{ category: string; count: number }[]> {
-  const publishedPosts = await getPublishedPostsSnapshot()
-  const buckets = new Map<string, number>()
-
-  for (const post of publishedPosts) {
-    const category = (post.category || '未分类').trim()
-    buckets.set(category, (buckets.get(category) ?? 0) + 1)
-  }
-
-  return Array.from(buckets.entries())
-    .map(([category, count]) => ({ category, count }))
-    .sort((a, b) => b.count - a.count || a.category.localeCompare(b.category, 'zh-CN'))
+  return findCategoriesCached()
 }
 
 const findLatestPostPerCategoryCached = unstable_cache(
@@ -242,18 +197,7 @@ const findLatestPostPerCategoryCached = unstable_cache(
 export async function findLatestPostPerCategory(): Promise<
   { category: string; title: string; slug: string }[]
 > {
-  const publishedPosts = await getPublishedPostsSnapshot()
-  const seen = new Set<string>()
-  const rows: { category: string; title: string; slug: string }[] = []
-
-  for (const post of publishedPosts) {
-    const category = (post.category || '未分类').trim()
-    if (seen.has(category)) continue
-    seen.add(category)
-    rows.push({ category, title: post.title, slug: post.slug })
-  }
-
-  return rows
+  return findLatestPostPerCategoryCached()
 }
 
 export async function insertPost(input: CreatePostInput): Promise<PostRow> {
@@ -297,7 +241,6 @@ export async function insertPost(input: CreatePostInput): Promise<PostRow> {
   )
 
   revalidateTag(POSTS_TAG)
-  resetPublishedPostsSnapshot()
   return result.rows[0]
 }
 
@@ -372,7 +315,6 @@ export async function updatePost(id: number, input: UpdatePostInput): Promise<Po
   )
 
   revalidateTag(POSTS_TAG)
-  resetPublishedPostsSnapshot()
   return result.rows[0] ?? null
 }
 
@@ -384,7 +326,13 @@ export async function findAdjacentPosts(
   publishedAt: Date,
   id: number
 ): Promise<{ prev: PostRow | null; next: PostRow | null }> {
-  const publishedPosts = await getPublishedPostsSnapshot()
+  const result = await query<PostRow>(
+    `SELECT *
+     FROM posts
+     WHERE status = 'published'
+     ORDER BY published_at DESC NULLS LAST, created_at DESC, id DESC`
+  )
+  const publishedPosts = result.rows
   const targetTime = publishedAt.getTime()
   const ordered = [...publishedPosts].sort((a, b) => {
     const timeA = a.published_at ? new Date(a.published_at).getTime() : 0
@@ -422,20 +370,7 @@ const findAllTagsCached = unstable_cache(
 )
 
 export async function findAllTags(): Promise<{ tag: string; count: number }[]> {
-  const publishedPosts = await getPublishedPostsSnapshot()
-  const buckets = new Map<string, number>()
-
-  for (const post of publishedPosts) {
-    for (const tag of post.tags ?? []) {
-      const normalized = tag.trim()
-      if (!normalized) continue
-      buckets.set(normalized, (buckets.get(normalized) ?? 0) + 1)
-    }
-  }
-
-  return Array.from(buckets.entries())
-    .map(([tag, count]) => ({ tag, count }))
-    .sort((a, b) => b.count - a.count || a.tag.localeCompare(b.tag, 'zh-CN'))
+  return findAllTagsCached()
 }
 
 const findPostsForArchiveCached = unstable_cache(
@@ -461,14 +396,7 @@ const findPostsForArchiveCached = unstable_cache(
 export async function findPostsForArchive(): Promise<
   Pick<PostRow, 'id' | 'title' | 'slug' | 'category' | 'published_at'>[]
 > {
-  const publishedPosts = await getPublishedPostsSnapshot()
-  return publishedPosts.map((post) => ({
-    id: post.id,
-    title: post.title,
-    slug: post.slug,
-    category: post.category,
-    published_at: post.published_at,
-  }))
+  return findPostsForArchiveCached()
 }
 
 export async function renameCategory(oldName: string, newName: string): Promise<number> {
@@ -478,7 +406,6 @@ export async function renameCategory(oldName: string, newName: string): Promise<
   ])
 
   revalidateTag(POSTS_TAG)
-  resetPublishedPostsSnapshot()
   return result.rowCount ?? 0
 }
 
@@ -491,7 +418,6 @@ export async function resetCategory(name: string): Promise<number> {
   )
 
   revalidateTag(POSTS_TAG)
-  resetPublishedPostsSnapshot()
   return result.rowCount ?? 0
 }
 
@@ -508,7 +434,6 @@ export async function renameTag(oldTag: string, newTag: string): Promise<number>
   )
 
   revalidateTag(POSTS_TAG)
-  resetPublishedPostsSnapshot()
   return result.rowCount ?? 0
 }
 
@@ -521,13 +446,11 @@ export async function resetTag(name: string): Promise<number> {
   )
 
   revalidateTag(POSTS_TAG)
-  resetPublishedPostsSnapshot()
   return result.rowCount ?? 0
 }
 
 export async function deletePost(id: number): Promise<boolean> {
   const result = await query(`DELETE FROM posts WHERE id = $1`, [id])
   revalidateTag(POSTS_TAG)
-  resetPublishedPostsSnapshot()
   return (result.rowCount ?? 0) > 0
 }

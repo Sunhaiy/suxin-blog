@@ -183,6 +183,14 @@ docker compose -f docker-compose.prod.yml up -d --build
 - 后台手动补提接口 `POST /api/seo/submit`
 
 平台接入与变量说明见 [SEO 配置说明](docs/seo.md)。
+如果你要对接 Google / Bing / 百度站长平台，优先配置：
+
+- `GOOGLE_SITE_VERIFICATION`
+- `BING_SITE_VERIFICATION`
+- `BAIDU_SITE_VERIFICATION`
+- `MICROSOFT_CLARITY_ID`
+- `INDEXNOW_KEY`
+- `BAIDU_TOKEN`
 
 ## 数据与迁移
 

@@ -1,10 +1,8 @@
 # SEO 配置说明
 
-这份文档解释当前仓库已经内置了哪些 SEO 能力，以及上线后还需要做哪些平台配置。
+这份文档说明项目当前已经内置的 SEO 能力，以及 Google、Bing、百度三个平台上线后还需要补的配置。
 
-## 仓库内置能力
-
-当前仓库已经具备这些基础能力：
+## 项目已内置
 
 - `sitemap.xml`
 - `robots.txt`
@@ -15,38 +13,60 @@
 - 百度普通收录自动提交
 - 后台手动补提接口
 
-相关位置：
+相关文件：
 
 - `app/sitemap.ts`
 - `app/robots.ts`
 - `app/rss.xml/route.ts`
+- `app/layout.tsx`
+- `app/indexnow-key.txt/route.ts`
 - `lib/seo/submission.ts`
 - `app/api/seo/submit/route.ts`
-- `app/indexnow-key.txt/route.ts`
 
 ## 自动提交的工作方式
 
-当文章发生这些动作时，系统会尝试触发搜索引擎提交通道：
+当文章发生这些变化时，系统会尝试通知搜索引擎：
 
 - 新发布
 - 已发布文章更新
-- 已发布文章改 slug
+- 已发布文章修改 slug
 - 已发布文章删除
 
-目前支持的通道：
+当前支持：
 
 - `IndexNow`
 - `百度普通收录 API`
 
-Google 不在这套自动 API 提交范围内，因为普通博客文章没有通用的 Google 推送接口。
+Google 不在这套自动提交通道里。普通博客文章没有通用的 Google 推送 API，核心仍然是 `sitemap + 正常抓取 + Search Console`。
 
 ## 需要配置的环境变量
 
-### 总开关
+### 站点验证
+
+- `GOOGLE_SITE_VERIFICATION`
+- `BING_SITE_VERIFICATION`
+- `BAIDU_SITE_VERIFICATION`
+- `MICROSOFT_CLARITY_ID`
+
+它们分别对应平台给你的 HTML 标签验证 `content` 值：
+
+- Google Search Console：`google-site-verification`
+- Bing Webmaster Tools：`msvalidate.01`
+- 百度搜索资源平台：`baidu-site-verification`
+
+填入后，项目会自动把验证标签输出到全站 `<head>`。
+
+### Microsoft Clarity
+
+- `MICROSOFT_CLARITY_ID`
+
+填入后，项目会在全站注入 Microsoft Clarity 脚本，用于热力图、会话录制和行为分析。该能力不会影响 Bing 收录，但非常适合和 Bing Webmaster Tools 一起使用。
+
+### 自动提交总开关
 
 - `SEARCH_SUBMIT_ENABLED`
 
-默认可设为：
+推荐保持：
 
 ```env
 SEARCH_SUBMIT_ENABLED="true"
@@ -60,10 +80,10 @@ SEARCH_SUBMIT_ENABLED="true"
 
 当 `INDEXNOW_KEY` 存在时：
 
-- 系统会暴露 `/indexnow-key.txt`
-- 发布文章后会向 IndexNow 提交 URL
+- 项目会暴露 `/indexnow-key.txt`
+- 发布或更新文章时会自动向 IndexNow 提交 URL
 
-### 百度
+### 百度普通收录
 
 - `BAIDU_TOKEN`
 - `BAIDU_SITE`
@@ -72,41 +92,47 @@ SEARCH_SUBMIT_ENABLED="true"
 
 如果没有 `BAIDU_TOKEN`：
 
-- 百度推送会自动跳过
-- 其他 SEO 能力仍然照常工作
+- 百度自动推送会跳过
+- 其他 SEO 能力仍然正常工作
 
-## 平台侧需要做的事
+## 三个平台怎么接
 
 ### Google Search Console
 
 需要你手动做：
 
 1. 添加站点
-2. 验证域名或 URL 前缀
-3. 提交 `https://你的域名/sitemap.xml`
+2. 选择验证方式
+3. 如果选 HTML 标签验证，把 `content` 值写入 `GOOGLE_SITE_VERIFICATION`
+4. 提交 `https://你的域名/sitemap.xml`
 
-Google 对普通文章主要还是：
+Google 对普通内容的核心仍然是：
 
-- sitemap
-- 内链
+- `sitemap`
+- 站内链接
 - 正常抓取
+- Search Console 中的覆盖率与 URL 检查
 
-### Bing Webmaster
+### Bing Webmaster Tools
 
-建议做：
+建议这样做：
 
-1. 添加并验证站点
-2. 提交 `sitemap.xml`
-3. 配合启用的 `IndexNow` 使用
+1. 添加站点
+2. 如果你已验证 Google Search Console，可以直接导入并自动验证
+3. 或者选择 Meta tag 验证，把 `content` 值写入 `BING_SITE_VERIFICATION`
+4. 提交 `sitemap.xml`
+5. 保持 `IndexNow` 开启
 
 ### 百度搜索资源平台
 
-建议做：
+建议这样做：
 
-1. 添加并验证站点
-2. 提交 `sitemap.xml`
-3. 获取普通收录 API token
-4. 把 token 写入 `BAIDU_TOKEN`
+1. 添加站点
+2. 选择文件验证或 HTML 标签验证
+3. 如果选 HTML 标签验证，把 `content` 值写入 `BAIDU_SITE_VERIFICATION`
+4. 提交 `sitemap.xml`
+5. 获取普通收录 API token
+6. 把 token 写入 `BAIDU_TOKEN`
 
 ## 手动补提接口
 
@@ -116,7 +142,7 @@ Google 对普通文章主要还是：
 POST /api/seo/submit
 ```
 
-常见请求体：
+常见请求：
 
 ```json
 {
@@ -124,7 +150,7 @@ POST /api/seo/submit
 }
 ```
 
-也可以只提交一部分：
+也可以只补提一部分：
 
 ```json
 {
@@ -134,31 +160,30 @@ POST /api/seo/submit
 }
 ```
 
-## 推荐上线动作
+## 推荐上线顺序
 
-网站第一次上线后，推荐顺序是：
+1. 确认 `AUTH_URL`、`NEXT_PUBLIC_BASE_URL`、后台站点设置里的 `siteUrl` 都是正式域名
+2. 打开 `sitemap.xml` 和 `robots.txt`，确认可访问
+3. 配好 `GOOGLE_SITE_VERIFICATION`
+4. 配好 `BING_SITE_VERIFICATION`
+5. 配好 `BAIDU_SITE_VERIFICATION`
+6. 配好 `INDEXNOW_KEY`
+7. 配好 `BAIDU_SITE` 和 `BAIDU_TOKEN`
+8. 到 Google / Bing / 百度各自平台完成验证
+9. 各提交一次 `sitemap.xml`
+10. 对历史已发布文章执行一次手动补推
 
-1. 确认 `AUTH_URL`、`NEXT_PUBLIC_BASE_URL`、站点设置里的 `siteUrl` 都是正式域名
-2. 打开 `sitemap.xml` 与 `robots.txt` 检查是否可访问
-3. 配好 `INDEXNOW_KEY`
-4. 配好 `BAIDU_SITE` 和 `BAIDU_TOKEN`
-5. 到 Google / Bing / 百度各自平台完成站点验证
-6. 各提交一次 `sitemap.xml`
-7. 对历史已发布文章执行一次手动补提
+## 是否要每篇都手动提交
 
-## 对“要不要每篇手动提交”的建议
-
-通常不需要每发一篇文章都手工去三家平台各提一次。
+通常不需要。
 
 更合理的方式是：
 
-- 平时靠 `sitemap + 自动提交`
-- 特别重要的页面，或者长时间没收录的页面，再手工检查和补提
+- 平时依赖 `sitemap + 自动提交`
+- 对特别重要、或者长时间没收录的页面，再手动检查与补提
 
-## 后续还能继续增强的方向
+## 后续还能增强
 
-- 给文章页补 `BlogPosting`、`BreadcrumbList` 等结构化数据
-- 当内容量明显增大后，把 sitemap 拆成 sitemap index
-- 把 SEO 推送状态回写到后台，形成可视化追踪
-
-这些都不是当前仓库上线的前置条件，但会是后续很值得做的增强项。
+- 给文章页补 `BlogPosting`、`BreadcrumbList` 结构化数据
+- 当内容量变大后，把 `sitemap` 拆成 `sitemap index`
+- 把 SEO 提交结果回写到后台，做可视化追踪

@@ -1,4 +1,5 @@
 import type { Metadata, Viewport } from 'next'
+import Script from 'next/script'
 import { ThemeProvider } from 'next-themes'
 import '@fontsource-variable/inter'
 import '@fontsource-variable/roboto-mono'
@@ -17,9 +18,21 @@ function resolveMetadataBase(siteUrl?: string) {
   }
 }
 
+function readOptionalEnv(name: string) {
+  const value = process.env[name]?.trim()
+  return value ? value : null
+}
+
 export async function generateMetadata(): Promise<Metadata> {
   const profile = await getSiteProfile().catch(() => DEFAULT_SITE_PROFILE)
   const siteIcon = profile.avatarUrl || undefined
+  const googleVerification = readOptionalEnv('GOOGLE_SITE_VERIFICATION')
+  const bingVerification = readOptionalEnv('BING_SITE_VERIFICATION')
+  const baiduVerification = readOptionalEnv('BAIDU_SITE_VERIFICATION')
+  const otherVerification = {
+    ...(bingVerification ? { 'msvalidate.01': bingVerification } : {}),
+    ...(baiduVerification ? { 'baidu-site-verification': baiduVerification } : {}),
+  }
 
   return {
     metadataBase: resolveMetadataBase(profile.siteUrl),
@@ -60,6 +73,13 @@ export async function generateMetadata(): Promise<Metadata> {
       index: true,
       follow: true,
     },
+    verification:
+      googleVerification || Object.keys(otherVerification).length > 0
+        ? {
+            ...(googleVerification ? { google: googleVerification } : {}),
+            ...(Object.keys(otherVerification).length > 0 ? { other: otherVerification } : {}),
+          }
+        : undefined,
   }
 }
 
@@ -71,6 +91,8 @@ export const viewport: Viewport = {
 }
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
+  const clarityProjectId = readOptionalEnv('MICROSOFT_CLARITY_ID')
+
   return (
     <html lang="zh-CN" suppressHydrationWarning>
       <body className="bg-background font-sans antialiased text-foreground">
@@ -82,6 +104,11 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         >
           {children}
         </ThemeProvider>
+        {clarityProjectId ? (
+          <Script id="microsoft-clarity" strategy="afterInteractive">
+            {`(function(c,l,a,r,i,t,y){c[a]=c[a]||function(){(c[a].q=c[a].q||[]).push(arguments)};t=l.createElement(r);t.async=1;t.src="https://www.clarity.ms/tag/"+i+"?ref=bwt";y=l.getElementsByTagName(r)[0];y.parentNode.insertBefore(t,y);})(window,document,"clarity","script","${clarityProjectId}");`}
+          </Script>
+        ) : null}
       </body>
     </html>
   )

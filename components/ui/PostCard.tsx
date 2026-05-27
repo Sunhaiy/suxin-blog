@@ -1,4 +1,5 @@
 import Link from 'next/link'
+import { ProgressiveImage } from '@/components/ui/ProgressiveImage'
 import { getOptimizedMediaUrl, pickDeterministicMediaUrl, resolveMediaUrl } from '@/lib/media'
 import type { PostRow } from '@/types/post'
 
@@ -26,13 +27,14 @@ export function PostCard({ post, fallbackCoverUrl, fallbackCoverPool }: PostCard
       >
         <div className="relative aspect-[16/9] flex-shrink-0 overflow-hidden">
           {optimizedCoverUrl ? (
-            <img
+            <ProgressiveImage
               src={optimizedCoverUrl}
               alt={post.title}
               loading="lazy"
               decoding="async"
               fetchPriority="low"
-              className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
+              wrapperClassName="h-full w-full"
+              className="object-cover transition-transform duration-500 group-hover:scale-105"
             />
           ) : (
             <div className="relative flex h-full w-full items-center justify-center bg-gradient-to-br from-primary/12 via-card to-muted">

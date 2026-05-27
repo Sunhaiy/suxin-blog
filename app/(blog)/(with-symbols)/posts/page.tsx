@@ -1,10 +1,11 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
 import { FeaturedCarousel } from '@/components/ui/FeaturedCarousel'
+import { ProgressiveImage } from '@/components/ui/ProgressiveImage'
 import { PostsFilter } from '@/components/ui/PostsFilter'
 import { MaterialSymbol } from '@/components/ui/MaterialSymbol'
 import { findAllTags, findCategories, findPosts } from '@/lib/db/dao/postDao'
-import { pickDeterministicMediaUrl, resolveMediaUrl } from '@/lib/media'
+import { getOptimizedMediaUrl, pickDeterministicMediaUrl, resolveMediaUrl } from '@/lib/media'
 import { getSiteProfile } from '@/lib/site'
 
 export const metadata: Metadata = {
@@ -127,16 +128,21 @@ export default async function PostsPage({
                 siteProfile.defaultPostCoverUrl
               )
             )
+            const optimizedCoverUrl = getOptimizedMediaUrl(coverUrl, { width: 828, quality: 72 }) ?? coverUrl
 
             return (
               <Link key={post.id} href={`/posts/${post.slug}`} className="group block h-full">
                 <article className="flex h-full flex-col overflow-hidden rounded-[24px] border border-border/75 bg-card/78 backdrop-blur-xl transition-all duration-300 hover:-translate-y-0.5 hover:border-border">
                   <div className="relative aspect-[16/10] overflow-hidden bg-muted/70">
-                    {coverUrl ? (
-                      <img
-                        src={coverUrl}
+                    {optimizedCoverUrl ? (
+                      <ProgressiveImage
+                        src={optimizedCoverUrl}
                         alt={post.title}
-                        className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-[1.03]"
+                        loading="lazy"
+                        decoding="async"
+                        fetchPriority="low"
+                        wrapperClassName="h-full w-full"
+                        className="object-cover transition-transform duration-500 group-hover:scale-[1.03]"
                       />
                     ) : (
                       <div className="relative flex h-full items-center justify-center bg-gradient-to-br from-primary/12 via-card to-muted">

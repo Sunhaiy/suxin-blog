@@ -1,5 +1,6 @@
 import { MaterialSymbol } from '@/components/ui/MaterialSymbol'
-import { resolveMediaUrl } from '@/lib/media'
+import { ProgressiveImage } from '@/components/ui/ProgressiveImage'
+import { getOptimizedMediaUrl, resolveMediaUrl } from '@/lib/media'
 import type { WorkListItem } from '@/types/work'
 
 interface Props {
@@ -30,8 +31,9 @@ export function WorksStampGrid({ works }: Props) {
       </div>
 
       <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-3">
-        {works.map((work) => {
+        {works.map((work, index) => {
           const coverUrl = resolveMediaUrl(work.cover_url, work.hero_image_url)
+          const optimizedCoverUrl = getOptimizedMediaUrl(coverUrl, { width: 828, quality: 72 }) ?? coverUrl
           const primaryHref = work.primary_url || work.url || ''
           const githubHref = work.github_url || work.secondary_url || ''
           const summary = work.summary || work.subtitle || work.description || '这个项目暂时还没有补充更多说明。'
@@ -43,8 +45,16 @@ export function WorksStampGrid({ works }: Props) {
             >
               <div className="overflow-hidden rounded-[20px] border border-white/8 bg-black/30">
                 <div className="aspect-[16/10] w-full overflow-hidden">
-                  {coverUrl ? (
-                    <img src={coverUrl} alt={work.title} className="h-full w-full object-cover" />
+                  {optimizedCoverUrl ? (
+                    <ProgressiveImage
+                      src={optimizedCoverUrl}
+                      alt={work.title}
+                      loading={index < 3 ? 'eager' : 'lazy'}
+                      decoding="async"
+                      fetchPriority={index < 3 ? 'high' : 'low'}
+                      wrapperClassName="h-full w-full"
+                      className="object-cover"
+                    />
                   ) : (
                     <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-primary/30 via-zinc-900 to-zinc-800">
                       <span className="text-6xl font-black tracking-[-0.08em] text-white/18">

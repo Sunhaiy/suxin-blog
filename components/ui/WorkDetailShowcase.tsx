@@ -1,7 +1,9 @@
 'use client'
 
 import { useMemo, useRef } from 'react'
+import { ProgressiveImage } from '@/components/ui/ProgressiveImage'
 import { useGsapScope } from '@/hooks/useGsapScope'
+import { getOptimizedMediaUrl, resolveMediaUrl } from '@/lib/media'
 import type { WorkContributor, WorkDetail } from '@/types/work'
 
 interface WorkDetailShowcaseProps {
@@ -34,6 +36,10 @@ interface ProjectViewModel {
 
 export function WorkDetailShowcase({ work, siteUrl }: WorkDetailShowcaseProps) {
   const project = useMemo(() => mapWorkToProject(work, siteUrl), [siteUrl, work])
+  const projectHeroImageUrl = useMemo(
+    () => getOptimizedMediaUrl(project.image, { width: 1200, quality: 72 }) ?? project.image,
+    [project.image]
+  )
   const scrollContainerRef = useRef<HTMLDivElement | null>(null)
   const dragStateRef = useRef({ isDown: false, startX: 0, scrollLeft: 0 })
 
@@ -153,8 +159,16 @@ export function WorkDetailShowcase({ work, siteUrl }: WorkDetailShowcaseProps) {
 
               <div className="shine-container">
                 <div className="shine-sweep" />
-                {project.image ? (
-                  <img src={project.image} alt={project.name} className="hero-img" />
+                {projectHeroImageUrl ? (
+                  <ProgressiveImage
+                    src={projectHeroImageUrl}
+                    alt={project.name}
+                    loading="eager"
+                    decoding="async"
+                    fetchPriority="high"
+                    wrapperClassName="h-full w-full"
+                    className="hero-img"
+                  />
                 ) : (
                   <div className="img-placeholder">
                     <span className="ghost-txt">[[ NO_SIGNAL_ESTABLISHED ]]</span>
@@ -186,7 +200,14 @@ export function WorkDetailShowcase({ work, siteUrl }: WorkDetailShowcaseProps) {
                       <div key={`${user.name}-${index}`} className="user-row">
                         <div className="avatar-box">
                           {user.avatar_url ? (
-                            <img src={user.avatar_url} alt={user.name} className="avatar-img" />
+                            <ProgressiveImage
+                              src={getOptimizedMediaUrl(user.avatar_url, { width: 128, quality: 72 }) ?? user.avatar_url}
+                              alt={user.name}
+                              loading="lazy"
+                              decoding="async"
+                              wrapperClassName="h-full w-full rounded-full"
+                              className="avatar-img"
+                            />
                           ) : (
                             <span className="abbr">{user.name.charAt(0).toUpperCase()}</span>
                           )}
@@ -1004,7 +1025,7 @@ function mapWorkToProject(work: WorkDetail, siteUrl: string): ProjectViewModel {
     name: work.title,
     subtitle: work.subtitle || '摘录 / ARCHIVE',
     tags: Array.isArray(work.tags) ? work.tags : [],
-    image: work.hero_image_url || work.cover_url || '',
+    image: resolveMediaUrl(work.hero_image_url, work.cover_url) || '',
     seal: work.seal,
     users: Array.isArray(work.contributors) ? work.contributors : [],
     progress: work.progress_text || '0 / 0',

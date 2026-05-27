@@ -1,5 +1,7 @@
 'use client'
 
+import { ProgressiveImage } from '@/components/ui/ProgressiveImage'
+import { getOptimizedMediaUrl } from '@/lib/media'
 import { extractPlainTextFromRichContent } from '@/lib/utils/extractHeadings'
 import type { MomentRow } from '@/types/moment'
 import type { SiteProfile } from '@/types/site'
@@ -82,6 +84,7 @@ function getMomentText(moment: MomentFeedItem) {
 export function MomentFeedCard({ moment, siteProfile }: MomentFeedCardProps) {
   const createdAt = new Date(moment.created_at)
   const text = getMomentText(moment)
+  const avatarUrl = getOptimizedMediaUrl(siteProfile.avatarUrl, { width: 128, quality: 76 }) ?? siteProfile.avatarUrl
 
   return (
     <article
@@ -89,8 +92,15 @@ export function MomentFeedCard({ moment, siteProfile }: MomentFeedCardProps) {
       className="group relative flex scroll-mt-24 gap-3 rounded-[12px] border border-border/60 bg-card/86 px-3.5 py-3.5 text-foreground backdrop-blur-xl transition-colors hover:border-border/90 hover:bg-card/92 sm:px-4"
     >
       <div className="h-10 w-10 shrink-0 self-start overflow-hidden rounded-full bg-background/60">
-        {siteProfile.avatarUrl ? (
-          <img src={siteProfile.avatarUrl} alt={siteProfile.ownerName} className="h-full w-full object-cover" />
+        {avatarUrl ? (
+          <ProgressiveImage
+            src={avatarUrl}
+            alt={siteProfile.ownerName}
+            loading="lazy"
+            decoding="async"
+            wrapperClassName="h-full w-full rounded-full"
+            className="object-cover"
+          />
         ) : (
           <span className="flex h-full w-full items-center justify-center text-lg font-semibold">
             {siteProfile.ownerInitial}
@@ -120,9 +130,19 @@ function MomentImages({ images }: { images: string[] }) {
   if (images.length === 0) return null
 
   if (images.length === 1) {
+    const optimizedImageUrl = getOptimizedMediaUrl(images[0], { width: 828, quality: 72 }) ?? images[0]
+
     return (
       <div className="mt-4 overflow-hidden rounded-[10px] bg-background/50">
-        <img src={images[0]} alt="" className="max-h-[34rem] w-full object-cover" />
+        <ProgressiveImage
+          src={optimizedImageUrl}
+          alt=""
+          loading="lazy"
+          decoding="async"
+          wrapperClassName="w-full"
+          className="max-h-[34rem] w-full"
+          style={{ height: 'auto' }}
+        />
       </div>
     )
   }
@@ -131,7 +151,14 @@ function MomentImages({ images }: { images: string[] }) {
     <div className="mt-4 grid grid-cols-2 gap-2">
       {images.slice(0, 4).map((url, index) => (
         <div key={index} className="relative aspect-square overflow-hidden rounded-[10px] bg-background/50">
-          <img src={url} alt="" className="h-full w-full object-cover" />
+          <ProgressiveImage
+            src={getOptimizedMediaUrl(url, { width: 384, quality: 72 }) ?? url}
+            alt=""
+            loading="lazy"
+            decoding="async"
+            wrapperClassName="h-full w-full"
+            className="object-cover"
+          />
           {index === 3 && images.length > 4 ? (
             <div className="absolute inset-0 flex items-center justify-center bg-background/70">
               <span className="text-lg font-black text-foreground">+{images.length - 4}</span>

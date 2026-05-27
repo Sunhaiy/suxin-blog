@@ -4,8 +4,9 @@ import Link from 'next/link'
 import { AboutLifestyleShowcase } from '@/components/ui/AboutLifestyleShowcase'
 import { AboutMotion } from '@/components/ui/AboutMotion'
 import { MaterialSymbol } from '@/components/ui/MaterialSymbol'
+import { ProgressiveImage } from '@/components/ui/ProgressiveImage'
 import { findWorks } from '@/lib/db/dao/worksDao'
-import { resolveMediaUrl } from '@/lib/media'
+import { getOptimizedMediaUrl, resolveMediaUrl } from '@/lib/media'
 import { getSiteProfile } from '@/lib/site'
 import type { SiteProfile } from '@/types/site'
 import type { WorkListItem } from '@/types/work'
@@ -280,41 +281,49 @@ export default async function AboutPage() {
 
         <AboutSection id="featured-projects" title="精选项目" label="FEATURED PROJECTS">
           <div className="about-stagger grid gap-7 md:grid-cols-2 xl:grid-cols-4">
-            {projects.map((project, index) => (
-              <article
-                key={`${project.title}-${index}`}
-                className="group"
-                style={{ '--stagger-index': index } as React.CSSProperties}
-              >
-                <Link
-                  href={project.slug ? `/works#work-${project.slug}` : '/works'}
-                  className="block focus:outline-none"
+            {projects.map((project, index) => {
+              const optimizedImageUrl =
+                getOptimizedMediaUrl(project.imageUrl, { width: 828, quality: 72 }) ?? project.imageUrl
+
+              return (
+                <article
+                  key={`${project.title}-${index}`}
+                  className="group"
+                  style={{ '--stagger-index': index } as React.CSSProperties}
                 >
-                  <p className="mb-2 font-mono text-xl font-bold text-white">
-                    {String(index + 1).padStart(2, '0')}
-                  </p>
-                  <div className="about-project-card border border-white/[0.42] bg-black transition-colors duration-300 group-hover:border-white group-focus-visible:border-white">
-                    <div className="aspect-[4/3] overflow-hidden border-b border-white/[0.22] bg-white/[0.04]">
-                      <img
-                        src={project.imageUrl}
-                        alt={project.title}
-                        className="h-full w-full object-cover grayscale transition duration-500 group-hover:scale-[1.03] group-hover:grayscale-0"
-                      />
-                    </div>
-                    <div className="min-h-[185px] px-5 py-5">
-                      <h3 className="text-3xl font-black tracking-[-0.08em] text-white">
-                        {project.title}
-                      </h3>
-                      <div className="mt-4 space-y-1 text-base leading-6 text-white/72">
-                        {project.lines.map((line) => (
-                          <p key={line}>/ {line}</p>
-                        ))}
+                  <Link
+                    href={project.slug ? `/works#work-${project.slug}` : '/works'}
+                    className="block focus:outline-none"
+                  >
+                    <p className="mb-2 font-mono text-xl font-bold text-white">
+                      {String(index + 1).padStart(2, '0')}
+                    </p>
+                    <div className="about-project-card border border-white/[0.42] bg-black transition-colors duration-300 group-hover:border-white group-focus-visible:border-white">
+                      <div className="aspect-[4/3] overflow-hidden border-b border-white/[0.22] bg-white/[0.04]">
+                        <ProgressiveImage
+                          src={optimizedImageUrl}
+                          alt={project.title}
+                          loading="lazy"
+                          decoding="async"
+                          wrapperClassName="h-full w-full"
+                          className="h-full w-full object-cover grayscale transition duration-500 group-hover:scale-[1.03] group-hover:grayscale-0"
+                        />
+                      </div>
+                      <div className="min-h-[185px] px-5 py-5">
+                        <h3 className="text-3xl font-black tracking-[-0.08em] text-white">
+                          {project.title}
+                        </h3>
+                        <div className="mt-4 space-y-1 text-base leading-6 text-white/72">
+                          {project.lines.map((line) => (
+                            <p key={line}>/ {line}</p>
+                          ))}
+                        </div>
                       </div>
                     </div>
-                  </div>
-                </Link>
-              </article>
-            ))}
+                  </Link>
+                </article>
+              )
+            })}
           </div>
         </AboutSection>
 

@@ -1,13 +1,14 @@
 ﻿import type { Metadata } from 'next'
 import Link from 'next/link'
 import { PublicSymbol } from '@/components/ui/PublicSymbol'
+import { ProgressiveImage } from '@/components/ui/ProgressiveImage'
 import { SceneFilterLayer } from '@/components/scene/SceneFilterLayer'
 import { ActivityHeatmap } from '@/components/ui/ActivityHeatmap'
 import { HomeSidebarVisitorCard } from '@/components/ui/HomeSidebarVisitorCard'
 import { PostCard } from '@/components/ui/PostCard'
 import { getActivityHeatmap } from '@/lib/db/dao/activityDao'
-import { findMoments } from '@/lib/db/dao/momentDao'
-import { findAllTags, findPosts, findPostsForArchive } from '@/lib/db/dao/postDao'
+import { findRecentPublicMoments } from '@/lib/db/dao/momentDao'
+import { getHomepagePostSnapshot } from '@/lib/db/dao/postDao'
 import { getOptimizedMediaUrl } from '@/lib/media'
 import { getBackgroundSceneSettings } from '@/lib/scene'
 import { getSiteProfile } from '@/lib/site'
@@ -72,34 +73,6 @@ function getYearProgress(year: number) {
   return progress
 }
 
-function getArchivePreview(posts: Array<{ published_at: Date | string | null }>) {
-  const buckets = new Map<string, { label: string; count: number; href: string }>()
-
-  for (const post of posts) {
-    if (!post.published_at) continue
-
-    const date = new Date(post.published_at)
-    if (Number.isNaN(date.getTime())) continue
-
-    const year = date.getFullYear()
-    const month = date.getMonth() + 1
-    const key = `${year}-${String(month).padStart(2, '0')}`
-    const current = buckets.get(key)
-
-    if (current) {
-      current.count += 1
-    } else {
-      buckets.set(key, {
-        label: `${year} / ${String(month).padStart(2, '0')}`,
-        count: 1,
-        href: '/posts/archive',
-      })
-    }
-  }
-
-  return Array.from(buckets.values()).slice(0, 5)
-}
-
 function pickSidebarGreeting(pool: string[]) {
   const source = pool.filter(Boolean)
   if (source.length === 0) return '\u4e0b\u5348\u597d\uff0c\u7ee7\u7eed\u5411\u524d\u3002'
@@ -107,22 +80,15 @@ function pickSidebarGreeting(pool: string[]) {
 }
 
 export default async function HomePage() {
-  const [postsResult, momentsResult, scene, activityData, siteProfile, tags, archivePosts] = await Promise.all([
-    findPosts({ status: 'published', pageSize: 6, page: 1 }),
-    findMoments({ publicOnly: true, pageSize: 10 }),
+  const [postsSnapshot, moments, scene, activityData, siteProfile] = await Promise.all([
+    getHomepagePostSnapshot(),
+    findRecentPublicMoments(10),
     getBackgroundSceneSettings(),
     getActivityHeatmap(365),
     getSiteProfile(),
-    findAllTags(),
-    findPostsForArchive(),
   ])
 
   const hasSceneImage = Boolean(scene.image.url)
-  const topTags = tags.slice(0, 18)
-  const archivePreview = getArchivePreview(archivePosts)
-  const categoryCount = new Set(
-    archivePosts.map((post) => post.category || '\u672a\u5206\u7c7b')
-  ).size
   const yearProgress = getYearProgress(2026)
   const sidebarGreeting = pickSidebarGreeting(siteProfile.homeGreetingPool)
   const heroSceneUrl = getOptimizedMediaUrl(scene.image.url, { width: 1920, quality: 68 }) ?? scene.image.url
@@ -155,13 +121,14 @@ export default async function HomePage() {
             <h1 className="sr-only">{siteProfile.siteName}</h1>
             <div className="scene-copy mx-auto mt-5 flex h-24 w-24 items-center justify-center overflow-hidden rounded-full border border-hero-border/70 bg-hero-panel/55 p-1.5 shadow-[0_18px_56px_rgba(0,0,0,0.22)] backdrop-blur-xl sm:h-32 sm:w-32">
               {heroAvatarUrl ? (
-                <img
+                <ProgressiveImage
                   src={heroAvatarUrl}
                   alt={siteProfile.ownerName}
                   width={128}
                   height={128}
                   decoding="async"
                   fetchPriority="high"
+                  wrapperClassName="h-full w-full rounded-full"
                   className="h-full w-full rounded-full object-cover"
                 />
               ) : (
@@ -179,7 +146,7 @@ export default async function HomePage() {
             </div>
           </div>
 
-          {momentsResult.data.length > 0 ? (
+          {moments.length > 0 ? (
             <div className="mt-auto hidden pt-16 md:block">
               <div className="scene-panel mx-auto max-w-5xl overflow-hidden rounded-[32px] p-5 sm:p-6">
                 <div className="mb-5 flex items-center justify-between gap-4">
@@ -199,7 +166,7 @@ export default async function HomePage() {
                 </div>
 
                 <div className="flex gap-3 overflow-x-auto px-0.5 pb-1 pt-0.5 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-                  {momentsResult.data.map((moment) => {
+                  {moments.map((moment) => {
                     const preview = getMomentPreview(moment)
 
                     return (
@@ -212,12 +179,13 @@ export default async function HomePage() {
                         <div className="relative z-10">
                           {moment.images.length > 0 ? (
                             <div className="mb-3 aspect-[16/9] overflow-hidden rounded-[18px] border border-border/45 bg-background/20 dark:bg-black/10">
-                              <img
+                              <ProgressiveImage
                                 src={getOptimizedMediaUrl(moment.images[0], { width: 828, quality: 70 }) ?? moment.images[0]}
                                 alt=""
                                 loading="lazy"
                                 decoding="async"
                                 fetchPriority="low"
+                                wrapperClassName="h-full w-full"
                                 className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-[1.04]"
                               />
                             </div>
@@ -282,14 +250,14 @@ export default async function HomePage() {
                   </Link>
                 </div>
 
-                {postsResult.data.length === 0 ? (
+                {postsSnapshot.posts.length === 0 ? (
                   <p className="py-8 text-center text-sm text-muted-foreground">
                     {'\u6682\u65f6\u8fd8\u6ca1\u6709\u6587\u7ae0\u3002'}
                   </p>
                 ) : (
                   <>
                     <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-                      {postsResult.data.map((post) => (
+                      {postsSnapshot.posts.map((post) => (
                         <PostCard
                           key={post.id}
                           post={post}
@@ -299,7 +267,7 @@ export default async function HomePage() {
                       ))}
                     </div>
 
-                    {postsResult.total > 6 ? (
+                    {postsSnapshot.totalPublished > 6 ? (
                       <div className="mt-8 flex justify-center">
                         <Link
                           href="/posts"
@@ -326,13 +294,14 @@ export default async function HomePage() {
 
                 <div className="mx-auto mt-5 flex h-20 w-20 items-center justify-center overflow-hidden rounded-full border-2 border-primary/22 bg-primary/8">
                   {sidebarAvatarUrl ? (
-                    <img
+                    <ProgressiveImage
                       src={sidebarAvatarUrl}
                       alt={siteProfile.ownerName}
                       width={80}
                       height={80}
                       loading="lazy"
                       decoding="async"
+                      wrapperClassName="h-full w-full rounded-full"
                       className="h-full w-full object-cover"
                     />
                   ) : (
@@ -351,9 +320,9 @@ export default async function HomePage() {
 
                 <div className="mt-4 grid grid-cols-3 rounded-[18px] border border-border/70 bg-background/44 py-2.5">
                   {[
-                    { label: '文章', value: postsResult.total },
-                    { label: '分类', value: categoryCount },
-                    { label: '标签', value: tags.length },
+                    { label: '文章', value: postsSnapshot.totalPublished },
+                    { label: '分类', value: postsSnapshot.categoryCount },
+                    { label: '标签', value: postsSnapshot.totalTags },
                   ].map((item, index) => (
                     <div
                       key={item.label}
@@ -412,7 +381,7 @@ export default async function HomePage() {
                   </Link>
                 </div>
                 <div className="mt-3 space-y-2">
-                  {archivePreview.map((item) => (
+                  {postsSnapshot.archivePreview.map((item) => (
                     <Link
                       key={item.label}
                       href={item.href}
@@ -430,10 +399,10 @@ export default async function HomePage() {
                   {'\u6807\u7b7e\u4e91'}
                 </p>
                 <div className="mt-3 flex flex-wrap gap-2">
-                  {topTags.map(({ tag, count }) => (
+                  {postsSnapshot.topTags.map(({ tag, count }) => (
                     <Link
                       key={tag}
-                      href={`/posts?tag=${encodeURIComponent(tag)}`}
+                      href={`/posts?tags=${encodeURIComponent(tag)}`}
                       className="inline-flex items-center gap-1 rounded-full border border-border/70 bg-background/42 px-3 py-1.5 text-xs text-foreground/82 transition-colors hover:border-primary/30 hover:bg-primary/6 hover:text-primary"
                     >
                       <span>{tag}</span>

@@ -10,6 +10,41 @@ import type {
 
 const POSTS_TAG = 'posts'
 
+export interface HomepageArchivePreview {
+  label: string
+  count: number
+  href: string
+}
+
+export type HomepagePostCardRow = Pick<
+  PostRow,
+  | 'id'
+  | 'title'
+  | 'slug'
+  | 'excerpt'
+  | 'cover_url'
+  | 'cover_alt'
+  | 'seo_title'
+  | 'seo_description'
+  | 'is_featured'
+  | 'status'
+  | 'tags'
+  | 'category'
+  | 'view_count'
+  | 'created_at'
+  | 'updated_at'
+  | 'published_at'
+>
+
+export interface HomepagePostSnapshot {
+  posts: HomepagePostCardRow[]
+  totalPublished: number
+  topTags: { tag: string; count: number }[]
+  totalTags: number
+  archivePreview: HomepageArchivePreview[]
+  categoryCount: number
+}
+
 export async function findPostById(id: number): Promise<PostRow | null> {
   const result = await query<PostRow>('SELECT * FROM posts WHERE id = $1', [id])
   return result.rows[0] ?? null
@@ -148,6 +183,111 @@ export async function findPosts(params: PostQueryParams = {}): Promise<Paginated
   }
 
   return findPostsUncached(params)
+}
+
+const getHomepagePostSnapshotCached = unstable_cache(
+  async (): Promise<HomepagePostSnapshot> => {
+    const [postsResult, tagsResult, archiveResult] = await Promise.all([
+      query<
+        HomepagePostCardRow & {
+          total_count: number
+        }
+      >(
+        `SELECT
+           id,
+           title,
+           slug,
+           excerpt,
+           cover_url,
+           cover_alt,
+           seo_title,
+           seo_description,
+           is_featured,
+           status,
+           tags,
+           category,
+           view_count,
+           created_at,
+           updated_at,
+           published_at,
+           COUNT(*) OVER()::int AS total_count
+         FROM posts
+         WHERE status = 'published'
+         ORDER BY is_featured DESC, published_at DESC NULLS LAST, created_at DESC
+         LIMIT 6`
+      ),
+      query<{ tag: string; count: number; total_tags: number }>(
+        `WITH tag_counts AS (
+           SELECT unnest(tags) AS tag, COUNT(*)::int AS count
+           FROM posts
+           WHERE status = 'published'
+             AND array_length(tags, 1) > 0
+           GROUP BY 1
+         )
+         SELECT
+           tag,
+           count,
+           COUNT(*) OVER()::int AS total_tags
+         FROM tag_counts
+         ORDER BY count DESC, tag ASC
+         LIMIT 18`
+      ),
+      query<{ label: string; count: number; category_count: number }>(
+        `WITH archive_counts AS (
+           SELECT date_trunc('month', published_at) AS month_bucket, COUNT(*)::int AS count
+           FROM posts
+           WHERE status = 'published'
+             AND published_at IS NOT NULL
+           GROUP BY 1
+         ),
+         category_total AS (
+           SELECT COUNT(DISTINCT COALESCE(NULLIF(category, ''), '未分类'))::int AS total
+           FROM posts
+           WHERE status = 'published'
+         )
+         SELECT
+           to_char(month_bucket, 'YYYY / MM') AS label,
+           count,
+           (SELECT total FROM category_total) AS category_count
+         FROM archive_counts
+         ORDER BY month_bucket DESC
+         LIMIT 5`
+      ),
+    ])
+
+    const totalPublished = postsResult.rows[0]?.total_count ?? 0
+    const posts = postsResult.rows.map((row) => {
+      const { total_count, ...post } = row
+      void total_count
+      return post
+    })
+    const topTags = tagsResult.rows.map((row) => ({
+      tag: row.tag,
+      count: Number(row.count),
+    }))
+
+    return {
+      posts,
+      totalPublished,
+      topTags,
+      totalTags: tagsResult.rows[0]?.total_tags ?? 0,
+      archivePreview: archiveResult.rows.map((row) => ({
+        label: row.label,
+        count: Number(row.count),
+        href: '/posts/archive',
+      })),
+      categoryCount: archiveResult.rows[0]?.category_count ?? 0,
+    }
+  },
+  ['homepage-post-snapshot'],
+  {
+    revalidate: 180,
+    tags: [POSTS_TAG],
+  }
+)
+
+export async function getHomepagePostSnapshot(): Promise<HomepagePostSnapshot> {
+  return getHomepagePostSnapshotCached()
 }
 
 const findCategoriesCached = unstable_cache(

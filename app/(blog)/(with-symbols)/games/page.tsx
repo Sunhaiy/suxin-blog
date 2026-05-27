@@ -23,7 +23,7 @@ export default async function GamesPage() {
   const coverPool = games.filter((game) => game.cover_url)
   const heroBg = siteProfile.gamesHeroImageUrl || coverPool[0]?.cover_url || null
   const optimizedHeroBg = heroBg
-    ? (getOptimizedMediaUrl(heroBg, { width: 1600, quality: 68 }) ?? heroBg)
+    ? (getOptimizedMediaUrl(heroBg, { width: 1200, quality: 68 }) ?? heroBg)
     : null
 
   const completed = games.filter(

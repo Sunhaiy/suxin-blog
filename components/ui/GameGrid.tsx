@@ -1,5 +1,6 @@
-import { getOptimizedMediaUrl } from '@/lib/media'
 import { MaterialSymbol } from '@/components/ui/MaterialSymbol'
+import { ProgressiveImage } from '@/components/ui/ProgressiveImage'
+import { getOptimizedMediaUrl } from '@/lib/media'
 import type { GameRow } from '@/types/acg'
 
 interface Props {
@@ -61,13 +62,14 @@ export function GameGrid({ games }: Props) {
           >
             <div className="relative aspect-square overflow-hidden">
               {optimizedCoverUrl ? (
-                <img
+                <ProgressiveImage
                   src={optimizedCoverUrl}
                   alt={game.title}
                   loading="lazy"
                   decoding="async"
                   fetchPriority="low"
-                  className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-[1.04]"
+                  wrapperClassName="h-full w-full"
+                  className="object-cover transition-transform duration-500 group-hover:scale-[1.04]"
                 />
               ) : (
                 <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-zinc-950 via-zinc-900 to-emerald-950 px-4 text-center">

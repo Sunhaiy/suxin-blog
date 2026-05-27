@@ -18,7 +18,7 @@ export default async function AnimePage() {
       ? coverPool[Math.floor(Math.random() * coverPool.length)].cover_url!
       : null
   const optimizedHeroBg = heroBg
-    ? (getOptimizedMediaUrl(heroBg, { width: 1600, quality: 68 }) ?? heroBg)
+    ? (getOptimizedMediaUrl(heroBg, { width: 1200, quality: 68 }) ?? heroBg)
     : null
 
   const total = animes.length

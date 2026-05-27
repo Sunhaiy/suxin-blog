@@ -45,8 +45,11 @@ ALTER TABLE posts ADD COLUMN IF NOT EXISTS is_featured BOOLEAN NOT NULL DEFAULT 
 CREATE INDEX IF NOT EXISTS idx_posts_featured    ON posts (is_featured) WHERE is_featured = TRUE;
 CREATE INDEX IF NOT EXISTS idx_posts_published   ON posts (published_at DESC NULLS LAST)
   WHERE status = 'published';
+CREATE INDEX IF NOT EXISTS idx_posts_home_sort   ON posts (is_featured DESC, published_at DESC NULLS LAST, created_at DESC)
+  WHERE status = 'published';
 CREATE INDEX IF NOT EXISTS idx_posts_tags        ON posts USING GIN (tags);
 CREATE INDEX IF NOT EXISTS idx_posts_category    ON posts (category);
+CREATE INDEX IF NOT EXISTS idx_posts_status_category ON posts (status, category);
 
 -- ============================================================
 -- 极客瞬间表

@@ -3,7 +3,9 @@
 import { useEffect, useMemo, useRef, useState, type TouchEvent as ReactTouchEvent } from 'react'
 import { gsap } from 'gsap'
 import { MaterialSymbol } from '@/components/ui/MaterialSymbol'
+import { ProgressiveImage } from '@/components/ui/ProgressiveImage'
 import { useGsapScope } from '@/hooks/useGsapScope'
+import { getOptimizedMediaUrl } from '@/lib/media'
 import type { GalleryAlbumRow, GalleryItemRow } from '@/types/gallery'
 
 type ImmersiveGalleryProps = {
@@ -309,10 +311,14 @@ export function ImmersiveGallery({
               onTouchEnd={handleMobileTouchEnd}
             >
               {activeSlide ? (
-                <img
+                <ProgressiveImage
                   src={activeSlide.imageUrl}
                   alt={activeSlide.title}
-                  className="aspect-[4/5] w-full object-cover"
+                  loading="eager"
+                  decoding="async"
+                  fetchPriority="high"
+                  wrapperClassName="aspect-[4/5] w-full"
+                  className="object-cover"
                 />
               ) : (
                 <div className="aspect-[4/5] w-full bg-muted/60" />
@@ -383,7 +389,14 @@ export function ImmersiveGallery({
                   }`}
                   aria-label={slide.title}
                 >
-                  <img src={slide.thumbUrl} alt="" className="h-20 w-20 object-cover sm:h-24 sm:w-24" />
+                  <ProgressiveImage
+                    src={slide.thumbUrl}
+                    alt=""
+                    loading="lazy"
+                    decoding="async"
+                    wrapperClassName="h-20 w-20 sm:h-24 sm:w-24"
+                    className="object-cover"
+                  />
                 </button>
               )
             })}
@@ -534,10 +547,13 @@ function AlbumCollectionCard({
 
         <div className="overflow-hidden rounded-[1.4rem] border border-border/70 bg-background/70">
           {imageUrl ? (
-            <img
+            <ProgressiveImage
               src={imageUrl}
               alt=""
-              className={`aspect-[4/5] w-full object-cover transition-all duration-500 ${
+              loading="lazy"
+              decoding="async"
+              wrapperClassName="aspect-[4/5] w-full"
+              className={`object-cover transition-all duration-500 ${
                 active ? 'scale-[1.02]' : 'brightness-[0.95] saturate-[0.94]'
               }`}
             />
@@ -598,7 +614,15 @@ function GalleryCard({
         filter: `blur(${blur}px) saturate(${saturate})`,
       }}
     >
-      <img src={slide.imageUrl} alt={slide.title} className="h-full w-full object-cover" />
+      <ProgressiveImage
+        src={slide.imageUrl}
+        alt={slide.title}
+        loading={isActive ? 'eager' : 'lazy'}
+        decoding="async"
+        fetchPriority={isActive ? 'high' : 'low'}
+        wrapperClassName="h-full w-full"
+        className="object-cover"
+      />
       <div
         className={`absolute inset-0 ${
           isActive
@@ -675,8 +699,10 @@ function buildSlides(items: GalleryItemRow[]): GallerySlide[] {
     id: item.id,
     title: item.title?.trim() || item.file_name,
     description: item.description?.trim() || '',
-    imageUrl: item.url,
-    thumbUrl: item.thumbnail_url || item.url,
+    imageUrl: getOptimizedMediaUrl(item.url, { width: 1200, quality: 72 }) ?? item.url,
+    thumbUrl:
+      getOptimizedMediaUrl(item.thumbnail_url || item.url, { width: 384, quality: 72 }) ??
+      (item.thumbnail_url || item.url),
   }))
 }
 

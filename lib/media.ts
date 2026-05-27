@@ -6,6 +6,13 @@ export function isLocalMediaUrl(url?: string | null) {
   return Boolean(url && url.startsWith('/'))
 }
 
+const NEXT_IMAGE_WIDTHS = [16, 32, 48, 64, 96, 128, 256, 384, 640, 750, 828, 1080, 1200, 1920, 2048, 3840]
+
+function normalizeNextImageWidth(width: number) {
+  const supportedWidth = NEXT_IMAGE_WIDTHS.find((candidate) => candidate >= width)
+  return supportedWidth ?? NEXT_IMAGE_WIDTHS[NEXT_IMAGE_WIDTHS.length - 1]
+}
+
 export function getOptimizedMediaUrl(
   url?: string | null,
   options?: { width?: number; quality?: number }
@@ -13,7 +20,7 @@ export function getOptimizedMediaUrl(
   if (!url) return null
   if (!isLocalMediaUrl(url)) return url
 
-  const width = options?.width ?? 1200
+  const width = normalizeNextImageWidth(options?.width ?? 1200)
   const quality = options?.quality ?? 75
   const params = new URLSearchParams({
     url,

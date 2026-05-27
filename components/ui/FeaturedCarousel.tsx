@@ -3,7 +3,8 @@
 import { useState } from 'react'
 import Link from 'next/link'
 import { RiArrowLeftSLine, RiArrowRightSLine } from '@remixicon/react'
-import { pickDeterministicMediaUrl, resolveMediaUrl } from '@/lib/media'
+import { ProgressiveImage } from '@/components/ui/ProgressiveImage'
+import { getOptimizedMediaUrl, pickDeterministicMediaUrl, resolveMediaUrl } from '@/lib/media'
 import type { PostRow } from '@/types/post'
 
 type CarouselPost = Pick<PostRow, 'id' | 'slug' | 'title' | 'cover_url' | 'published_at' | 'category'>
@@ -27,11 +28,12 @@ export function FeaturedCarousel({
   return (
     <div>
       <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
-        {visible.map((post) => {
+        {visible.map((post, index) => {
           const coverUrl = resolveMediaUrl(
             post.cover_url,
             pickDeterministicMediaUrl(fallbackCoverPool, post.slug || post.id, fallbackCoverUrl)
           )
+          const optimizedCoverUrl = getOptimizedMediaUrl(coverUrl, { width: 828, quality: 72 }) ?? coverUrl
 
           return (
             <Link
@@ -39,11 +41,15 @@ export function FeaturedCarousel({
               href={`/posts/${post.slug}`}
               className="group relative block aspect-[3/2] overflow-hidden rounded-xl border border-border/80 bg-card/92 transition-colors duration-300 hover:border-border/90"
             >
-              {coverUrl ? (
-                <img
-                  src={coverUrl}
+              {optimizedCoverUrl ? (
+                <ProgressiveImage
+                  src={optimizedCoverUrl}
                   alt={post.title}
-                  className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
+                  loading={page === 0 && index === 0 ? 'eager' : 'lazy'}
+                  decoding="async"
+                  fetchPriority={page === 0 && index === 0 ? 'high' : 'low'}
+                  wrapperClassName="h-full w-full"
+                  className="object-cover transition-transform duration-500 group-hover:scale-105"
                 />
               ) : (
                 <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-primary/20 via-muted to-card">

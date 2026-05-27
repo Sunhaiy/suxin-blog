@@ -121,6 +121,43 @@ export async function findMoments(params: {
   return findMomentsUncached(params)
 }
 
+const findRecentPublicMomentsCached = unstable_cache(
+  async (pageSize: number): Promise<MomentRow[]> => {
+    const result = await query<MomentRow>(
+      `SELECT
+         m.*,
+         COALESCE(l.like_count, 0)::int AS like_count,
+         COALESCE(c.comment_count, 0)::int AS comment_count
+       FROM moments m
+       LEFT JOIN (
+         SELECT moment_id, COUNT(*) AS like_count
+         FROM moment_likes
+         GROUP BY moment_id
+       ) l ON l.moment_id = m.id
+       LEFT JOIN (
+         SELECT moment_id, COUNT(*) AS comment_count
+         FROM moment_comments
+         GROUP BY moment_id
+       ) c ON c.moment_id = m.id
+       WHERE m.is_public = TRUE
+       ORDER BY m.created_at DESC
+       LIMIT $1`,
+      [pageSize]
+    )
+
+    return result.rows
+  },
+  ['moments-public-preview'],
+  {
+    revalidate: 180,
+    tags: [MOMENTS_TAG],
+  }
+)
+
+export async function findRecentPublicMoments(pageSize: number = 10): Promise<MomentRow[]> {
+  return findRecentPublicMomentsCached(pageSize)
+}
+
 export async function findMomentById(id: number): Promise<MomentRow | null> {
   const result = await query<MomentRow>(
     `SELECT

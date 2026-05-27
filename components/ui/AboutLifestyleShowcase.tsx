@@ -2,6 +2,8 @@
 
 import { useEffect, useMemo, useState } from 'react'
 import { MaterialSymbol } from '@/components/ui/MaterialSymbol'
+import { ProgressiveImage } from '@/components/ui/ProgressiveImage'
+import { getOptimizedMediaUrl } from '@/lib/media'
 import type { AboutLifestyleItem } from '@/types/site'
 
 export function AboutLifestyleShowcase({ items }: { items: AboutLifestyleItem[] }) {
@@ -25,6 +27,7 @@ export function AboutLifestyleShowcase({ items }: { items: AboutLifestyleItem[] 
     activeItem.mediaType === 'video'
       ? activeItem.posterUrl || activeItem.mediaUrl
       : activeItem.mediaUrl
+  const optimizedFallbackImage = getOptimizedMediaUrl(fallbackImage, { width: 1200, quality: 72 }) ?? fallbackImage
 
   return (
     <div className="border border-white/[0.18]" onMouseLeave={() => setPreviewId(null)}>
@@ -70,9 +73,12 @@ export function AboutLifestyleShowcase({ items }: { items: AboutLifestyleItem[] 
                 <source src={activeItem.mediaUrl} type="video/mp4" />
               </video>
             ) : (
-              <img
-                src={fallbackImage}
+              <ProgressiveImage
+                src={optimizedFallbackImage}
                 alt={activeItem.label}
+                loading="lazy"
+                decoding="async"
+                wrapperClassName="absolute inset-0 h-full w-full"
                 className="absolute inset-0 h-full w-full object-cover grayscale"
               />
             )}

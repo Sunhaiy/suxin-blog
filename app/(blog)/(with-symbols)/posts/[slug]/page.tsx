@@ -6,6 +6,7 @@ import {
   RiTimeLine,
 } from '@remixicon/react'
 import { auth } from '@/auth'
+import { ProgressiveImage } from '@/components/ui/ProgressiveImage'
 import { TOC } from '@/components/ui/TOC'
 import { getOptimizedMediaUrl, pickDeterministicMediaUrl, resolveMediaUrl } from '@/lib/media'
 import {
@@ -21,8 +22,13 @@ import { PostContent } from './PostContent'
 export const revalidate = 3600
 
 export async function generateStaticParams() {
-  const result = await findPosts({ status: 'published', pageSize: 100 })
-  return result.data.map((post) => ({ slug: post.slug }))
+  try {
+    const result = await findPosts({ status: 'published', pageSize: 100 })
+    return result.data.map((post) => ({ slug: post.slug }))
+  } catch (error) {
+    console.warn('[posts/[slug]] Skipping static params generation during build:', error)
+    return []
+  }
 }
 
 export async function generateMetadata({
@@ -108,11 +114,12 @@ export default async function PostPage({
     <>
       <section className="relative overflow-hidden" style={{ minHeight: '420px' }}>
         {optimizedCoverUrl ? (
-          <img
+          <ProgressiveImage
             src={optimizedCoverUrl}
             alt={post.cover_alt || post.title}
             decoding="async"
             fetchPriority="high"
+            wrapperClassName="absolute inset-0 h-full w-full"
             className="absolute inset-0 h-full w-full object-cover brightness-[0.62] saturate-[0.94]"
           />
         ) : (
@@ -195,13 +202,14 @@ export default async function PostPage({
             <div className="flex items-center gap-5 rounded-2xl border border-border bg-card p-6">
                 <div className="flex h-14 w-14 shrink-0 items-center justify-center overflow-hidden rounded-full border border-primary/25 bg-gradient-to-br from-primary/30 to-primary/8">
                 {optimizedAvatarUrl ? (
-                  <img
+                  <ProgressiveImage
                     src={optimizedAvatarUrl}
                     alt={siteProfile.ownerName}
                     width={56}
                     height={56}
                     loading="lazy"
                     decoding="async"
+                    wrapperClassName="h-full w-full rounded-full"
                     className="h-full w-full object-cover"
                   />
                 ) : (

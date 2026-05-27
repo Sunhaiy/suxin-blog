@@ -13,7 +13,7 @@
  *   - sitemap 自动刷新
  *
  * 注意：在 Next.js API Routes 中，该模块需在
- * next.config.ts 的 serverComponentsExternalPackages 中排除。
+ * next.config.mjs 的 serverExternalPackages 中排除。
  * 建议通过独立的 Node.js 入口（如 scripts/start-cron.ts）启动，
  * 与 Next.js 进程并行运行。
  */

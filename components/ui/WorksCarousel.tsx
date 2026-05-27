@@ -4,7 +4,9 @@ import JsBarcode from 'jsbarcode'
 import Link from 'next/link'
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { MaterialSymbol } from '@/components/ui/MaterialSymbol'
+import { ProgressiveImage } from '@/components/ui/ProgressiveImage'
 import { useGsapScope } from '@/hooks/useGsapScope'
+import { getOptimizedMediaUrl, resolveMediaUrl } from '@/lib/media'
 import type { WorkListItem } from '@/types/work'
 
 interface Props {
@@ -31,6 +33,14 @@ export function WorksCarousel({ works, siteUrl }: Props) {
   const initialRenderRef = useRef(true)
   const gestureLockRef = useRef(0)
   const activeWork = works[active]
+  const activeWorkCoverUrl = useMemo(
+    () => resolveMediaUrl(activeWork.cover_url, activeWork.hero_image_url),
+    [activeWork.cover_url, activeWork.hero_image_url]
+  )
+  const optimizedActiveWorkCoverUrl = useMemo(
+    () => getOptimizedMediaUrl(activeWorkCoverUrl, { width: 828, quality: 72 }) ?? activeWorkCoverUrl,
+    [activeWorkCoverUrl]
+  )
   const ticketDate = useMemo(() => formatTicketDate(activeWork), [activeWork])
   const ticketTime = useMemo(() => formatTicketTime(activeWork), [activeWork])
   const ticketSummary = activeWork.subtitle || activeWork.summary || activeWork.description || ''
@@ -393,11 +403,15 @@ export function WorksCarousel({ works, siteUrl }: Props) {
                     data-ticket-line
                   >
                     <div className="aspect-[1.43/1]">
-                      {activeWork.cover_url ? (
-                        <img
-                          src={activeWork.cover_url}
+                      {optimizedActiveWorkCoverUrl ? (
+                        <ProgressiveImage
+                          src={optimizedActiveWorkCoverUrl}
                           alt={activeWork.title}
-                          className="h-full w-full object-cover transition-transform duration-700 group-hover/ticket:scale-[1.025]"
+                          loading="eager"
+                          decoding="async"
+                          fetchPriority="high"
+                          wrapperClassName="h-full w-full"
+                          className="object-cover transition-transform duration-700 group-hover/ticket:scale-[1.025]"
                         />
                       ) : (
                         <div className="flex h-full w-full items-center justify-center bg-[radial-gradient(circle_at_30%_20%,rgba(146,122,255,0.7),transparent_32%),radial-gradient(circle_at_70%_30%,rgba(35,215,255,0.65),transparent_34%),radial-gradient(circle_at_50%_75%,rgba(255,92,163,0.55),transparent_30%),linear-gradient(135deg,#050505,#2e2e2e)]">

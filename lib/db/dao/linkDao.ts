@@ -1,4 +1,4 @@
-import { revalidateTag, unstable_cache } from 'next/cache'
+import { revalidatePath, revalidateTag, unstable_cache } from 'next/cache'
 import { query } from '@/lib/db'
 import type { CreateLinkInput, LinkRow, UpdateLinkInput } from '@/types/link'
 
@@ -61,6 +61,7 @@ export async function insertLink(input: CreateLinkInput): Promise<LinkRow> {
   )
 
   revalidateTag(LINKS_TAG)
+  revalidatePath('/links')
   resetLinksSnapshot()
   return result.rows[0]
 }
@@ -95,6 +96,7 @@ export async function updateLink(id: number, input: UpdateLinkInput): Promise<Li
   )
 
   revalidateTag(LINKS_TAG)
+  revalidatePath('/links')
   resetLinksSnapshot()
   return result.rows[0] ?? null
 }
@@ -102,6 +104,7 @@ export async function updateLink(id: number, input: UpdateLinkInput): Promise<Li
 export async function deleteLink(id: number): Promise<boolean> {
   const result = await query('DELETE FROM links WHERE id = $1', [id])
   revalidateTag(LINKS_TAG)
+  revalidatePath('/links')
   resetLinksSnapshot()
   return (result.rowCount ?? 0) > 0
 }

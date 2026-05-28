@@ -15,7 +15,7 @@ export const metadata: Metadata = {
   },
 }
 
-export const revalidate = 3600
+export const dynamic = 'force-dynamic'
 
 const DEFAULT_CATEGORY_CONFIG: Record<string, { label: string; icon: string; description: string }> = {
   friend: {

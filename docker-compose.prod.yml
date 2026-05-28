@@ -41,13 +41,13 @@ services:
       PGDATABASE: ${POSTGRES_DB}
       PGUSER: ${POSTGRES_USER}
       PGPASSWORD: ${POSTGRES_PASSWORD}
-      UPLOAD_DIR: /app/public/uploads
+      UPLOAD_DIR: /app/data/uploads
       UPLOAD_PUBLIC_PATH: /uploads
     depends_on:
       db:
         condition: service_healthy
     volumes:
-      - ./data/uploads:/app/public/uploads
+      - ./data/uploads:/app/data/uploads
       - ./deploy-assets:/app/deploy-assets:ro
 
   caddy:

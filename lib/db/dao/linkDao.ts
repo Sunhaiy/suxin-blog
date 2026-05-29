@@ -1,5 +1,6 @@
 import { revalidatePath, revalidateTag, unstable_cache } from 'next/cache'
 import { query } from '@/lib/db'
+import { ensureLocalAvatar } from '@/lib/links/localizeAvatar'
 import type { CreateLinkInput, LinkRow, UpdateLinkInput } from '@/types/link'
 
 const LINKS_TAG = 'links'
@@ -45,6 +46,7 @@ export async function findLinkById(id: number): Promise<LinkRow | null> {
 }
 
 export async function insertLink(input: CreateLinkInput): Promise<LinkRow> {
+  const avatarUrl = await ensureLocalAvatar(input.avatarUrl ?? null)
   const result = await query<LinkRow>(
     `INSERT INTO links (name, url, description, avatar_url, category, sort_order, is_active)
      VALUES ($1,$2,$3,$4,$5,$6,$7)
@@ -53,7 +55,7 @@ export async function insertLink(input: CreateLinkInput): Promise<LinkRow> {
       input.name,
       input.url,
       input.description ?? null,
-      input.avatarUrl ?? null,
+      avatarUrl,
       input.category ?? 'friend',
       input.sortOrder ?? 0,
       input.isActive ?? true,
@@ -67,6 +69,10 @@ export async function insertLink(input: CreateLinkInput): Promise<LinkRow> {
 }
 
 export async function updateLink(id: number, input: UpdateLinkInput): Promise<LinkRow | null> {
+  // 编辑时若传入了外链头像，同样下载存到本地
+  if (typeof input.avatarUrl === 'string' && input.avatarUrl.trim()) {
+    input = { ...input, avatarUrl: (await ensureLocalAvatar(input.avatarUrl)) ?? input.avatarUrl }
+  }
   const map: [keyof UpdateLinkInput, string][] = [
     ['name', 'name'],
     ['url', 'url'],

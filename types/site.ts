@@ -62,6 +62,7 @@ export interface SiteProfile {
   aboutHeroNameEn: string
   aboutHeroRoleLine: string
   aboutHeroBio: string
+  aboutHeroPortraitUrl: string | null
   aboutNameplateLogoTop: string
   aboutNameplateLogoBottom: string
   aboutNameplateTitle: string

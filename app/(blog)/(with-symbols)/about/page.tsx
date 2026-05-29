@@ -1,5 +1,6 @@
 import type { Metadata } from 'next'
 import type React from 'react'
+import { preload } from 'react-dom'
 import Link from 'next/link'
 import { AboutLifestyleShowcase } from '@/components/ui/AboutLifestyleShowcase'
 import { AboutMotion } from '@/components/ui/AboutMotion'
@@ -117,6 +118,51 @@ function buildProjectCards(works: WorkListItem[], selectedIds: number[]): AboutP
   return [...workCards, ...FALLBACK_PROJECTS].slice(0, 4)
 }
 
+function HeroPortrait({
+  src,
+  name,
+  nameEn,
+  className = '',
+}: {
+  src: string
+  name: string
+  nameEn: string
+  className?: string
+}) {
+  return (
+    <div
+      className={`group relative aspect-square overflow-hidden border border-white/[0.18] bg-white/[0.04] ${className}`.trim()}
+    >
+      <ProgressiveImage
+        src={src}
+        alt={name}
+        loading="eager"
+        decoding="async"
+        wrapperClassName="h-full w-full"
+        className="h-full w-full object-cover grayscale transition duration-700 group-hover:scale-[1.02] group-hover:grayscale-0"
+      />
+      <div
+        aria-hidden
+        className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent"
+      />
+      <div
+        aria-hidden
+        className="pointer-events-none absolute inset-0 opacity-[0.12]"
+        style={{
+          backgroundImage:
+            'linear-gradient(rgba(255,255,255,0.5) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.5) 1px, transparent 1px)',
+          backgroundSize: '32px 32px',
+        }}
+      />
+      {nameEn ? (
+        <span className="absolute bottom-3 left-3 font-mono text-[11px] uppercase tracking-[0.28em] text-white/72">
+          {nameEn}
+        </span>
+      ) : null}
+    </div>
+  )
+}
+
 function StudioNameplate({ siteProfile }: { siteProfile: SiteProfile }) {
   return (
     <section className="about-reveal mt-9 border-y border-white/[0.14] py-8 sm:py-10">
@@ -200,6 +246,14 @@ function StudioNameplate({ siteProfile }: { siteProfile: SiteProfile }) {
 export default async function AboutPage() {
   const [siteProfile, works] = await Promise.all([getSiteProfile(), findWorks()])
   const projects = buildProjectCards(works, siteProfile.aboutFeaturedWorkIds)
+  const heroPortraitUrl = siteProfile.aboutHeroPortraitUrl
+    ? getOptimizedMediaUrl(siteProfile.aboutHeroPortraitUrl, { width: 760, quality: 82 }) ??
+      siteProfile.aboutHeroPortraitUrl
+    : null
+  // 关于页自拍照（首屏 hero）尽早高优先级加载
+  if (heroPortraitUrl) {
+    preload(heroPortraitUrl, { as: 'image', fetchPriority: 'high' })
+  }
 
   return (
     <div className="about-portfolio relative isolate -mt-16 min-h-screen overflow-hidden bg-[#030303] pt-16 text-white selection:bg-white selection:text-black">
@@ -224,12 +278,22 @@ export default async function AboutPage() {
 
       <main className="mx-auto max-w-[1160px] px-6 py-12 sm:px-8 sm:py-16 lg:px-10">
         <section className="about-hero about-reveal relative min-h-[430px] border-b border-white/[0.16] pb-12 sm:pb-16">
-          <div className="absolute right-0 top-0 hidden text-right sm:block">
+          <div className="absolute right-0 top-0 z-10 hidden text-right sm:block">
             <p className="font-mono text-2xl font-black leading-none tracking-[0.08em] text-white">
               ###
             </p>
             <p className="mt-1 text-sm text-white/58">作品集</p>
           </div>
+
+          {heroPortraitUrl ? (
+            <div className="about-reveal absolute right-0 top-16 hidden w-[clamp(240px,28vw,360px)] lg:block">
+              <HeroPortrait
+                src={heroPortraitUrl}
+                name={siteProfile.aboutHeroName}
+                nameEn={siteProfile.aboutHeroNameEn}
+              />
+            </div>
+          ) : null}
 
           <Link
             href="/works"
@@ -252,6 +316,15 @@ export default async function AboutPage() {
             <p className="about-hero-copy mt-8 max-w-[520px] text-base leading-8 text-white/72">
               {siteProfile.aboutHeroBio}
             </p>
+
+            {heroPortraitUrl ? (
+              <HeroPortrait
+                src={heroPortraitUrl}
+                name={siteProfile.aboutHeroName}
+                nameEn={siteProfile.aboutHeroNameEn}
+                className="mt-10 w-full max-w-[280px] lg:hidden"
+              />
+            ) : null}
           </div>
         </section>
 

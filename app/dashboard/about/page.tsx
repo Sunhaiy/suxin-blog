@@ -121,6 +121,7 @@ export default function DashboardAboutPage() {
   const [saving, setSaving] = useState(false)
   const [uploadingVideoIndex, setUploadingVideoIndex] = useState<number | null>(null)
   const [uploadingPosterIndex, setUploadingPosterIndex] = useState<number | null>(null)
+  const [uploadingPortrait, setUploadingPortrait] = useState(false)
   const [error, setError] = useState('')
   const [success, setSuccess] = useState('')
 
@@ -225,6 +226,22 @@ export default function DashboardAboutPage() {
     }
   }
 
+  async function handlePortraitUpload(file: File | null) {
+    if (!file) return
+    setUploadingPortrait(true)
+    resetNotice()
+
+    try {
+      const result = await uploadImage(file)
+      updateProfile('aboutHeroPortraitUrl', result.url)
+      setSuccess('自拍照已上传，记得保存配置后前台才会生效。')
+    } catch (err) {
+      setError(err instanceof Error ? err.message : '上传自拍照失败')
+    } finally {
+      setUploadingPortrait(false)
+    }
+  }
+
   async function handleSave() {
     if (!profileForm) return
     setSaving(true)
@@ -317,6 +334,72 @@ export default function DashboardAboutPage() {
                     onChange={(event) => updateProfile('aboutHeroBio', event.target.value)}
                     placeholder="写一段关于自己的介绍"
                   />
+                </AdminField>
+                <AdminField
+                  label="首屏自拍照"
+                  fullWidth
+                  hint="展示在关于页首屏右侧（移动端在简介下方）。建议竖向或方形人像，JPG / PNG。"
+                >
+                  <div className="grid gap-3 md:grid-cols-[120px_1fr]">
+                    <div className="relative aspect-square w-[120px] overflow-hidden rounded-2xl border border-border/70 bg-background/55">
+                      {profileForm.aboutHeroPortraitUrl ? (
+                        // eslint-disable-next-line @next/next/no-img-element
+                        <img
+                          src={profileForm.aboutHeroPortraitUrl}
+                          alt="自拍照预览"
+                          className="h-full w-full object-cover"
+                        />
+                      ) : (
+                        <div className="flex h-full w-full items-center justify-center text-muted-foreground">
+                          <MaterialSymbol icon="account_circle" size={40} />
+                        </div>
+                      )}
+                    </div>
+                    <div className="flex flex-col gap-2">
+                      <input
+                        className={ADMIN_INPUT_CLASS}
+                        value={profileForm.aboutHeroPortraitUrl ?? ''}
+                        onChange={(event) =>
+                          updateProfile('aboutHeroPortraitUrl', event.target.value || null)
+                        }
+                        placeholder="/uploads/example.jpg"
+                      />
+                      <div className="flex flex-wrap items-center gap-2">
+                        <Button
+                          type="button"
+                          size="sm"
+                          variant="secondary"
+                          loading={uploadingPortrait}
+                          onClick={() =>
+                            document.getElementById('about-portrait-upload')?.click()
+                          }
+                        >
+                          <MaterialSymbol icon="image_arrow_up" size={16} />
+                          上传自拍照
+                        </Button>
+                        {profileForm.aboutHeroPortraitUrl ? (
+                          <Button
+                            type="button"
+                            size="sm"
+                            variant="ghost"
+                            onClick={() => updateProfile('aboutHeroPortraitUrl', null)}
+                          >
+                            移除
+                          </Button>
+                        ) : null}
+                      </div>
+                      <input
+                        id="about-portrait-upload"
+                        type="file"
+                        accept="image/*"
+                        className="hidden"
+                        onChange={(event) => {
+                          void handlePortraitUpload(event.target.files?.[0] ?? null)
+                          event.target.value = ''
+                        }}
+                      />
+                    </div>
+                  </div>
                 </AdminField>
               </div>
             </AdminSection>

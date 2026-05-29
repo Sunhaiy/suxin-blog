@@ -152,6 +152,13 @@ export const siteProfileSchema = z.object({
   aboutHeroNameEn: z.string().trim().max(120).default(''),
   aboutHeroRoleLine: z.string().trim().max(160).default(''),
   aboutHeroBio: z.string().trim().max(620).default(''),
+  aboutHeroPortraitUrl: z
+    .string()
+    .trim()
+    .max(260)
+    .refine((value) => !value || isUploadOrAbsoluteUrl(value), 'Invalid about portrait URL')
+    .nullable()
+    .optional(),
   aboutNameplateLogoTop: z.string().trim().max(10).default(''),
   aboutNameplateLogoBottom: z.string().trim().max(10).default(''),
   aboutNameplateTitle: z.string().trim().max(140).default(''),

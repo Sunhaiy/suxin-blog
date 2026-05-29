@@ -12,11 +12,20 @@ const nextConfig = {
   outputFileTracingRoot: path.join(__dirname),
   images: {
     unoptimized: false,
+    // 只用 WebP：本机 CPU 较弱，AVIF 冷转码要 4~9s 严重拖慢首屏；WebP 约 1s 且体积相近
+    formats: ['image/webp'],
+    // 优化后的图片缓存一年，减少重复转码
+    minimumCacheTTL: 31536000,
   },
   // Next.js 15: serverComponentsExternalPackages 已提升为顶层配置
   serverExternalPackages: ['pg', 'sharp', 'exifr'],
   async headers() {
     return [
+      {
+        // 切片字体长缓存（public 目录默认不长缓存）
+        source: '/fonts/:path*',
+        headers: [{ key: 'Cache-Control', value: 'public, max-age=31536000, immutable' }],
+      },
       {
         source: '/:path*',
         headers: [

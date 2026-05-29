@@ -9,6 +9,7 @@ import { PostCard } from '@/components/ui/PostCard'
 import { getActivityHeatmap } from '@/lib/db/dao/activityDao'
 import { findRecentPublicMoments } from '@/lib/db/dao/momentDao'
 import { getHomepagePostSnapshot } from '@/lib/db/dao/postDao'
+import { preload } from 'react-dom'
 import { getOptimizedMediaUrl } from '@/lib/media'
 import { getBackgroundSceneSettings } from '@/lib/scene'
 import { getSiteProfile } from '@/lib/site'
@@ -92,7 +93,15 @@ export default async function HomePage() {
   const yearProgress = getYearProgress(2026)
   const sidebarGreeting = pickSidebarGreeting(siteProfile.homeGreetingPool)
   const heroSceneUrl = getOptimizedMediaUrl(scene.image.url, { width: 1920, quality: 68 }) ?? scene.image.url
+  // 让浏览器尽早高优先级下载首屏背景大图（LCP 元素），不改变任何视觉表现
+  if (hasSceneImage && heroSceneUrl) {
+    preload(heroSceneUrl, { as: 'image', fetchPriority: 'high' })
+  }
   const heroAvatarUrl = getOptimizedMediaUrl(siteProfile.avatarUrl, { width: 256, quality: 80 })
+  // 首屏头像（移动端常为 LCP 元素）尽早高优先级加载
+  if (heroAvatarUrl) {
+    preload(heroAvatarUrl, { as: 'image', fetchPriority: 'high' })
+  }
   const sidebarAvatarUrl = getOptimizedMediaUrl(siteProfile.avatarUrl, { width: 256, quality: 76 })
 
   return (

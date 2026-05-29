@@ -1,4 +1,5 @@
 import type { Metadata } from 'next'
+import { preload } from 'react-dom'
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import {
@@ -104,6 +105,10 @@ export default async function PostPage({
     pickDeterministicMediaUrl(siteProfile.postCoverPoolUrls, post.slug || post.id, siteProfile.defaultPostCoverUrl)
   )
   const optimizedCoverUrl = getOptimizedMediaUrl(coverUrl, { width: 1920, quality: 72 })
+  // 文章头图（hero / LCP）尽早高优先级加载
+  if (optimizedCoverUrl) {
+    preload(optimizedCoverUrl, { as: 'image', fetchPriority: 'high' })
+  }
   const optimizedAvatarUrl = getOptimizedMediaUrl(siteProfile.avatarUrl, { width: 256, quality: 76 })
   const canonicalUrl = `${(siteProfile.siteUrl || 'https://haiy.space').replace(/\/$/, '')}/posts/${post.slug}`
   const licenseName = 'CC BY-NC-SA 4.0'

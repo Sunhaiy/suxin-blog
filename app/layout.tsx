@@ -3,10 +3,8 @@ import Script from 'next/script'
 import { ThemeProvider } from 'next-themes'
 import '@fontsource-variable/inter'
 import '@fontsource-variable/roboto-mono'
-import '@fontsource/noto-sans-sc/chinese-simplified-400.css'
-import '@fontsource/noto-sans-sc/chinese-simplified-500.css'
-import '@fontsource/noto-sans-sc/chinese-simplified-600.css'
-import '@fontsource/noto-sans-sc/chinese-simplified-700.css'
+// Noto Sans SC：同款字体，按 unicode-range 分片，浏览器按需加载（替代原 4×1.1MB 整包）
+import './noto-sans-sc-sliced.css'
 import { DEFAULT_SITE_PROFILE, getSiteProfile } from '@/lib/site'
 import './globals.css'
 

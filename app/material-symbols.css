@@ -1,10 +1,11 @@
-/* Material Symbols Rounded — 仅 wght 轴(927KB)，替代默认的 5.2MB 全量字体。
-   FILL/GRAD/opsz 全站未做变化，故只保留 wght 轴即可，所有图标完整保留。
+/* Material Symbols Rounded — 子集版（仅站点用到的 102 个图标，44KB，替代默认 5.2MB 全量）。
+   保留 wght 轴与 ligature，图标用法(组件渲染 ligature 文本)完全不变。
+   重新生成： python scripts/subset-icons.py （图标取自 scripts/_used-icons.txt）。
    font-display: block —— 字体未到时不显示 ligature 文字(如 "arrow_outward")，到了直接出现。 */
 @font-face {
   font-family: 'Material Symbols Rounded Variable';
   font-style: normal;
-  font-weight: 100 900;
+  font-weight: 100 700;
   font-display: block;
-  src: url('/fonts/material-symbols/msr-wght.woff2') format('woff2-variations');
+  src: url('/fonts/material-symbols/msr-subset.woff2') format('woff2-variations');
 }

@@ -5,6 +5,8 @@ import '@fontsource-variable/inter'
 import '@fontsource-variable/roboto-mono'
 // Noto Sans SC：同款字体，按 unicode-range 分片，浏览器按需加载（替代原 4×1.1MB 整包）
 import './noto-sans-sc-sliced.css'
+// Material Symbols 图标字体：仅 wght 轴 927KB（替代默认 5.2MB 全量），全图标保留
+import './material-symbols.css'
 import { DEFAULT_SITE_PROFILE, getSiteProfile } from '@/lib/site'
 import './globals.css'
 

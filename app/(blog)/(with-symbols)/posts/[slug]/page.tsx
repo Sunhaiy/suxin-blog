@@ -104,7 +104,7 @@ export default async function PostPage({
     post.cover_url,
     pickDeterministicMediaUrl(siteProfile.postCoverPoolUrls, post.slug || post.id, siteProfile.defaultPostCoverUrl)
   )
-  const optimizedCoverUrl = getOptimizedMediaUrl(coverUrl, { width: 1920, quality: 72 })
+  const optimizedCoverUrl = getOptimizedMediaUrl(coverUrl, { width: 1200, quality: 70 })
   // 文章头图（hero / LCP）尽早高优先级加载
   if (optimizedCoverUrl) {
     preload(optimizedCoverUrl, { as: 'image', fetchPriority: 'high' })

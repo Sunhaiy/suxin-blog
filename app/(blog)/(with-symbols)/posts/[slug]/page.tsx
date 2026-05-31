@@ -119,14 +119,16 @@ export default async function PostPage({
     <>
       <section className="relative overflow-hidden" style={{ minHeight: '420px' }}>
         {optimizedCoverUrl ? (
-          <ProgressiveImage
-            src={optimizedCoverUrl}
-            alt={post.cover_alt || post.title}
-            decoding="async"
-            fetchPriority="high"
-            wrapperClassName="absolute inset-0 h-full w-full"
-            className="absolute inset-0 h-full w-full object-cover brightness-[0.62] saturate-[0.94]"
-          />
+          <div className="absolute inset-0">
+            <ProgressiveImage
+              src={optimizedCoverUrl}
+              alt={post.cover_alt || post.title}
+              decoding="async"
+              fetchPriority="high"
+              wrapperClassName="h-full w-full"
+              className="h-full w-full object-cover brightness-[0.62] saturate-[0.94]"
+            />
+          </div>
         ) : (
           <>
             <div

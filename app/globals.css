@@ -1818,10 +1818,14 @@
 }
 
 .image-reveal {
-  position: relative;
   overflow: hidden;
   background: color-mix(in srgb, hsl(var(--muted)) 82%, hsl(var(--card)) 18%);
   isolation: isolate;
+}
+/* position 用 :where() 降到 0 优先级，让 wrapperClassName 的定位类(如 absolute)能覆盖；
+   默认仍为 relative。修复文章 hero 等依赖 absolute inset-0 铺满无固定高父容器的场景。 */
+:where(.image-reveal) {
+  position: relative;
 }
 
 .image-reveal-skeleton {

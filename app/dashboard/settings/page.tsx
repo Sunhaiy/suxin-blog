@@ -5,14 +5,18 @@ import useSWR from 'swr'
 import {
   AdminField,
   AdminNotice,
-  AdminPageHeader,
-  AdminPanel,
   AdminSection,
   AdminStatusBadge,
   ADMIN_INPUT_CLASS,
   ADMIN_MUTED_PANEL_CLASS,
   ADMIN_TEXTAREA_CLASS,
 } from '@/components/admin/AdminPrimitives'
+import {
+  SettingsShell,
+  SettingsBlock,
+  SettingsSaveBar,
+  type SettingsSection,
+} from '@/components/admin/SettingsShell'
 import { MediaLibraryPicker } from '@/components/admin/MediaLibraryPicker'
 import { SceneFilterLayer } from '@/components/scene/SceneFilterLayer'
 import { Button } from '@/components/ui/Button'
@@ -397,19 +401,6 @@ export default function SettingsPage() {
     }
   }
 
-  async function handleSaveProfile() {
-    setSavingProfile(true)
-    resetNotice()
-
-    try {
-      await persistProfile(true)
-    } catch (err) {
-      setError(err instanceof Error ? err.message : '保存站点资料失败')
-    } finally {
-      setSavingProfile(false)
-    }
-  }
-
   async function handleSaveAll() {
     setSavingScene(true)
     setSavingProfile(true)
@@ -593,21 +584,32 @@ export default function SettingsPage() {
 
   const previewHasImage = Boolean(sceneForm.image.url)
 
+  const SETTINGS_SECTIONS: SettingsSection[] = [
+    { id: 'sec-basic', label: '站点基础资料', icon: 'badge' },
+    { id: 'sec-media', label: '头像与封面', icon: 'imagesmode' },
+    { id: 'sec-hero', label: '首页 Hero 场景', icon: 'wallpaper' },
+    { id: 'sec-cards', label: '首页卡片', icon: 'dashboard' },
+    { id: 'sec-coverpool', label: '随机封面池', icon: 'photo_library' },
+  ]
+
   return (
-    <div className="space-y-6">
-      <AdminPageHeader
-        eyebrow="Site Console"
-        title="全局设置"
-        description="统一维护站点资料、媒体资源、首页 Hero、默认文章封面和首页卡片内容。这里的修改会直接影响前台展示。"
-        meta={
-          <>
-            <AdminStatusBadge tone="accent">媒体资源</AdminStatusBadge>
-            <AdminStatusBadge tone="neutral">默认封面</AdminStatusBadge>
-            <AdminStatusBadge tone="neutral">首页场景</AdminStatusBadge>
-          </>
-        }
-        actions={
-          <>
+    <div className="space-y-5">
+      <div className="flex flex-wrap items-end justify-between gap-3">
+        <div>
+          <p className="text-[11px] font-mono uppercase tracking-[0.28em] text-muted-foreground">
+            Site Console
+          </p>
+          <h1 className="mt-1 text-2xl font-semibold tracking-[-0.03em] text-foreground">全局设置</h1>
+        </div>
+      </div>
+
+      {error ? <AdminNotice tone="danger">{error}</AdminNotice> : null}
+      {success ? <AdminNotice tone="success">{success}</AdminNotice> : null}
+
+      <SettingsShell
+        sections={SETTINGS_SECTIONS}
+        saveBar={
+          <SettingsSaveBar dirty={savingScene || savingProfile ? false : true}>
             <Button variant="secondary" onClick={handleSaveScene} loading={savingScene || savingProfile}>
               <MaterialSymbol icon="wallpaper" size={18} />
               保存首页 Hero
@@ -616,23 +618,15 @@ export default function SettingsPage() {
               <MaterialSymbol icon="save" size={18} />
               保存全部
             </Button>
-          </>
+          </SettingsSaveBar>
         }
-      />
-
-      {error ? <AdminNotice tone="danger">{error}</AdminNotice> : null}
-      {success ? <AdminNotice tone="success">{success}</AdminNotice> : null}
-
-      <AdminPanel
-        title="品牌与媒体资源"
-        description="把站点身份、头像、默认文章封面和游戏页 Hero 放在同一套媒体工作流里维护，后面会轻松很多。"
-        icon="imagesmode"
       >
-        <div className="space-y-6">
-          <AdminSection
-            title="站点基础资料"
-            description="这些内容会同时影响导航、资料卡、关于页和 Moments 的作者信息。"
-          >
+        <SettingsBlock
+          id="sec-basic"
+          title="站点基础资料"
+          icon="badge"
+          description="影响导航、资料卡、关于页和 Moments 作者信息"
+        >
             <div className="grid gap-4 md:grid-cols-2">
               <AdminField label="站点名称">
                 <input
@@ -748,13 +742,14 @@ export default function SettingsPage() {
                 />
               </AdminField>
             </div>
-          </AdminSection>
+        </SettingsBlock>
 
-          <AdminSection
-            title="头像与默认文章封面"
-            description="站点头像、文章默认封面和游戏页 Hero 背景都在这里统一维护，优先复用媒体库资源。"
-            aside={<AdminStatusBadge tone="accent">Media Linked</AdminStatusBadge>}
-          >
+        <SettingsBlock
+          id="sec-media"
+          title="头像与默认文章封面"
+          icon="imagesmode"
+          description="头像、默认封面、游戏页 Hero，优先复用媒体库"
+        >
             <div className="grid gap-4 xl:grid-cols-3">
               <MediaAssetCard
                 eyebrow="Avatar"
@@ -962,8 +957,6 @@ export default function SettingsPage() {
                 />
               </AdminField>
             </div>
-          </AdminSection>
-        </div>
 
         <input
           ref={avatarFileRef}
@@ -986,29 +979,31 @@ export default function SettingsPage() {
           className="hidden"
           onChange={handleGamesHeroUpload}
         />
-      </AdminPanel>
+        </SettingsBlock>
 
-      <AdminPanel
-        title="首页 Hero 场景"
-        description="首页 Hero 会直接读取这里的背景、滤镜和雾感参数。这里保存后，前台首页会同步刷新。"
-        icon="wallpaper"
-        actions={
-          <>
-            <Button
-              variant="secondary"
-              onClick={() => sceneFileRef.current?.click()}
-              loading={uploadingScene}
-            >
-              <MaterialSymbol icon="image_arrow_up" size={18} />
-              上传背景图
-            </Button>
-            <Button variant="ghost" onClick={handleClearSceneImage} disabled={clearingScene || !sceneForm.image.url}>
-              <MaterialSymbol icon="delete" size={18} />
-              {clearingScene ? '清除中...' : '清除背景图'}
-            </Button>
-          </>
-        }
-      >
+        <SettingsBlock
+          id="sec-hero"
+          title="首页 Hero 场景"
+          icon="wallpaper"
+          description="首页首屏背景、滤镜与雾感，保存后前台同步"
+          actions={
+            <>
+              <Button
+                variant="secondary"
+                size="sm"
+                onClick={() => sceneFileRef.current?.click()}
+                loading={uploadingScene}
+              >
+                <MaterialSymbol icon="image_arrow_up" size={16} />
+                上传背景图
+              </Button>
+              <Button variant="ghost" size="sm" onClick={handleClearSceneImage} disabled={clearingScene || !sceneForm.image.url}>
+                <MaterialSymbol icon="delete" size={16} />
+                {clearingScene ? '清除中...' : '清除背景图'}
+              </Button>
+            </>
+          }
+        >
         <div className="space-y-6">
           <AdminSection
             title="首页 Hero 预览"
@@ -1161,12 +1156,14 @@ export default function SettingsPage() {
           </AdminSection>
 
         </div>
+        </SettingsBlock>
 
-          <AdminSection
-            title="首页卡片配置"
-            description="维护首页侧边栏的一言卡片、问候气泡和资料卡快捷入口。前台会直接从这里读取并随机展示。"
-            aside={<AdminStatusBadge tone="accent">Homepage</AdminStatusBadge>}
-          >
+        <SettingsBlock
+          id="sec-cards"
+          title="首页卡片配置"
+          icon="dashboard"
+          description="一言卡片、问候气泡、资料卡快捷入口"
+        >
             <div className="space-y-5">
               <div className="grid gap-4 xl:grid-cols-2">
                 <AdminField
@@ -1295,17 +1292,19 @@ export default function SettingsPage() {
                 </div>
               </div>
             </div>
-          </AdminSection>
+        </SettingsBlock>
 
-          <AdminSection
-            title="随机文章封面池"
-            description="文章没有单独封面时，会从这里稳定随机抽取一张。后台上传的图片会单独存到 post-cover-pool 文件夹。"
-            aside={
-              <AdminStatusBadge tone="neutral">
-                {profileForm.postCoverPoolUrls.length} 张
-              </AdminStatusBadge>
-            }
-          >
+        <SettingsBlock
+          id="sec-coverpool"
+          title="随机文章封面池"
+          icon="photo_library"
+          description="文章无封面时从这里随机抽取一张"
+          actions={
+            <AdminStatusBadge tone="neutral">
+              {profileForm.postCoverPoolUrls.length} 张
+            </AdminStatusBadge>
+          }
+        >
             <div className="space-y-4">
               <div className="flex flex-wrap gap-2">
                 <Button
@@ -1354,7 +1353,6 @@ export default function SettingsPage() {
                   还没有可用的随机封面。上传几张后，文章在未单独设置封面时就会自动从这里抽取。                </div>
               )}
             </div>
-          </AdminSection>
 
         <input
           ref={postCoverPoolFileRef}
@@ -1371,7 +1369,8 @@ export default function SettingsPage() {
           className="hidden"
           onChange={handleSceneUpload}
         />
-      </AdminPanel>
+        </SettingsBlock>
+      </SettingsShell>
     </div>
   )
 }

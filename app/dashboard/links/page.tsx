@@ -683,7 +683,7 @@ export default function DashboardLinksPage() {
             key={tab.key}
             type="button"
             onClick={() => setActiveTab(tab.key)}
-            className={`flex items-center justify-between rounded-[24px] border px-5 py-4 text-left transition-colors ${
+            className={`flex items-center justify-between rounded-2xl border px-5 py-4 text-left transition-colors ${
               activeTab === tab.key
                 ? 'border-primary/24 bg-primary/10 text-foreground'
                 : 'border-border/70 bg-background/34 text-muted-foreground hover:border-border hover:bg-background/46'
@@ -717,10 +717,10 @@ export default function DashboardLinksPage() {
                   <button
                     type="button"
                     onClick={() => profileAvatarRef.current?.click()}
-                    className="group mt-4 block w-full rounded-[24px] border border-dashed border-border/70 bg-background/36 p-4 text-left transition-colors hover:border-primary/18 hover:bg-background/48"
+                    className="group mt-4 block w-full rounded-2xl border border-dashed border-border/70 bg-background/36 p-4 text-left transition-colors hover:border-primary/18 hover:bg-background/48"
                   >
                     <div className="flex justify-center">
-                      <div className="flex h-24 w-24 items-center justify-center overflow-hidden rounded-[24px] border border-border/70 bg-background/50">
+                      <div className="flex h-24 w-24 items-center justify-center overflow-hidden rounded-2xl border border-border/70 bg-background/50">
                         {profileForm.avatarUrl ? (
                           <img
                             src={profileForm.avatarUrl}
@@ -860,7 +860,7 @@ export default function DashboardLinksPage() {
           className="min-w-0 overflow-hidden"
           bodyClassName="space-y-4"
         >
-          <div className="space-y-4 rounded-[24px] border border-border/70 bg-background/34 p-4">
+          <div className="space-y-4 rounded-2xl border border-border/70 bg-background/34 p-4">
             <div className="flex flex-wrap gap-2">
               <button
                 type="button"
@@ -958,7 +958,7 @@ export default function DashboardLinksPage() {
               {Array.from({ length: 5 }).map((_, index) => (
                 <div
                   key={index}
-                  className="h-24 animate-pulse rounded-[22px] border border-border/70 bg-background/38"
+                  className="h-24 animate-pulse rounded-xl border border-border/70 bg-background/38"
                 />
               ))}
             </div>
@@ -974,7 +974,7 @@ export default function DashboardLinksPage() {
               }
             />
           ) : (
-            <div className="max-h-[68vh] overflow-y-auto rounded-[24px] border border-border/70">
+            <div className="max-h-[68vh] overflow-y-auto rounded-2xl border border-border/70">
               {filteredLinks.map((link) => {
               const active = selectedId === link.id
 
@@ -1075,7 +1075,7 @@ export default function DashboardLinksPage() {
                 <button
                   type="button"
                   onClick={() => fileRef.current?.click()}
-                  className="group mt-4 block w-full rounded-[24px] border border-dashed border-border/70 bg-background/36 p-4 text-left transition-colors hover:border-primary/18 hover:bg-background/48"
+                  className="group mt-4 block w-full rounded-2xl border border-dashed border-border/70 bg-background/36 p-4 text-left transition-colors hover:border-primary/18 hover:bg-background/48"
                 >
                   <div className="flex justify-center">
                     <div className="flex h-24 w-24 items-center justify-center overflow-hidden rounded-[26px] border border-border/70 bg-background/50">
@@ -1213,7 +1213,7 @@ export default function DashboardLinksPage() {
                 <span className="text-[11px] font-mono uppercase tracking-[0.24em] text-muted-foreground">
                   发布状态
                 </span>
-                <label className="flex items-start gap-3 rounded-[22px] border border-border/70 bg-background/38 px-4 py-4">
+                <label className="flex items-start gap-3 rounded-xl border border-border/70 bg-background/38 px-4 py-4">
                   <input
                     type="checkbox"
                     checked={form.isActive}
@@ -1279,7 +1279,7 @@ export default function DashboardLinksPage() {
             description="切换上方状态筛选，可以查看已采纳或已忽略的申请。"
           />
         ) : (
-          <div className="max-h-[70vh] overflow-y-auto rounded-[24px] border border-border/70">
+          <div className="max-h-[70vh] overflow-y-auto rounded-2xl border border-border/70">
             {filteredSubmissions.map((submission) => (
               <div
                 key={submission.id}
@@ -1331,7 +1331,7 @@ export default function DashboardLinksPage() {
                 </div>
 
                 <div className="mt-4 grid gap-4 md:grid-cols-2">
-                  <div className="space-y-2 rounded-[20px] border border-border/70 bg-background/40 p-4 text-sm text-muted-foreground">
+                  <div className="space-y-2 rounded-xl border border-border/70 bg-background/40 p-4 text-sm text-muted-foreground">
                     <p className="font-mono text-[11px] uppercase tracking-[0.22em] text-muted-foreground/70">
                       Submission
                     </p>

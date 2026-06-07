@@ -5,14 +5,17 @@ import useSWR from 'swr'
 import {
   AdminField,
   AdminNotice,
-  AdminPageHeader,
   AdminPanel,
   AdminSection,
-  AdminStatusBadge,
   ADMIN_INPUT_CLASS,
   ADMIN_MUTED_PANEL_CLASS,
   ADMIN_TEXTAREA_CLASS,
 } from '@/components/admin/AdminPrimitives'
+import {
+  SettingsShell,
+  SettingsSaveBar,
+  type SettingsSection,
+} from '@/components/admin/SettingsShell'
 import { Button } from '@/components/ui/Button'
 import { MaterialSymbol } from '@/components/ui/MaterialSymbol'
 import type { AboutLifestyleItem, AboutStrengthItem, SiteProfile } from '@/types/site'
@@ -262,35 +265,48 @@ export default function DashboardAboutPage() {
   const isLoading = profileRequest.isLoading || !profileForm
   const works = worksRequest.data ?? []
 
+  const aboutDirty = profileRequest.data
+    ? JSON.stringify(profileForm) !== JSON.stringify(profileRequest.data)
+    : false
+
+  const ABOUT_SECTIONS: SettingsSection[] = [
+    { id: 'sec-identity', label: '首屏身份', icon: 'badge' },
+    { id: 'sec-nameplate', label: '名牌横幅', icon: 'workspace_premium' },
+    { id: 'sec-strengths', label: '核心能力', icon: 'view_column' },
+    { id: 'sec-projects', label: '精选项目', icon: 'deployed_code' },
+    { id: 'sec-lifestyle', label: '生活方式', icon: 'interests' },
+    { id: 'sec-closing', label: '收尾与联系', icon: 'alternate_email' },
+  ]
+
   return (
-    <div className="space-y-6">
-      <AdminPageHeader
-        eyebrow="About Studio"
-        title="关于页配置"
-        description="关于页的文案、能力矩阵、精选项目和生活方式都在这里统一维护，不再散落在前台代码里。"
-        meta={
-          <>
-            <AdminStatusBadge tone="accent">独立页面</AdminStatusBadge>
-            <AdminStatusBadge>同步前台 /about</AdminStatusBadge>
-          </>
-        }
-        actions={
-          <Button onClick={handleSave} loading={saving} disabled={isLoading}>
-            <MaterialSymbol icon="save" size={18} />
-            保存配置
-          </Button>
-        }
-      />
+    <div className="space-y-5">
+      <div className="flex flex-wrap items-end justify-between gap-3">
+        <div>
+          <p className="text-[11px] font-mono uppercase tracking-[0.28em] text-muted-foreground">
+            About Studio
+          </p>
+          <h1 className="mt-1 text-2xl font-semibold tracking-[-0.03em] text-foreground">关于页配置</h1>
+        </div>
+      </div>
 
       {error ? <AdminNotice tone="danger">{error}</AdminNotice> : null}
       {success ? <AdminNotice tone="success">{success}</AdminNotice> : null}
 
       {isLoading ? (
-        <AdminPanel>
-          <div className="h-64 animate-pulse rounded-[24px] bg-background/50" />
-        </AdminPanel>
+        <div className="h-64 animate-pulse rounded-2xl border border-border/70 bg-background/50" />
       ) : (
-        <>
+        <SettingsShell
+          sections={ABOUT_SECTIONS}
+          saveBar={
+            <SettingsSaveBar dirty={aboutDirty}>
+              <Button onClick={handleSave} loading={saving} disabled={isLoading}>
+                <MaterialSymbol icon="save" size={18} />
+                保存配置
+              </Button>
+            </SettingsSaveBar>
+          }
+        >
+          <div id="sec-identity" className="scroll-mt-4">
           <AdminPanel
             title="首屏身份"
             description="对应关于页顶部的大标题、英文名、身份行和个人简介。"
@@ -404,7 +420,9 @@ export default function DashboardAboutPage() {
               </div>
             </AdminSection>
           </AdminPanel>
+          </div>
 
+          <div id="sec-nameplate" className="scroll-mt-4">
           <AdminPanel
             title="名牌横幅"
             description="关于页顶部与核心能力之间的高保真名牌，文案和 Logo 均可配置。"
@@ -507,7 +525,9 @@ export default function DashboardAboutPage() {
               </section>
             </div>
           </AdminPanel>
+          </div>
 
+          <div id="sec-strengths" className="scroll-mt-4">
           <AdminPanel
             title="核心能力"
             description="这里直接控制关于页的能力矩阵，图标使用 Material Symbols 名称。"
@@ -574,7 +594,9 @@ export default function DashboardAboutPage() {
               ))}
             </div>
           </AdminPanel>
+          </div>
 
+          <div id="sec-projects" className="scroll-mt-4">
           <AdminPanel
             title="精选项目"
             description="手动指定关于页展示的四个作品。未选满时，前台会自动用作品列表继续补齐。"
@@ -636,7 +658,9 @@ export default function DashboardAboutPage() {
               )}
             </AdminSection>
           </AdminPanel>
+          </div>
 
+          <div id="sec-lifestyle" className="scroll-mt-4">
           <AdminPanel
             title="生活方式"
             description="这里控制生活方式 Tab、默认视频/图片、展开说明。第一项就是默认展示项。"
@@ -815,7 +839,9 @@ export default function DashboardAboutPage() {
               ))}
             </div>
           </AdminPanel>
+          </div>
 
+          <div id="sec-closing" className="scroll-mt-4">
           <AdminPanel
             title="收尾与联系"
             description="对应关于页底部的宣言、说明文字和页脚联系邮箱。"
@@ -852,7 +878,8 @@ export default function DashboardAboutPage() {
               </div>
             </AdminSection>
           </AdminPanel>
-        </>
+          </div>
+        </SettingsShell>
       )}
     </div>
   )

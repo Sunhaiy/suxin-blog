@@ -6,7 +6,6 @@ import {
   AdminEmptyState,
   AdminField,
   AdminNotice,
-  AdminPageHeader,
   AdminPanel,
   AdminSection,
   AdminStatusBadge,
@@ -628,37 +627,36 @@ export default function DashboardLinksPage() {
   )
 
   return (
-    <div className="space-y-6">
-      <AdminPageHeader
-        eyebrow="Links Directory"
-        title="友情链接与申请"
-        description="一边维护公开友链，一边配置前台资料卡和申请文案。申请表收到的数据也会直接落在这里。"
-        actions={
-          <div className="flex flex-wrap items-center gap-3">
-            <Button variant="secondary" onClick={handleSaveProfile} loading={savingProfile}>
-              <MaterialSymbol icon="settings" size={18} />
-              保存页面资料
-            </Button>
-            <Button onClick={startNew}>
-              <MaterialSymbol icon="add_link" size={18} />
-              新建友链
-            </Button>
-          </div>
-        }
-        meta={
-          <>
-            <AdminStatusBadge tone="accent">{linksRequest.data?.length ?? 0} 条公开记录</AdminStatusBadge>
+    <div className="space-y-4">
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <div className="min-w-0">
+          <p className="text-[11px] font-mono uppercase tracking-[0.28em] text-muted-foreground">
+            Links Directory
+          </p>
+          <div className="mt-1 flex flex-wrap items-center gap-2.5">
+            <h1 className="text-2xl font-semibold tracking-[-0.03em] text-foreground">友情链接与申请</h1>
+            <AdminStatusBadge tone="accent">{linksRequest.data?.length ?? 0} 条</AdminStatusBadge>
             <AdminStatusBadge tone={pendingCount > 0 ? 'warning' : 'neutral'}>
-              {pendingCount} 条待处理申请
+              {pendingCount} 待处理
             </AdminStatusBadge>
-          </>
-        }
-      />
+          </div>
+        </div>
+        <div className="flex flex-wrap items-center gap-2">
+          <Button variant="secondary" size="sm" onClick={handleSaveProfile} loading={savingProfile}>
+            <MaterialSymbol icon="settings" size={16} />
+            保存页面资料
+          </Button>
+          <Button size="sm" onClick={startNew}>
+            <MaterialSymbol icon="add_link" size={16} />
+            新建友链
+          </Button>
+        </div>
+      </div>
 
       {error ? <AdminNotice tone="danger">{error}</AdminNotice> : null}
       {success ? <AdminNotice tone="success">{success}</AdminNotice> : null}
 
-      <div className="grid gap-3 md:grid-cols-3">
+      <div className="grid gap-2 md:grid-cols-3">
         {[
           {
             key: 'links' as const,
@@ -683,17 +681,17 @@ export default function DashboardLinksPage() {
             key={tab.key}
             type="button"
             onClick={() => setActiveTab(tab.key)}
-            className={`flex items-center justify-between rounded-2xl border px-5 py-4 text-left transition-colors ${
+            className={`flex items-center justify-between rounded-xl border px-4 py-2.5 text-left transition-colors ${
               activeTab === tab.key
                 ? 'border-primary/24 bg-primary/10 text-foreground'
                 : 'border-border/70 bg-background/34 text-muted-foreground hover:border-border hover:bg-background/46'
             }`}
           >
-            <span className="flex items-center gap-3">
-              <MaterialSymbol icon={tab.icon} size={19} />
-              <span className="font-medium">{tab.label}</span>
+            <span className="flex items-center gap-2.5">
+              <MaterialSymbol icon={tab.icon} size={17} />
+              <span className="text-sm font-medium">{tab.label}</span>
             </span>
-            <span className="text-xs font-mono uppercase tracking-[0.16em]">{tab.meta}</span>
+            <span className="text-[11px] font-mono uppercase tracking-[0.16em]">{tab.meta}</span>
           </button>
         ))}
       </div>
@@ -710,7 +708,7 @@ export default function DashboardLinksPage() {
               description="这部分会直接出现在友情链接页最上面，给来访者一个清晰的交换对象。"
             >
               <div className="grid gap-5 xl:grid-cols-[220px_minmax(0,1fr)]">
-                <div className={`${ADMIN_MUTED_PANEL_CLASS} p-5`}>
+                <div className={`${ADMIN_MUTED_PANEL_CLASS} p-4`}>
                   <p className="text-[11px] font-mono uppercase tracking-[0.22em] text-muted-foreground">
                     Avatar
                   </p>
@@ -1068,7 +1066,7 @@ export default function DashboardLinksPage() {
             className="lg:!grid-cols-1"
           >
             <div className="grid gap-5">
-              <div className={`${ADMIN_MUTED_PANEL_CLASS} p-5`}>
+              <div className={`${ADMIN_MUTED_PANEL_CLASS} p-4`}>
                 <p className="text-[11px] font-mono uppercase tracking-[0.22em] text-muted-foreground">
                   Avatar
                 </p>
@@ -1283,7 +1281,7 @@ export default function DashboardLinksPage() {
             {filteredSubmissions.map((submission) => (
               <div
                 key={submission.id}
-                className="border-b border-border/60 bg-background/24 p-5 last:border-b-0"
+                className="border-b border-border/60 bg-background/24 p-4 last:border-b-0"
               >
                 <div className="flex flex-wrap items-start justify-between gap-4">
                   <div>

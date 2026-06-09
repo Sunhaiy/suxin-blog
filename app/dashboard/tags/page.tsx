@@ -135,8 +135,8 @@ export default function TagsPage() {
 
       {loading ? (
         <div className="grid gap-4">
-          <div className="h-16 animate-pulse rounded-[24px] border border-border bg-card/70" />
-          <div className="h-[420px] animate-pulse rounded-[28px] border border-border bg-card/70" />
+          <div className="h-16 animate-pulse rounded-xl border border-border bg-card/70" />
+          <div className="h-[420px] animate-pulse rounded-2xl border border-border bg-card/70" />
         </div>
       ) : tags.length === 0 ? (
         <AdminEmptyState

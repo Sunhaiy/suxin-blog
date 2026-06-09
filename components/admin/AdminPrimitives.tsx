@@ -6,21 +6,21 @@ function cn(...values: Array<string | false | null | undefined>) {
 }
 
 export const ADMIN_PANEL_CLASS =
-  'rounded-[28px] border border-border/75 bg-card/76 backdrop-blur-xl'
+  'rounded-2xl border border-border/75 bg-card/76 backdrop-blur-xl'
 
 export const ADMIN_MUTED_PANEL_CLASS =
-  'rounded-[24px] border border-border/70 bg-background/36 backdrop-blur-md'
+  'rounded-xl border border-border/70 bg-background/36 backdrop-blur-md'
 
 export const ADMIN_INPUT_CLASS =
-  'h-11 w-full rounded-[18px] border border-border/70 bg-background/55 px-4 text-sm text-foreground placeholder:text-muted-foreground/55 transition-colors focus:border-primary/28 focus:outline-none focus:ring-2 focus:ring-primary/14'
+  'h-11 w-full rounded-lg border border-border/70 bg-background/55 px-4 text-sm text-foreground placeholder:text-muted-foreground/55 transition-colors focus:border-primary/28 focus:outline-none focus:ring-2 focus:ring-primary/14'
 
 export const ADMIN_SELECT_CLASS = ADMIN_INPUT_CLASS
 
 export const ADMIN_TEXTAREA_CLASS =
-  'w-full rounded-[18px] border border-border/70 bg-background/55 px-4 py-3 text-sm leading-6 text-foreground placeholder:text-muted-foreground/55 transition-colors focus:border-primary/28 focus:outline-none focus:ring-2 focus:ring-primary/14'
+  'w-full rounded-lg border border-border/70 bg-background/55 px-4 py-3 text-sm leading-6 text-foreground placeholder:text-muted-foreground/55 transition-colors focus:border-primary/28 focus:outline-none focus:ring-2 focus:ring-primary/14'
 
 export const ADMIN_NOTICE_CLASS =
-  'rounded-[22px] border px-4 py-3 text-sm leading-6 backdrop-blur-md'
+  'rounded-lg border px-4 py-3 text-sm leading-6 backdrop-blur-md'
 
 export function AdminPageHeader({
   eyebrow = 'Console',
@@ -72,24 +72,24 @@ export function AdminPanel({
   return (
     <section className={cn(ADMIN_PANEL_CLASS, className)}>
       {(title || description || actions) ? (
-        <div className="flex flex-wrap items-start justify-between gap-4 border-b border-border/70 px-6 py-5">
-          <div className="flex min-w-0 items-start gap-3">
+        <div className="flex flex-wrap items-center justify-between gap-3 border-b border-border/60 px-5 py-3.5">
+          <div className="flex min-w-0 items-center gap-2.5">
             {icon ? (
-              <span className="mt-0.5 flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl border border-border/70 bg-background/55 text-primary">
-                <MaterialSymbol icon={icon} size={18} />
+              <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border border-border/70 bg-background/55 text-primary">
+                <MaterialSymbol icon={icon} size={17} />
               </span>
             ) : null}
             <div className="min-w-0">
-              {title ? <h2 className="text-lg font-semibold text-foreground">{title}</h2> : null}
+              {title ? <h2 className="text-[15px] font-semibold leading-tight text-foreground">{title}</h2> : null}
               {description ? (
-                <p className="mt-1 text-sm leading-7 text-muted-foreground">{description}</p>
+                <p className="mt-0.5 text-xs leading-5 text-muted-foreground">{description}</p>
               ) : null}
             </div>
           </div>
-          {actions ? <div className="flex flex-wrap items-center gap-3">{actions}</div> : null}
+          {actions ? <div className="flex flex-wrap items-center gap-2">{actions}</div> : null}
         </div>
       ) : null}
-      <div className={cn('px-6 py-6', bodyClassName)}>{children}</div>
+      <div className={cn('px-5 py-5', bodyClassName)}>{children}</div>
     </section>
   )
 }
@@ -185,7 +185,7 @@ export function AdminListToolbar({
   return (
     <div
       className={cn(
-        'rounded-[24px] border border-border/70 bg-card/70 px-4 py-4 backdrop-blur-xl',
+        'rounded-xl border border-border/70 bg-card/70 px-4 py-4 backdrop-blur-xl',
         className
       )}
     >
@@ -206,7 +206,7 @@ export function AdminEmptyState({
   action?: ReactNode
 }) {
   return (
-    <div className="rounded-[24px] border border-border/70 bg-background/36 px-6 py-12 text-center">
+    <div className="rounded-xl border border-border/70 bg-background/36 px-6 py-12 text-center">
       <span className="mx-auto flex h-12 w-12 items-center justify-center rounded-2xl border border-border/70 bg-background/55 text-muted-foreground">
         <MaterialSymbol icon={icon} size={22} />
       </span>

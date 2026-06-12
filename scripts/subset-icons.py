@@ -54,9 +54,9 @@ for name in icons:
     else:
         missing.append(name)
 
-print(f"解析到图标字形: {len(keep_glyphs)} / {len(icons)}")
+print(f"resolved glyphs: {len(keep_glyphs)} / {len(icons)}")
 if missing:
-    print("⚠️ 未解析(字体里无此图标或名字有误):", " ".join(missing))
+    print("WARN missing (not in font or wrong name):", " ".join(missing))
 
 letters = "abcdefghijklmnopqrstuvwxyz_"
 font.close()

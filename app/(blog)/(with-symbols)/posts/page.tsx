@@ -1,5 +1,6 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
+import { SideRays } from '@/components/ui/SideRays'
 import { FeaturedCarousel } from '@/components/ui/FeaturedCarousel'
 import { ProgressiveImage } from '@/components/ui/ProgressiveImage'
 import { PostsFilter } from '@/components/ui/PostsFilter'
@@ -70,6 +71,19 @@ export default async function PostsPage({
 
   return (
     <div className="relative isolate min-h-[calc(100vh-4rem)] bg-background">
+      {/* 动态光线背景（reactbits side-rays），固定在视口、置于内容之下 */}
+      <div aria-hidden className="pointer-events-none fixed inset-0 -z-10 opacity-60">
+        <SideRays
+          intensity={3}
+          speed={4.7}
+          tilt={-2}
+          origin="top-left"
+          falloff={1}
+          rayColor1="#ffaa6e"
+          rayColor2="#96c8ff"
+          opacity={0.9}
+        />
+      </div>
       <div className="mx-auto max-w-6xl px-6 py-12 sm:px-8">
       {!isFiltered ? (
         <section className="mb-10 rounded-[28px] border border-border/75 bg-card/72 p-5 backdrop-blur-xl sm:p-6">

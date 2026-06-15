@@ -50,98 +50,79 @@ export function DashboardFrame({
       }
     >
       <div className="mx-auto flex h-full max-w-[1720px]">
-        <aside className="hidden h-full w-[296px] shrink-0 border-r border-border/70 bg-card/76 backdrop-blur-2xl lg:flex lg:flex-col">
-          <div className="border-b border-border/70 px-6 py-5">
-            <Link href="/dashboard" className="flex items-start gap-3">
-              <span className="flex h-11 w-11 items-center justify-center rounded-[20px] border border-border/70 bg-background/60 text-primary">
-                <MaterialSymbol icon="dashboard_customize" size={20} fill />
+        <aside className="hidden h-full w-[220px] shrink-0 border-r border-border/60 bg-card/60 backdrop-blur-2xl lg:flex lg:flex-col">
+          {/* Logo */}
+          <div className="px-4 pt-5 pb-4">
+            <Link href="/dashboard" className="flex items-center gap-2.5 px-1">
+              <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-lg bg-primary/15 text-primary">
+                <MaterialSymbol icon="dashboard_customize" size={14} fill />
               </span>
-              <div className="min-w-0">
-                <span className="block truncate text-lg font-semibold text-foreground">Suxin Blog Console</span>
-                <span className="mt-1 block text-[11px] font-mono uppercase tracking-[0.24em] text-muted-foreground">
-                  Unified Admin System
-                </span>
-              </div>
+              <span className="truncate text-sm font-semibold text-foreground">Suxin Blog</span>
             </Link>
-
             <Link
               href={DASHBOARD_EDITOR_ITEM.href}
-              className="mt-5 inline-flex h-11 w-full items-center justify-center gap-2 rounded-[20px] border border-primary/18 bg-primary/10 px-4 text-sm font-medium text-foreground transition-colors hover:border-primary/28 hover:bg-primary/14"
+              className="mt-3.5 flex h-8 w-full items-center justify-center gap-1.5 rounded-lg bg-primary/12 text-xs font-medium text-foreground transition-colors hover:bg-primary/18"
             >
-              <MaterialSymbol icon={DASHBOARD_EDITOR_ITEM.icon} size={18} />
+              <MaterialSymbol icon={DASHBOARD_EDITOR_ITEM.icon} size={14} />
               {DASHBOARD_EDITOR_ITEM.label}
             </Link>
           </div>
 
-          <div className="flex min-h-0 flex-1 flex-col">
-            <nav className="min-h-0 flex-1 space-y-6 overflow-y-auto px-4 py-5">
-              {DASHBOARD_NAV_GROUPS.map((group) => (
-                <section key={group.label}>
-                  <p className="px-2 text-[11px] font-mono uppercase tracking-[0.24em] text-muted-foreground">
-                    {group.label}
-                  </p>
-                  <div className="mt-2 space-y-1">
-                    {group.items.map((item) => {
-                      const active = isActivePath(pathname, item.href)
-
-                      return (
-                        <Link
-                          key={item.href}
-                          href={item.href}
-                          className={cn(
-                            'group flex items-start gap-3 rounded-[20px] border px-3 py-2.5 transition-colors',
-                            active
-                              ? 'border-primary/18 bg-primary/10 text-foreground'
-                              : 'border-transparent text-muted-foreground hover:border-border/70 hover:bg-background/45 hover:text-foreground'
-                          )}
-                        >
-                          <span
-                            className={cn(
-                              'mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-[18px] border transition-colors',
-                              active
-                                ? 'border-primary/18 bg-background/58 text-primary'
-                                : 'border-border/70 bg-background/48 text-muted-foreground group-hover:text-foreground'
-                            )}
-                          >
-                            <MaterialSymbol icon={item.icon} size={17} />
-                          </span>
-                          <span className="min-w-0 pt-0.5">
-                            <span className="block text-sm font-medium leading-5">{item.label}</span>
-                            <span className="mt-0.5 block text-[11px] leading-5 text-muted-foreground">
-                              {item.description}
-                            </span>
-                          </span>
-                        </Link>
-                      )
-                    })}
-                  </div>
-                </section>
-              ))}
-            </nav>
-
-            <div className="border-t border-border/70 px-5 py-4">
-              <div className="rounded-[22px] border border-border/70 bg-background/42 p-4">
-                <p className="text-[11px] font-mono uppercase tracking-[0.24em] text-muted-foreground">账号</p>
-                <p className="mt-3 truncate text-sm text-foreground">{email ?? '未登录'}</p>
-                <div className="mt-4 flex items-center gap-2">
-                  <Link
-                    href="/"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="inline-flex items-center gap-1.5 rounded-full border border-border/70 bg-background/55 px-3 py-2 text-xs text-muted-foreground transition-colors hover:text-foreground"
-                  >
-                    <MaterialSymbol icon="open_in_new" size={15} />
-                    查看前台
-                  </Link>
-                  <Link
-                    href="/api/auth/signout"
-                    className="inline-flex items-center gap-1.5 rounded-full border border-border/70 bg-background/55 px-3 py-2 text-xs text-muted-foreground transition-colors hover:border-red-500/28 hover:text-red-300"
-                  >
-                    <MaterialSymbol icon="logout" size={15} />
-                    退出
-                  </Link>
+          {/* Nav */}
+          <nav className="min-h-0 flex-1 space-y-4 overflow-y-auto px-3 pb-3">
+            {DASHBOARD_NAV_GROUPS.map((group) => (
+              <section key={group.label}>
+                <p className="px-2 pb-1 text-[10px] font-medium uppercase tracking-widest text-muted-foreground/50">
+                  {group.label}
+                </p>
+                <div className="space-y-0.5">
+                  {group.items.map((item) => {
+                    const active = isActivePath(pathname, item.href)
+                    return (
+                      <Link
+                        key={item.href}
+                        href={item.href}
+                        className={cn(
+                          'flex items-center gap-2.5 rounded-md px-2 py-1.5 text-sm transition-colors',
+                          active
+                            ? 'bg-primary/12 text-foreground'
+                            : 'text-muted-foreground hover:bg-black/5 hover:text-foreground dark:hover:bg-white/5'
+                        )}
+                      >
+                        <MaterialSymbol
+                          icon={item.icon}
+                          size={16}
+                          className={active ? 'text-primary' : ''}
+                        />
+                        {item.label}
+                      </Link>
+                    )
+                  })}
                 </div>
-              </div>
+              </section>
+            ))}
+          </nav>
+
+          {/* Footer */}
+          <div className="border-t border-border/60 px-4 py-3">
+            <p className="truncate text-xs text-muted-foreground">{email ?? '未登录'}</p>
+            <div className="mt-2 flex items-center gap-3">
+              <Link
+                href="/"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center gap-1 text-xs text-muted-foreground transition-colors hover:text-foreground"
+              >
+                <MaterialSymbol icon="open_in_new" size={13} />
+                前台
+              </Link>
+              <Link
+                href="/api/auth/signout"
+                className="flex items-center gap-1 text-xs text-muted-foreground transition-colors hover:text-red-400"
+              >
+                <MaterialSymbol icon="logout" size={13} />
+                退出
+              </Link>
             </div>
           </div>
         </aside>

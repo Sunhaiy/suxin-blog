@@ -23,7 +23,7 @@ export const ADMIN_NOTICE_CLASS =
   'rounded-lg border px-4 py-3 text-sm leading-6 backdrop-blur-md'
 
 export function AdminPageHeader({
-  eyebrow = 'Console',
+  eyebrow: _eyebrow,
   title,
   description,
   actions,
@@ -36,16 +36,13 @@ export function AdminPageHeader({
   meta?: ReactNode
 }) {
   return (
-    <div className="flex flex-wrap items-end justify-between gap-4">
+    <div className="flex flex-wrap items-end justify-between gap-3">
       <div className="max-w-3xl">
-        <p className="text-[11px] font-mono uppercase tracking-[0.28em] text-muted-foreground">
-          {eyebrow}
-        </p>
-        <h1 className="mt-2 text-3xl font-semibold tracking-[-0.04em] text-foreground">{title}</h1>
+        <h1 className="text-xl font-semibold text-foreground">{title}</h1>
         {description ? (
-          <p className="mt-3 text-sm leading-7 text-muted-foreground">{description}</p>
+          <p className="mt-1.5 text-sm leading-6 text-muted-foreground">{description}</p>
         ) : null}
-        {meta ? <div className="mt-4 flex flex-wrap items-center gap-2">{meta}</div> : null}
+        {meta ? <div className="mt-3 flex flex-wrap items-center gap-2">{meta}</div> : null}
       </div>
       {actions ? <div className="flex flex-wrap items-center gap-3">{actions}</div> : null}
     </div>
@@ -72,24 +69,17 @@ export function AdminPanel({
   return (
     <section className={cn(ADMIN_PANEL_CLASS, className)}>
       {(title || description || actions) ? (
-        <div className="flex flex-wrap items-center justify-between gap-3 border-b border-border/60 px-5 py-3.5">
-          <div className="flex min-w-0 items-center gap-2.5">
-            {icon ? (
-              <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border border-border/70 bg-background/55 text-primary">
-                <MaterialSymbol icon={icon} size={17} />
-              </span>
+        <div className="flex flex-wrap items-center justify-between gap-3 border-b border-border/60 px-4 py-3">
+          <div className="min-w-0">
+            {title ? <h2 className="text-sm font-semibold text-foreground">{title}</h2> : null}
+            {description ? (
+              <p className="mt-0.5 text-xs leading-5 text-muted-foreground">{description}</p>
             ) : null}
-            <div className="min-w-0">
-              {title ? <h2 className="text-[15px] font-semibold leading-tight text-foreground">{title}</h2> : null}
-              {description ? (
-                <p className="mt-0.5 text-xs leading-5 text-muted-foreground">{description}</p>
-              ) : null}
-            </div>
           </div>
           {actions ? <div className="flex flex-wrap items-center gap-2">{actions}</div> : null}
         </div>
       ) : null}
-      <div className={cn('px-5 py-5', bodyClassName)}>{children}</div>
+      <div className={cn('px-4 py-4', bodyClassName)}>{children}</div>
     </section>
   )
 }

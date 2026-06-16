@@ -6,6 +6,7 @@ import {
   AdminEmptyState,
   AdminField,
   AdminNotice,
+  AdminPageHeader,
   AdminPanel,
   AdminSection,
   AdminStatusBadge,
@@ -13,6 +14,7 @@ import {
   ADMIN_MUTED_PANEL_CLASS,
   ADMIN_TEXTAREA_CLASS,
 } from '@/components/admin/AdminPrimitives'
+import { AdminDialog } from '@/components/admin/AdminDialog'
 import { MediaLibraryPicker } from '@/components/admin/MediaLibraryPicker'
 import { Button } from '@/components/ui/Button'
 import { MaterialSymbol } from '@/components/ui/MaterialSymbol'
@@ -218,6 +220,7 @@ export default function DashboardLinksPage() {
   const [form, setForm] = useState<LinkFormState>(EMPTY_FORM)
   const [profileForm, setProfileForm] = useState<SiteProfile | null>(null)
   const [activeTab, setActiveTab] = useState<LinksWorkspaceTab>('links')
+  const [dialogOpen, setDialogOpen] = useState(false)
   const [categoryDraft, setCategoryDraft] = useState('')
   const [categoryFilter, setCategoryFilter] = useState('all')
   const [linkStatusFilter, setLinkStatusFilter] = useState<'all' | 'active' | 'hidden'>('all')
@@ -279,6 +282,7 @@ export default function DashboardLinksPage() {
     setForm(EMPTY_FORM)
     setActiveTab('links')
     clearNotice()
+    setDialogOpen(true)
   }
 
   async function handleSave() {
@@ -341,7 +345,7 @@ export default function DashboardLinksPage() {
       }
 
       await Promise.all([linksRequest.mutate(), categoriesRequest.mutate()])
-      if (selectedId === id) startNew()
+      if (selectedId === id) { setSelectedId(null); setForm(EMPTY_FORM); setDialogOpen(false) }
       setSuccess('友链已删除。')
     } catch (err) {
       setError(err instanceof Error ? err.message : '删除失败')
@@ -602,7 +606,8 @@ export default function DashboardLinksPage() {
     })
     setSelectedId(null)
     setActiveTab('links')
-    setSuccess('已把申请信息带入右侧编辑器，可以直接补充后创建友链。')
+    setDialogOpen(true)
+    setSuccess('已把申请信息带入编辑框，补充后可直接创建友链。')
   }
 
   const pendingCount =
@@ -627,619 +632,202 @@ export default function DashboardLinksPage() {
   )
 
   return (
-    <div className="space-y-4">
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <div className="min-w-0">
-          <p className="text-[11px] font-mono uppercase tracking-[0.28em] text-muted-foreground">
-            Links Directory
-          </p>
-          <div className="mt-1 flex flex-wrap items-center gap-2.5">
-            <h1 className="text-2xl font-semibold tracking-[-0.03em] text-foreground">友情链接与申请</h1>
-            <AdminStatusBadge tone="accent">{linksRequest.data?.length ?? 0} 条</AdminStatusBadge>
-            <AdminStatusBadge tone={pendingCount > 0 ? 'warning' : 'neutral'}>
-              {pendingCount} 待处理
-            </AdminStatusBadge>
+    <div className="space-y-5">
+      <AdminPageHeader
+        title="友情链接"
+        actions={
+          <div className="flex items-center gap-2">
+            <Button variant="secondary" size="sm" onClick={() => setActiveTab('profile')}>
+              <MaterialSymbol icon="settings" size={16} />
+              页面资料
+            </Button>
+            <Button size="sm" onClick={startNew}>
+              <MaterialSymbol icon="add_link" size={16} />
+              新建友链
+            </Button>
           </div>
-        </div>
-        <div className="flex flex-wrap items-center gap-2">
-          <Button variant="secondary" size="sm" onClick={handleSaveProfile} loading={savingProfile}>
-            <MaterialSymbol icon="settings" size={16} />
-            保存页面资料
-          </Button>
-          <Button size="sm" onClick={startNew}>
-            <MaterialSymbol icon="add_link" size={16} />
-            新建友链
-          </Button>
-        </div>
-      </div>
+        }
+        meta={
+          <>
+            <AdminStatusBadge tone="accent">{linksRequest.data?.length ?? 0} 条</AdminStatusBadge>
+            {pendingCount > 0 && (
+              <AdminStatusBadge tone="warning">{pendingCount} 条待处理申请</AdminStatusBadge>
+            )}
+          </>
+        }
+      />
 
       {error ? <AdminNotice tone="danger">{error}</AdminNotice> : null}
       {success ? <AdminNotice tone="success">{success}</AdminNotice> : null}
 
-      <div className="grid gap-2 md:grid-cols-3">
-        {[
-          {
-            key: 'links' as const,
-            label: '友链编辑',
-            icon: 'link',
-            meta: `${linksRequest.data?.length ?? 0} 条`,
-          },
-          {
-            key: 'profile' as const,
-            label: '页面资料',
-            icon: 'badge',
-            meta: '前台卡片',
-          },
-          {
-            key: 'submissions' as const,
-            label: '申请箱',
-            icon: 'inbox',
-            meta: `${pendingCount} 待处理`,
-          },
-        ].map((tab) => (
+      {/* Tab nav */}
+      <div className="flex gap-1.5 rounded-xl border border-border/70 bg-background/34 p-1">
+        {([
+          { key: 'links' as const, label: '友链列表', icon: 'link' },
+          { key: 'profile' as const, label: '页面资料', icon: 'badge' },
+          { key: 'submissions' as const, label: `申请箱${pendingCount > 0 ? ` (${pendingCount})` : ''}`, icon: 'inbox' },
+        ] as const).map((tab) => (
           <button
             key={tab.key}
             type="button"
             onClick={() => setActiveTab(tab.key)}
-            className={`flex items-center justify-between rounded-xl border px-4 py-2.5 text-left transition-colors ${
+            className={`flex items-center gap-2 rounded-lg px-3.5 py-2 text-sm font-medium transition-colors ${
               activeTab === tab.key
-                ? 'border-primary/24 bg-primary/10 text-foreground'
-                : 'border-border/70 bg-background/34 text-muted-foreground hover:border-border hover:bg-background/46'
+                ? 'bg-card text-foreground shadow-sm'
+                : 'text-muted-foreground hover:text-foreground'
             }`}
           >
-            <span className="flex items-center gap-2.5">
-              <MaterialSymbol icon={tab.icon} size={17} />
-              <span className="text-sm font-medium">{tab.label}</span>
-            </span>
-            <span className="text-[11px] font-mono uppercase tracking-[0.16em]">{tab.meta}</span>
+            <MaterialSymbol icon={tab.icon} size={16} />
+            {tab.label}
           </button>
         ))}
       </div>
 
+      {/* Profile tab */}
       {activeTab === 'profile' && profileForm ? (
         <AdminPanel
           title="友链页资料"
-          description="前台顶部的本站信息、申请说明和审核规则都在这里维护。"
-          icon="badge"
+          actions={
+            <Button size="sm" onClick={handleSaveProfile} loading={savingProfile}>
+              <MaterialSymbol icon="save" size={16} />
+              保存资料
+            </Button>
+          }
         >
           <div className="space-y-6">
-            <AdminSection
-              title="本站卡片"
-              description="这部分会直接出现在友情链接页最上面，给来访者一个清晰的交换对象。"
-            >
-              <div className="grid gap-5 xl:grid-cols-[220px_minmax(0,1fr)]">
+            <AdminSection title="本站卡片">
+              <div className="grid gap-5 md:grid-cols-[180px_minmax(0,1fr)]">
                 <div className={`${ADMIN_MUTED_PANEL_CLASS} p-4`}>
-                  <p className="text-[11px] font-mono uppercase tracking-[0.22em] text-muted-foreground">
-                    Avatar
-                  </p>
                   <button
                     type="button"
                     onClick={() => profileAvatarRef.current?.click()}
-                    className="group mt-4 block w-full rounded-2xl border border-dashed border-border/70 bg-background/36 p-4 text-left transition-colors hover:border-primary/18 hover:bg-background/48"
+                    className="block w-full"
                   >
-                    <div className="flex justify-center">
-                      <div className="flex h-24 w-24 items-center justify-center overflow-hidden rounded-2xl border border-border/70 bg-background/50">
-                        {profileForm.avatarUrl ? (
-                          <img
-                            src={profileForm.avatarUrl}
-                            alt={profileForm.ownerName}
-                            className="h-full w-full object-cover"
-                          />
-                        ) : (
-                          <span className="text-3xl font-semibold text-foreground">
-                            {profileForm.ownerInitial}
-                          </span>
-                        )}
-                      </div>
+                    <div className="flex h-28 w-full items-center justify-center overflow-hidden rounded-xl border border-border/70 bg-background/50">
+                      {profileForm.avatarUrl ? (
+                        <img src={profileForm.avatarUrl} alt={profileForm.ownerName} className="h-full w-full object-cover" />
+                      ) : (
+                        <span className="text-3xl font-semibold text-foreground">{profileForm.ownerInitial}</span>
+                      )}
                     </div>
-                    <p className="mt-4 text-center text-sm font-medium text-foreground">
-                      {uploadingProfileAvatar ? '上传中…' : '点击上传站点头像'}
+                    <p className="mt-2 text-center text-xs text-muted-foreground">
+                      {uploadingProfileAvatar ? '上传中…' : '点击上传头像'}
                     </p>
                   </button>
-
-                  <div className="mt-4 flex flex-wrap gap-2">
-                    <MediaLibraryPicker
-                      value={profileForm.avatarUrl}
-                      onSelect={(url) =>
-                        updateProfile('avatarUrl', normalizeSiteAssetUrl(url, profileForm.siteUrl))
-                      }
-                      buttonLabel="从相册选择"
-                      dialogTitle="选择友情链接页头像"
-                    />
-                    <Button
-                      variant="secondary"
-                      size="sm"
-                      onClick={() => profileAvatarRef.current?.click()}
-                      loading={uploadingProfileAvatar}
-                    >
-                      <MaterialSymbol icon="image_arrow_up" size={16} />
-                      上传头像
+                  <div className="mt-3 flex gap-2">
+                    <Button variant="secondary" size="sm" onClick={() => profileAvatarRef.current?.click()} loading={uploadingProfileAvatar}>
+                      <MaterialSymbol icon="image_arrow_up" size={14} />
+                      上传
                     </Button>
+                    <MediaLibraryPicker value={profileForm.avatarUrl} onSelect={(url) => updateProfile('avatarUrl', normalizeSiteAssetUrl(url, profileForm.siteUrl))} buttonLabel="相册" dialogTitle="选择友链页头像" />
                   </div>
                 </div>
 
                 <div className="grid gap-4 md:grid-cols-2">
-                  <Field label="站点名称">
-                    <input
-                      value={profileForm.siteName}
-                      onChange={(event) => updateProfile('siteName', event.target.value)}
-                      className={INPUT_CLASS}
-                    />
-                  </Field>
-                  <Field label="英文副标">
-                    <input
-                      value={profileForm.siteNameEn}
-                      onChange={(event) => updateProfile('siteNameEn', event.target.value)}
-                      className={INPUT_CLASS}
-                    />
-                  </Field>
-                  <Field label="站点地址">
-                    <input
-                      value={profileForm.siteUrl}
-                      onChange={(event) => updateProfile('siteUrl', event.target.value)}
-                      className={INPUT_CLASS}
-                      placeholder="https://haiy.space"
-                    />
-                  </Field>
-                  <Field label="RSS 链接">
-                    <input
-                      value={profileForm.rssUrl}
-                      onChange={(event) => updateProfile('rssUrl', event.target.value)}
-                      className={INPUT_CLASS}
-                      placeholder="/rss.xml"
-                    />
-                  </Field>
-                  <Field label="头像地址" fullWidth hint="默认使用带站点域名的完整地址，方便别人直接复制。">
-                    <input
-                      value={profileForm.avatarUrl ?? ''}
-                      onChange={(event) =>
-                        updateProfile('avatarUrl', event.target.value || null)
-                      }
-                      onBlur={(event) =>
-                        updateProfile(
-                          'avatarUrl',
-                          event.target.value
-                            ? normalizeSiteAssetUrl(event.target.value, profileForm.siteUrl)
-                            : null
-                        )
-                      }
-                      className={INPUT_CLASS}
-                      placeholder={`${profileForm.siteUrl.replace(/\/+$/, '')}/uploads/avatar.jpg`}
-                    />
+                  <Field label="站点名称"><input value={profileForm.siteName} onChange={(e) => updateProfile('siteName', e.target.value)} className={INPUT_CLASS} /></Field>
+                  <Field label="英文副标"><input value={profileForm.siteNameEn} onChange={(e) => updateProfile('siteNameEn', e.target.value)} className={INPUT_CLASS} /></Field>
+                  <Field label="站点地址"><input value={profileForm.siteUrl} onChange={(e) => updateProfile('siteUrl', e.target.value)} className={INPUT_CLASS} placeholder="https://haiy.space" /></Field>
+                  <Field label="RSS 链接"><input value={profileForm.rssUrl} onChange={(e) => updateProfile('rssUrl', e.target.value)} className={INPUT_CLASS} placeholder="/rss.xml" /></Field>
+                  <Field label="头像地址" fullWidth>
+                    <input value={profileForm.avatarUrl ?? ''} onChange={(e) => updateProfile('avatarUrl', e.target.value || null)} onBlur={(e) => updateProfile('avatarUrl', e.target.value ? normalizeSiteAssetUrl(e.target.value, profileForm.siteUrl) : null)} className={INPUT_CLASS} />
                   </Field>
                   <Field label="友链页简介" fullWidth>
-                    <textarea
-                      value={profileForm.friendLinkIntro}
-                      onChange={(event) => updateProfile('friendLinkIntro', event.target.value)}
-                      className={TEXTAREA_CLASS}
-                      rows={4}
-                    />
+                    <textarea value={profileForm.friendLinkIntro} onChange={(e) => updateProfile('friendLinkIntro', e.target.value)} className={TEXTAREA_CLASS} rows={3} />
                   </Field>
                 </div>
               </div>
             </AdminSection>
 
-            <AdminSection
-              title="申请规则"
-              description="前台申请卡片会直接读取这里的文案。建议每条一行，节奏会更干净。"
-            >
-              <div className="grid gap-4">
-                <Field label="申请要求" fullWidth>
-                  <textarea
-                    value={profileForm.friendLinkRequirements}
-                    onChange={(event) =>
-                      updateProfile('friendLinkRequirements', event.target.value)
-                    }
-                    className={TEXTAREA_CLASS}
-                    rows={6}
-                    placeholder={'1. 站点可稳定访问\n2. 有持续更新内容\n3. 简介尽量简洁'}
-                  />
-                </Field>
-              </div>
+            <AdminSection title="申请规则">
+              <Field label="申请要求" fullWidth>
+                <textarea value={profileForm.friendLinkRequirements} onChange={(e) => updateProfile('friendLinkRequirements', e.target.value)} className={TEXTAREA_CLASS} rows={5} placeholder={'1. 站点可稳定访问\n2. 有持续更新内容\n3. 简介尽量简洁'} />
+              </Field>
             </AdminSection>
           </div>
 
-          <input
-            ref={profileAvatarRef}
-            type="file"
-            accept="image/*"
-            className="hidden"
-            onChange={handleProfileAvatarUpload}
-          />
+          <input ref={profileAvatarRef} type="file" accept="image/*" className="hidden" onChange={handleProfileAvatarUpload} />
         </AdminPanel>
       ) : null}
 
+      {/* Links tab */}
       {activeTab === 'links' ? (
-        <div className="grid min-w-0 items-start gap-6 xl:grid-cols-[minmax(0,1fr)_420px]">
-        <AdminPanel
-          title="友链工作台"
-          description="按分组和显示状态筛选，行内直接编辑或删除，数据多了也不会把页面撑成一条长卷轴。"
-          icon="link"
-          className="min-w-0 overflow-hidden"
-          bodyClassName="space-y-4"
-        >
-          <div className="space-y-4 rounded-2xl border border-border/70 bg-background/34 p-4">
-            <div className="flex flex-wrap gap-2">
+        <AdminPanel title="友链列表">
+          {/* Filters */}
+          <div className="mb-4 flex flex-wrap items-center gap-2">
+            {[{ slug: 'all', label: '全部' }, ...categoryOptions].map((cat) => (
               <button
+                key={cat.slug}
                 type="button"
-                onClick={() => setCategoryFilter('all')}
-                className={`rounded-full border px-3 py-1.5 text-sm transition-colors ${
-                  categoryFilter === 'all'
+                onClick={() => setCategoryFilter(cat.slug)}
+                className={`rounded-full border px-3 py-1.5 text-xs font-medium transition-colors ${
+                  categoryFilter === cat.slug
                     ? 'border-primary/24 bg-primary/12 text-foreground'
                     : 'border-border/70 text-muted-foreground hover:text-foreground'
                 }`}
               >
-                全部分组
+                {cat.label}
+                {'link_count' in cat && <span className="ml-1 opacity-60">{cat.link_count}</span>}
               </button>
-              {categoryOptions.map((category) => (
-                <button
-                  key={category.slug}
-                  type="button"
-                  onClick={() => setCategoryFilter(category.slug)}
-                  className={`rounded-full border px-3 py-1.5 text-sm transition-colors ${
-                    categoryFilter === category.slug
-                      ? 'border-primary/24 bg-primary/12 text-foreground'
-                      : 'border-border/70 text-muted-foreground hover:text-foreground'
-                  }`}
-                >
-                  {category.label}
-                  <span className="ml-1.5 text-xs text-muted-foreground">
-                    {category.link_count}
-                  </span>
-                </button>
-              ))}
+            ))}
+            <div className="ml-auto flex items-center gap-2">
+              <input value={categoryDraft} onChange={(e) => setCategoryDraft(e.target.value)} className={`${INPUT_CLASS} w-36`} placeholder="新分组名" />
+              <Button variant="secondary" size="sm" onClick={createCategory} loading={categorySaving}>
+                <MaterialSymbol icon="add" size={14} />
+                新增分组
+              </Button>
             </div>
-
-            <div className="flex flex-wrap items-center justify-between gap-3">
-              <div className="flex flex-wrap gap-2">
-                {[
-                  ['all', '全部'],
-                  ['active', '公开'],
-                  ['hidden', '隐藏'],
-                ].map(([key, label]) => (
-                  <button
-                    key={key}
-                    type="button"
-                    onClick={() => setLinkStatusFilter(key as typeof linkStatusFilter)}
-                    className={`rounded-full border px-3 py-1.5 text-sm transition-colors ${
-                      linkStatusFilter === key
-                        ? 'border-primary/24 bg-primary/12 text-foreground'
-                        : 'border-border/70 text-muted-foreground hover:text-foreground'
-                    }`}
-                  >
-                    {label}
-                  </button>
-                ))}
-              </div>
-
-              <div className="flex min-w-0 flex-1 flex-wrap justify-end gap-2">
-                <input
-                  value={categoryDraft}
-                  onChange={(event) => setCategoryDraft(event.target.value)}
-                  className={`${INPUT_CLASS} max-w-[220px] min-w-[160px]`}
-                  placeholder="新建分组名称"
-                />
-                <Button variant="secondary" size="sm" onClick={createCategory} loading={categorySaving}>
-                  <MaterialSymbol icon="add" size={16} />
-                  新增分组
-                </Button>
-              </div>
-            </div>
-
-            {categoryOptions.length > 1 ? (
-              <div className="flex flex-wrap gap-2 border-t border-border/60 pt-3">
-                {categoryOptions.map((category) => (
-                  <span
-                    key={category.slug}
-                    className="inline-flex items-center gap-2 rounded-full border border-border/70 px-3 py-1.5 text-xs text-muted-foreground"
-                  >
-                    <MaterialSymbol icon={category.icon || 'link'} size={14} />
-                    {category.label}
-                    {!category.is_default ? (
-                      <button
-                        type="button"
-                        onClick={() => deleteCategory(category)}
-                        disabled={categoryDeletingSlug === category.slug}
-                        className="text-red-300 transition-colors hover:text-red-200 disabled:opacity-50"
-                      >
-                        删除
-                      </button>
-                    ) : null}
-                  </span>
-                ))}
-              </div>
-            ) : null}
           </div>
 
+          {categoryOptions.length > 1 ? (
+            <div className="mb-4 flex flex-wrap gap-1.5">
+              {categoryOptions.filter((c) => !c.is_default).map((cat) => (
+                <span key={cat.slug} className="inline-flex items-center gap-1.5 rounded-full border border-border/70 px-2.5 py-1 text-xs text-muted-foreground">
+                  {cat.label}
+                  <button type="button" onClick={() => deleteCategory(cat)} disabled={categoryDeletingSlug === cat.slug} className="text-red-400 hover:text-red-300 disabled:opacity-50">
+                    <MaterialSymbol icon="close" size={12} />
+                  </button>
+                </span>
+              ))}
+            </div>
+          ) : null}
+
           {linksRequest.isLoading ? (
-            <div className="space-y-3">
-              {Array.from({ length: 5 }).map((_, index) => (
-                <div
-                  key={index}
-                  className="h-24 animate-pulse rounded-xl border border-border/70 bg-background/38"
-                />
+            <div className="space-y-2">
+              {Array.from({ length: 5 }).map((_, i) => (
+                <div key={i} className="h-14 animate-pulse rounded-xl border border-border/70 bg-background/38" />
               ))}
             </div>
           ) : !filteredLinks.length ? (
-            <AdminEmptyState
-              icon="link"
-              title="还没有友链"
-              description="先录入第一条公开链接，后面整页的节奏就会自然起来。"
-              action={
-                <Button size="sm" onClick={startNew}>
-                  新建第一条
-                </Button>
-              }
-            />
+            <AdminEmptyState icon="link" title="还没有友链" description="先录入第一条公开链接。" action={<Button size="sm" onClick={startNew}>新建第一条</Button>} />
           ) : (
-            <div className="max-h-[68vh] overflow-y-auto rounded-2xl border border-border/70">
-              {filteredLinks.map((link) => {
-              const active = selectedId === link.id
-
-              return (
-                <div
-                  key={link.id}
-                  className={`grid gap-4 border-b border-border/60 px-5 py-4 transition-colors last:border-b-0 lg:grid-cols-[minmax(0,1fr)_112px_112px_130px] lg:items-center ${
-                    active
-                      ? 'bg-primary/10'
-                      : 'bg-background/22 hover:bg-background/42'
-                  }`}
-                >
-                  <button
-                      type="button"
-                      onClick={() => {
-                        setSelectedId(link.id)
-                        setForm(toFormState(link))
-                        clearNotice()
-                      }}
-                    className="min-w-0 text-left"
-                    >
-                    <p className="truncate text-base font-semibold text-foreground">{link.name}</p>
-                    <p className="mt-1 truncate text-sm text-muted-foreground">
-                      {getCategoryLabel(link.category, categoryOptions)} · {link.url}
-                    </p>
-                  </button>
-
-                  <div>
-                    <AdminStatusBadge tone={link.is_active ? 'success' : 'warning'}>
-                      {link.is_active ? '公开' : '隐藏'}
-                    </AdminStatusBadge>
+            <div className="overflow-hidden rounded-xl border border-border/70">
+              {filteredLinks.map((link) => (
+                <div key={link.id} className="flex items-center gap-3 border-b border-border/60 bg-background/22 px-4 py-3 last:border-b-0 hover:bg-background/40">
+                  <div className="flex h-9 w-9 shrink-0 items-center justify-center overflow-hidden rounded-lg border border-border/60 bg-background/50">
+                    {link.avatar_url
+                      ? <img src={link.avatar_url} alt={link.name} className="h-full w-full object-cover" />
+                      : <span className="text-sm font-semibold text-foreground">{link.name.charAt(0).toUpperCase()}</span>
+                    }
                   </div>
-
-                  <p className="text-sm font-mono text-muted-foreground">
-                    {formatDate(link.created_at)}
-                  </p>
-
-                  <div className="flex justify-start gap-2 lg:justify-end">
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => {
-                        setSelectedId(link.id)
-                        setForm(toFormState(link))
-                        clearNotice()
-                      }}
-                    >
-                      编辑
-                    </Button>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => handleDelete(link.id)}
-                      disabled={deletingId === link.id}
-                      className="text-red-400 hover:text-red-300"
-                    >
-                      删除
-                    </Button>
+                  <div className="min-w-0 flex-1">
+                    <div className="flex flex-wrap items-center gap-2">
+                      <span className="truncate text-sm font-medium text-foreground">{link.name}</span>
+                      <AdminStatusBadge tone={link.is_active ? 'success' : 'warning'}>{link.is_active ? '公开' : '隐藏'}</AdminStatusBadge>
+                    </div>
+                    <p className="truncate text-xs text-muted-foreground">{link.url}</p>
                   </div>
+                  <p className="shrink-0 font-mono text-xs text-muted-foreground/60">{formatDate(link.created_at)}</p>
+                  <Button variant="ghost" size="sm" onClick={() => { setSelectedId(link.id); setForm(toFormState(link)); clearNotice(); setDialogOpen(true) }}>
+                    编辑
+                  </Button>
+                  <Button variant="ghost" size="sm" onClick={() => handleDelete(link.id)} disabled={deletingId === link.id} className="text-red-400 hover:text-red-300">
+                    删除
+                  </Button>
                 </div>
-              )
-            })}
+              ))}
             </div>
           )}
         </AdminPanel>
-
-        <AdminPanel
-          title={form.id ? '编辑友链' : '新建友链'}
-          description="右侧只保留友链本身需要的字段，提交申请的数据可以一键带进来。"
-          icon="edit_square"
-          className="min-w-0 overflow-hidden xl:sticky xl:top-6 xl:max-h-[calc(100vh-3rem)] xl:overflow-y-auto"
-          actions={
-            <div className="flex flex-wrap items-center gap-3">
-              {form.id ? (
-                <Button variant="ghost" onClick={startNew}>
-                  <MaterialSymbol icon="add" size={18} />
-                  切到新建
-                </Button>
-              ) : null}
-              <Button onClick={handleSave} loading={saving}>
-                <MaterialSymbol icon="save" size={18} />
-                {form.id ? '保存修改' : '创建友链'}
-              </Button>
-            </div>
-          }
-          bodyClassName="space-y-6"
-        >
-          <AdminSection
-            title="头像与基础信息"
-            description="头像、名称和链接决定了前台卡片的第一印象。"
-            className="lg:!grid-cols-1"
-          >
-            <div className="grid gap-5">
-              <div className={`${ADMIN_MUTED_PANEL_CLASS} p-4`}>
-                <p className="text-[11px] font-mono uppercase tracking-[0.22em] text-muted-foreground">
-                  Avatar
-                </p>
-                <button
-                  type="button"
-                  onClick={() => fileRef.current?.click()}
-                  className="group mt-4 block w-full rounded-2xl border border-dashed border-border/70 bg-background/36 p-4 text-left transition-colors hover:border-primary/18 hover:bg-background/48"
-                >
-                  <div className="flex justify-center">
-                    <div className="flex h-24 w-24 items-center justify-center overflow-hidden rounded-[26px] border border-border/70 bg-background/50">
-                      {form.avatarUrl ? (
-                        <img
-                          src={form.avatarUrl}
-                          alt={form.name || 'avatar preview'}
-                          className="h-full w-full object-cover"
-                        />
-                      ) : (
-                        <span className="text-3xl font-semibold text-foreground">
-                          {(form.name.trim().charAt(0) || '友').toUpperCase()}
-                        </span>
-                      )}
-                    </div>
-                  </div>
-                  <p className="mt-4 text-center text-sm font-medium text-foreground">
-                    {uploading ? '上传中…' : '点击上传头像'}
-                  </p>
-                </button>
-
-                <div className="mt-4 flex flex-wrap gap-2">
-                  <MediaLibraryPicker
-                    value={form.avatarUrl}
-                    onSelect={(url) =>
-                      setForm((current) => ({
-                        ...current,
-                        avatarUrl: toAbsoluteAssetUrl(url, profileForm?.siteUrl),
-                      }))
-                    }
-                    buttonLabel="从相册选择"
-                    dialogTitle="选择友链头像"
-                  />
-                  <Button
-                    variant="secondary"
-                    size="sm"
-                    onClick={() => fileRef.current?.click()}
-                    loading={uploading}
-                  >
-                    <MaterialSymbol icon="image_arrow_up" size={16} />
-                    上传头像
-                  </Button>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => setForm((current) => ({ ...current, avatarUrl: '' }))}
-                    disabled={!form.avatarUrl}
-                  >
-                    <MaterialSymbol icon="delete" size={16} />
-                    清空
-                  </Button>
-                </div>
-              </div>
-
-              <div className="grid gap-4">
-                <Field label="站点名称" hint="展示名称建议控制在 12 个字以内。">
-                  <input
-                    value={form.name}
-                    onChange={(event) => setForm((current) => ({ ...current, name: event.target.value }))}
-                    className={INPUT_CLASS}
-                    placeholder="例如：某某的博客"
-                  />
-                </Field>
-                <Field label="友链分类">
-                  <select
-                    value={form.category}
-                    onChange={(event) =>
-                      setForm((current) => ({
-                        ...current,
-                        category: event.target.value as LinkCategory,
-                      }))
-                    }
-                    className={INPUT_CLASS}
-                  >
-                    {categoryOptions.map((category) => (
-                      <option key={category.slug} value={category.slug}>
-                        {category.label}
-                      </option>
-                    ))}
-                  </select>
-                </Field>
-                <Field label="站点链接" fullWidth hint="前台卡片和跳转按钮都会直接使用它。">
-                  <input
-                    value={form.url}
-                    onChange={(event) => setForm((current) => ({ ...current, url: event.target.value }))}
-                    className={INPUT_CLASS}
-                    placeholder="https://example.com"
-                  />
-                </Field>
-                <Field label="头像链接" fullWidth>
-                  <input
-                    value={form.avatarUrl}
-                    onChange={(event) =>
-                      setForm((current) => ({ ...current, avatarUrl: event.target.value }))
-                    }
-                    className={INPUT_CLASS}
-                    placeholder="https://example.com/avatar.jpg"
-                  />
-                </Field>
-              </div>
-            </div>
-          </AdminSection>
-
-          <AdminSection
-            title="简介与排序"
-            description="简介尽量一句话说清楚，排序值越小越靠前。"
-            className="lg:!grid-cols-1"
-          >
-            <div className="grid gap-4">
-              <Field label="一句话简介" fullWidth>
-                <textarea
-                  value={form.description}
-                  onChange={(event) =>
-                    setForm((current) => ({ ...current, description: event.target.value }))
-                  }
-                  className={TEXTAREA_CLASS}
-                  rows={4}
-                  placeholder="这个站点适合什么人逛，为什么值得放进友情链接。"
-                />
-              </Field>
-              <Field label="排序值" hint="默认 0，数值越小越靠前。">
-                <input
-                  type="number"
-                  value={form.sortOrder}
-                  onChange={(event) =>
-                    setForm((current) => ({
-                      ...current,
-                      sortOrder: Number(event.target.value || 0),
-                    }))
-                  }
-                  className={INPUT_CLASS}
-                />
-              </Field>
-              <div className="block space-y-2.5">
-                <span className="text-[11px] font-mono uppercase tracking-[0.24em] text-muted-foreground">
-                  发布状态
-                </span>
-                <label className="flex items-start gap-3 rounded-xl border border-border/70 bg-background/38 px-4 py-4">
-                  <input
-                    type="checkbox"
-                    checked={form.isActive}
-                    onChange={(event) =>
-                      setForm((current) => ({ ...current, isActive: event.target.checked }))
-                    }
-                    className="mt-1 h-4 w-4 rounded border-border bg-background"
-                  />
-                  <span>
-                    <span className="block text-sm font-medium text-foreground">公开显示</span>
-                    <span className="mt-1 block text-sm leading-6 text-muted-foreground">
-                      关闭后只保留在后台，不会在前台友情链接页展示。
-                    </span>
-                  </span>
-                </label>
-              </div>
-            </div>
-          </AdminSection>
-
-          <input
-            ref={fileRef}
-            type="file"
-            accept="image/*"
-            className="hidden"
-            onChange={handleAvatarUpload}
-          />
-        </AdminPanel>
-        </div>
       ) : null}
 
       {activeTab === 'submissions' ? (
@@ -1373,6 +961,106 @@ export default function DashboardLinksPage() {
         )}
       </AdminPanel>
       ) : null}
+
+      {/* Create / Edit dialog */}
+      <AdminDialog
+        open={dialogOpen}
+        onClose={() => setDialogOpen(false)}
+        title={form.id ? `编辑：${form.name || '友链'}` : '新建友链'}
+        size="lg"
+        footer={
+          <div className="flex w-full items-center justify-between gap-3">
+            <div>
+              {form.id ? (
+                <Button variant="ghost" onClick={() => handleDelete(form.id!)} disabled={deletingId === form.id}>
+                  <MaterialSymbol icon="delete" size={16} />
+                  {deletingId === form.id ? '删除中…' : '删除友链'}
+                </Button>
+              ) : null}
+            </div>
+            <div className="flex items-center gap-3">
+              <Button variant="secondary" onClick={() => setDialogOpen(false)}>取消</Button>
+              <Button onClick={handleSave} loading={saving}>
+                <MaterialSymbol icon="save" size={16} />
+                {form.id ? '保存修改' : '创建友链'}
+              </Button>
+            </div>
+          </div>
+        }
+      >
+        <div className="space-y-5">
+          {/* Avatar */}
+          <div className="flex items-start gap-4">
+            <button
+              type="button"
+              onClick={() => fileRef.current?.click()}
+              className="flex h-16 w-16 shrink-0 items-center justify-center overflow-hidden rounded-xl border border-dashed border-border/70 bg-background/38 transition-colors hover:border-primary/30 hover:bg-background/52"
+            >
+              {form.avatarUrl ? (
+                <img src={form.avatarUrl} alt={form.name || 'avatar'} className="h-full w-full object-cover" />
+              ) : (
+                <span className="text-xl font-semibold text-foreground">
+                  {(form.name.trim().charAt(0) || '友').toUpperCase()}
+                </span>
+              )}
+            </button>
+            <div className="min-w-0 flex-1">
+              <Field label="头像链接" fullWidth>
+                <input
+                  value={form.avatarUrl}
+                  onChange={(e) => setForm((c) => ({ ...c, avatarUrl: e.target.value }))}
+                  className={INPUT_CLASS}
+                  placeholder="https://example.com/avatar.jpg"
+                />
+              </Field>
+              <div className="mt-2 flex gap-2">
+                <Button variant="secondary" size="sm" onClick={() => fileRef.current?.click()} loading={uploading}>
+                  <MaterialSymbol icon="image_arrow_up" size={14} />
+                  上传头像
+                </Button>
+                <Button variant="ghost" size="sm" onClick={() => setForm((c) => ({ ...c, avatarUrl: '' }))} disabled={!form.avatarUrl}>
+                  清空
+                </Button>
+              </div>
+            </div>
+          </div>
+
+          {/* Core fields */}
+          <div className="grid gap-4 sm:grid-cols-2">
+            <Field label="站点名称">
+              <input value={form.name} onChange={(e) => setForm((c) => ({ ...c, name: e.target.value }))} className={INPUT_CLASS} placeholder="例如：某某的博客" />
+            </Field>
+            <Field label="友链分类">
+              <select value={form.category} onChange={(e) => setForm((c) => ({ ...c, category: e.target.value as LinkCategory }))} className={INPUT_CLASS}>
+                {categoryOptions.map((cat) => (
+                  <option key={cat.slug} value={cat.slug}>{cat.label}</option>
+                ))}
+              </select>
+            </Field>
+            <Field label="站点链接" fullWidth>
+              <input value={form.url} onChange={(e) => setForm((c) => ({ ...c, url: e.target.value }))} className={INPUT_CLASS} placeholder="https://example.com" />
+            </Field>
+            <Field label="一句话简介" fullWidth>
+              <textarea value={form.description} onChange={(e) => setForm((c) => ({ ...c, description: e.target.value }))} className={TEXTAREA_CLASS} rows={3} placeholder="这个站点为什么值得一看。" />
+            </Field>
+          </div>
+
+          {/* Sort & visibility */}
+          <div className="flex flex-wrap items-end gap-4">
+            <div className="w-28">
+              <Field label="排序值">
+                <input type="number" value={form.sortOrder} onChange={(e) => setForm((c) => ({ ...c, sortOrder: Number(e.target.value || 0) }))} className={INPUT_CLASS} />
+              </Field>
+            </div>
+            <label className="flex items-center gap-2.5 pb-1">
+              <input type="checkbox" checked={form.isActive} onChange={(e) => setForm((c) => ({ ...c, isActive: e.target.checked }))} className="h-4 w-4 rounded border-border bg-background" />
+              <span className="text-sm text-foreground">公开显示</span>
+            </label>
+          </div>
+        </div>
+
+        <input ref={fileRef} type="file" accept="image/*" className="hidden" onChange={handleAvatarUpload} />
+      </AdminDialog>
     </div>
   )
 }

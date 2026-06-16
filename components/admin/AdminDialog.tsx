@@ -43,16 +43,7 @@ export function AdminDialog({
   }, [onClose])
 
   function handleBackdropClick(e: React.MouseEvent<HTMLDialogElement>) {
-    const rect = ref.current?.getBoundingClientRect()
-    if (!rect) return
-    if (
-      e.clientX < rect.left ||
-      e.clientX > rect.right ||
-      e.clientY < rect.top ||
-      e.clientY > rect.bottom
-    ) {
-      onClose()
-    }
+    if (e.target === ref.current) onClose()
   }
 
   const widthClass = { md: 'max-w-xl', lg: 'max-w-2xl', xl: 'max-w-4xl' }[size]

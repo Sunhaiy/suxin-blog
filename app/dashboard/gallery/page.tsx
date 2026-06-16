@@ -3,8 +3,6 @@
 import { useEffect, useRef, useState } from 'react'
 import {
   ADMIN_INPUT_CLASS,
-  ADMIN_SELECT_CLASS,
-  ADMIN_TEXTAREA_CLASS,
   AdminEmptyState,
   AdminNotice,
   AdminPageHeader,
@@ -214,23 +212,19 @@ export default function DashboardGalleryPage() {
         </button>
 
         {isLoading ? (
-          <div className="grid grid-cols-1 gap-4 lg:grid-cols-2 2xl:grid-cols-3">
-            {Array.from({ length: 6 }).map((_, i) => (
-              <div key={i} className="rounded-xl border border-border/70 bg-background/36 p-3">
-                <GalleryImageSkeleton className="aspect-[16/10] rounded-lg" />
-                <GalleryImageSkeleton className="mt-3 h-4 w-32 rounded-full" />
-                <GalleryImageSkeleton className="mt-2 h-16 w-full rounded-lg" />
-              </div>
+          <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6">
+            {Array.from({ length: 12 }).map((_, i) => (
+              <GalleryImageSkeleton key={i} className="aspect-square rounded-lg" />
             ))}
           </div>
         ) : items.length === 0 ? (
           <AdminEmptyState
             icon="imagesmode"
             title="还没有图片"
-            description="上传图片后会出现在这里，可以逐张归入相册或添加简介。"
+            description="上传图片后会出现在这里，可以逐张归入相册。"
           />
         ) : (
-          <div className="grid grid-cols-1 gap-3 lg:grid-cols-2 2xl:grid-cols-3">
+          <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6">
             {items.map((item) => (
               <GalleryItemEditorCard
                 key={item.id}
@@ -268,52 +262,54 @@ function GalleryItemEditorCard({
   onSaved: () => void
 }) {
   const { trigger: saveItem, isMutating: saving } = useUpdateGalleryItem(item.id)
-  const [description, setDescription] = useState(item.description ?? '')
   const [albumId, setAlbumId] = useState(item.album_id ? String(item.album_id) : '')
-  const [error, setError] = useState('')
 
-  const dirty =
-    description !== (item.description ?? '') || albumId !== (item.album_id ? String(item.album_id) : '')
+  const dirty = albumId !== (item.album_id ? String(item.album_id) : '')
 
   useEffect(() => {
-    setDescription(item.description ?? '')
     setAlbumId(item.album_id ? String(item.album_id) : '')
-  }, [item.album_id, item.description])
+  }, [item.album_id])
 
-  async function handleSave() {
-    setError('')
+  async function handleAlbumChange(value: string) {
+    setAlbumId(value)
     try {
-      await saveItem({ description: description.trim() || '', albumId: albumId ? Number(albumId) : null })
+      await saveItem({ description: item.description ?? '', albumId: value ? Number(value) : null })
       onSaved()
-    } catch (err) {
-      setError(err instanceof Error ? err.message : '保存图片信息失败')
+    } catch {
+      // revert on error
+      setAlbumId(item.album_id ? String(item.album_id) : '')
     }
   }
 
   return (
-    <article className="overflow-hidden rounded-xl border border-border/70 bg-background/36">
-      <div className="relative aspect-[16/10] overflow-hidden border-b border-border/70">
+    <article className="group overflow-hidden rounded-lg border border-border/70 bg-background/36">
+      <div className="relative aspect-square overflow-hidden">
         <img
           src={item.thumbnail_url ?? item.url}
           alt={item.title ?? item.file_name}
-          className="h-full w-full object-cover"
+          className="h-full w-full object-cover transition-transform duration-200 group-hover:scale-105"
         />
+        <div className="absolute inset-0 bg-black/0 transition-colors group-hover:bg-black/30" />
         <button
           onClick={() => void onDelete(item.id)}
-          className="absolute right-2 top-2 flex h-8 w-8 items-center justify-center rounded-lg border border-red-500/20 bg-black/50 text-red-300 backdrop-blur-md transition-colors hover:bg-red-500/20"
+          className="absolute right-1.5 top-1.5 flex h-7 w-7 items-center justify-center rounded-md bg-black/60 text-red-300 opacity-0 backdrop-blur-sm transition-opacity group-hover:opacity-100 hover:bg-red-500/40"
           title="删除图片"
         >
-          <MaterialSymbol icon="delete" size={15} />
+          <MaterialSymbol icon="delete" size={14} />
         </button>
+        {saving ? (
+          <div className="absolute bottom-1.5 right-1.5 flex h-5 w-5 items-center justify-center rounded-full bg-black/60">
+            <MaterialSymbol icon="sync" size={12} className="animate-spin text-primary" />
+          </div>
+        ) : null}
       </div>
 
-      <div className="space-y-3 p-3">
-        <p className="truncate text-sm text-foreground">{item.title ?? item.file_name}</p>
-
+      <div className="p-1.5">
         <select
           value={albumId}
-          onChange={(e) => setAlbumId(e.target.value)}
-          className={ADMIN_SELECT_CLASS}
+          onChange={(e) => void handleAlbumChange(e.target.value)}
+          disabled={saving}
+          className="h-7 w-full rounded-md border border-border/60 bg-background/50 px-2 text-xs text-foreground transition-colors focus:border-primary/30 focus:outline-none disabled:opacity-50"
         >
           <option value="">未归档</option>
           {albums.map((album) => (
@@ -322,29 +318,6 @@ function GalleryItemEditorCard({
             </option>
           ))}
         </select>
-
-        <textarea
-          value={description}
-          onChange={(e) => setDescription(e.target.value)}
-          rows={2}
-          className={ADMIN_TEXTAREA_CLASS}
-          placeholder="图片简介（留空则前台不显示）"
-        />
-
-        {error ? <AdminNotice tone="danger">{error}</AdminNotice> : null}
-
-        <div className="flex justify-end">
-          <Button
-            variant="secondary"
-            size="sm"
-            loading={saving}
-            disabled={!dirty && !saving}
-            onClick={() => void handleSave()}
-          >
-            <MaterialSymbol icon="save" size={15} />
-            保存
-          </Button>
-        </div>
       </div>
     </article>
   )

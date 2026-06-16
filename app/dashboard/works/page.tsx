@@ -14,6 +14,7 @@ import {
   ADMIN_MUTED_PANEL_CLASS,
   ADMIN_TEXTAREA_CLASS,
 } from '@/components/admin/AdminPrimitives'
+import { AdminDialog } from '@/components/admin/AdminDialog'
 import { MediaLibraryPicker } from '@/components/admin/MediaLibraryPicker'
 import { Button } from '@/components/ui/Button'
 import { MaterialSymbol } from '@/components/ui/MaterialSymbol'
@@ -84,6 +85,7 @@ export default function DashboardWorksPage() {
   const { data, isLoading, mutate } = useSWR<WorkDetail[]>('/api/works?admin=true', fetcher)
   const [form, setForm] = useState<WorkForm>(createEmptyWork())
   const [selectedId, setSelectedId] = useState<number | null>(null)
+  const [dialogOpen, setDialogOpen] = useState(false)
   const [saving, setSaving] = useState(false)
   const [deleting, setDeleting] = useState(false)
   const [uploadingCover, setUploadingCover] = useState(false)
@@ -110,6 +112,7 @@ export default function DashboardWorksPage() {
     setSelectedId(null)
     setForm(createEmptyWork())
     resetNotice()
+    setDialogOpen(true)
   }
 
   async function handleCoverUpload(event: ChangeEvent<HTMLInputElement>) {
@@ -209,7 +212,9 @@ export default function DashboardWorksPage() {
       const response = await fetch(`/api/works/${form.id}`, { method: 'DELETE' })
       if (!response.ok) throw new Error('删除失败')
       await mutate()
-      startNew()
+      setSelectedId(null)
+      setForm(createEmptyWork())
+      setDialogOpen(false)
       setSuccess('项目已删除。')
     } catch (err) {
       setError(err instanceof Error ? err.message : '删除失败')
@@ -219,58 +224,35 @@ export default function DashboardWorksPage() {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-5">
       <AdminPageHeader
-        eyebrow="Works Manager"
         title="项目管理"
-        description="维护项目票根正反两面的内容：正面展示标题与封面，背面展示简介、官网和 GitHub。"
         actions={
           <Button onClick={startNew}>
             <MaterialSymbol icon="add" size={18} />
             新建项目
           </Button>
         }
-        meta={
-          <>
-            <AdminStatusBadge tone="accent">{data?.length ?? 0} 个项目</AdminStatusBadge>
-            <AdminStatusBadge tone="neutral">票根翻转</AdminStatusBadge>
-          </>
-        }
+        meta={<AdminStatusBadge tone="accent">{data?.length ?? 0} 个项目</AdminStatusBadge>}
       />
 
-      {error ? <AdminNotice tone="danger">{error}</AdminNotice> : null}
-      {success ? <AdminNotice tone="success">{success}</AdminNotice> : null}
-
-      <div className="grid gap-6 xl:grid-cols-[320px_minmax(0,1fr)]">
-        <AdminPanel
-          title="项目列表"
-          description="左侧快速切换，右侧集中编辑。"
-          icon="deployed_code"
-          bodyClassName="space-y-3"
-        >
-          {isLoading ? (
-            <div className="space-y-3">
-              {Array.from({ length: 5 }).map((_, index) => (
-                <div
-                  key={index}
-                  className="h-24 animate-pulse rounded-[22px] border border-border/70 bg-background/38"
-                />
-              ))}
-            </div>
-          ) : !data?.length ? (
-            <AdminEmptyState
-              icon="deployed_code"
-              title="还没有项目"
-              description="先创建一个项目，前台项目页就会立刻读取到。"
-              action={
-                <Button size="sm" onClick={startNew}>
-                  新建第一个
-                </Button>
-              }
-            />
-          ) : (
-            data.map((item) => {
-              const active = selectedId === item.id
+      <AdminPanel title="项目列表">
+        {isLoading ? (
+          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+            {Array.from({ length: 6 }).map((_, i) => (
+              <div key={i} className="h-24 animate-pulse rounded-xl border border-border/70 bg-background/38" />
+            ))}
+          </div>
+        ) : !data?.length ? (
+          <AdminEmptyState
+            icon="deployed_code"
+            title="还没有项目"
+            description="先创建一个项目，前台项目页就会立刻读取到。"
+            action={<Button size="sm" onClick={startNew}>新建第一个</Button>}
+          />
+        ) : (
+          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+            {data.map((item) => {
               const primaryUrl = item.primary_url || item.url
               const secondaryUrl = item.github_url || item.secondary_url
               const primaryIsGithub = isGithubUrl(primaryUrl)
@@ -284,71 +266,67 @@ export default function DashboardWorksPage() {
                     setSelectedId(item.id)
                     setForm(item)
                     resetNotice()
+                    setDialogOpen(true)
                   }}
-                  className={`w-full rounded-[22px] border px-4 py-3 text-left transition-colors ${
-                    active
-                      ? 'border-primary/18 bg-primary/10'
-                      : 'border-border/70 bg-background/38 hover:border-border hover:bg-background/46'
-                  }`}
+                  className="w-full rounded-xl border border-border/70 bg-background/38 px-3.5 py-3 text-left transition-colors hover:border-border hover:bg-background/50"
                 >
-                  <div className="flex items-start justify-between gap-3">
-                    <div className="min-w-0">
-                      <div className="flex flex-wrap items-center gap-2">
-                        <p className="truncate text-sm font-medium text-foreground">{item.title}</p>
-                        <AdminStatusBadge tone={item.is_published ? 'accent' : 'neutral'}>
-                          {item.is_published ? '已发布' : '草稿'}
-                        </AdminStatusBadge>
-                      </div>
-                      <p className="mt-1 line-clamp-2 text-sm leading-6 text-muted-foreground">
-                        {item.summary || item.subtitle || '还没有摘要。'}
-                      </p>
-                      <div className="mt-2 flex flex-wrap gap-1.5">
-                        <AdminStatusBadge tone={hasOfficialLink ? 'accent' : 'neutral'}>
-                          {hasOfficialLink ? '有官网' : '无官网'}
-                        </AdminStatusBadge>
-                        <AdminStatusBadge tone={hasGithubLink ? 'accent' : 'neutral'}>
-                          {hasGithubLink ? '有 GitHub' : '无 GitHub'}
-                        </AdminStatusBadge>
-                      </div>
-                      <p className="mt-2 truncate text-[11px] font-mono text-muted-foreground/75">
-                        {item.slug || 'untitled'} · sort {item.sort_order}
-                      </p>
-                    </div>
+                  <div className="flex flex-wrap items-center gap-2">
+                    <p className="truncate text-sm font-medium text-foreground">{item.title}</p>
+                    <AdminStatusBadge tone={item.is_published ? 'accent' : 'neutral'}>
+                      {item.is_published ? '已发布' : '草稿'}
+                    </AdminStatusBadge>
                   </div>
+                  <p className="mt-1 line-clamp-1 text-xs text-muted-foreground">
+                    {item.summary || item.subtitle || '还没有摘要'}
+                  </p>
+                  <div className="mt-2 flex flex-wrap gap-1.5">
+                    <AdminStatusBadge tone={hasOfficialLink ? 'accent' : 'neutral'}>
+                      {hasOfficialLink ? '有官网' : '无官网'}
+                    </AdminStatusBadge>
+                    <AdminStatusBadge tone={hasGithubLink ? 'accent' : 'neutral'}>
+                      {hasGithubLink ? '有 GitHub' : '无 GitHub'}
+                    </AdminStatusBadge>
+                  </div>
+                  <p className="mt-1.5 truncate font-mono text-[10px] text-muted-foreground/60">
+                    {item.slug || 'untitled'} · sort {item.sort_order}
+                  </p>
                 </button>
               )
-            })
-          )}
-          <input
-            ref={coverInputRef}
-            type="file"
-            accept="image/*"
-            className="hidden"
-            onChange={handleCoverUpload}
-          />
-        </AdminPanel>
+            })}
+          </div>
+        )}
+      </AdminPanel>
 
-        <AdminPanel
-          title={form.id ? '编辑项目' : '新建项目'}
-          description="这些字段会同步到前台项目票根，尤其是悬停翻面后的简介和外链。"
-          icon="edit_square"
-          bodyClassName="space-y-6"
-          actions={
-            <div className="flex flex-wrap items-center gap-3">
+      <AdminDialog
+        open={dialogOpen}
+        onClose={() => setDialogOpen(false)}
+        title={form.id ? '编辑项目' : '新建项目'}
+        size="xl"
+        footer={
+          <div className="flex w-full items-center justify-between gap-3">
+            <div>
               {form.id ? (
-                <Button variant="ghost" onClick={startNew}>
-                  <MaterialSymbol icon="add" size={18} />
-                  切到新建
+                <Button variant="ghost" onClick={handleDelete} disabled={deleting}>
+                  <MaterialSymbol icon="delete" size={16} />
+                  {deleting ? '删除中…' : '删除项目'}
                 </Button>
               ) : null}
+            </div>
+            <div className="flex items-center gap-3">
+              <Button variant="secondary" onClick={() => setDialogOpen(false)}>取消</Button>
               <Button onClick={handleSave} loading={saving}>
-                <MaterialSymbol icon="save" size={18} />
+                <MaterialSymbol icon="save" size={16} />
                 {form.id ? '保存修改' : '创建项目'}
               </Button>
             </div>
-          }
-        >
-          <AdminSection title="基础信息" description="标题、摘要和标签会进入前台项目票根；摘要会优先显示在翻转背面。">
+          </div>
+        }
+      >
+        {error ? <AdminNotice tone="danger">{error}</AdminNotice> : null}
+        {success ? <AdminNotice tone="success">{success}</AdminNotice> : null}
+
+        <div className="space-y-6">
+          <AdminSection title="基础信息">
             <div className="grid gap-4 md:grid-cols-2">
               <AdminField label="标题">
                 <input
@@ -382,7 +360,7 @@ export default function DashboardWorksPage() {
                   value={form.summary ?? ''}
                   onChange={(event) => updateField('summary', event.target.value)}
                   className={ADMIN_TEXTAREA_CLASS}
-                  rows={4}
+                  rows={3}
                   placeholder="鼠标悬停翻转卡片后显示的一段简短介绍"
                 />
               </AdminField>
@@ -395,7 +373,7 @@ export default function DashboardWorksPage() {
                       'tags',
                       event.target.value
                         .split(',')
-                        .map((item) => item.trim())
+                        .map((tag) => tag.trim())
                         .filter(Boolean)
                     )
                   }
@@ -406,23 +384,23 @@ export default function DashboardWorksPage() {
             </div>
           </AdminSection>
 
-          <AdminSection title="封面与背面链接" description="封面显示在票根正面；官网和 GitHub 会显示在翻转背面。">
+          <AdminSection title="封面与外链">
             <div className="grid gap-4 md:grid-cols-2">
-              <AdminField label="封面 URL" fullWidth>
-                <div className="grid gap-4 lg:grid-cols-[260px_minmax(0,1fr)]">
+              <AdminField label="封面" fullWidth>
+                <div className="grid gap-3 sm:grid-cols-[180px_minmax(0,1fr)]">
                   <div className={`${ADMIN_MUTED_PANEL_CLASS} overflow-hidden`}>
                     <div className="aspect-[4/3] bg-background/40">
                       {form.cover_url ? (
                         <img src={form.cover_url} alt="作品封面预览" className="h-full w-full object-cover" />
                       ) : (
-                        <div className="flex h-full items-center justify-center text-sm text-muted-foreground">
+                        <div className="flex h-full items-center justify-center text-xs text-muted-foreground">
                           暂无封面
                         </div>
                       )}
                     </div>
                   </div>
 
-                  <div className="space-y-3">
+                  <div className="space-y-2.5">
                     <input
                       value={form.cover_url}
                       onChange={(event) => updateField('cover_url', event.target.value)}
@@ -437,13 +415,13 @@ export default function DashboardWorksPage() {
                         loading={uploadingCover}
                       >
                         <MaterialSymbol icon="image_arrow_up" size={16} />
-                        {form.cover_url ? '替换封面' : '上传封面'}
+                        {form.cover_url ? '替换' : '上传'}
                       </Button>
                       <MediaLibraryPicker
                         value={form.cover_url}
                         onSelect={(url) => updateField('cover_url', url)}
                         category="artwork"
-                        buttonLabel="从相册选择"
+                        buttonLabel="从相册选"
                         dialogTitle="选择作品封面"
                         description="作品卡片正面的封面可以直接上传，也可以复用相册里的图片。"
                       />
@@ -457,9 +435,6 @@ export default function DashboardWorksPage() {
                         清空
                       </Button>
                     </div>
-                    <p className="text-sm leading-6 text-muted-foreground">
-                      封面会显示在票根正面，建议使用构图干净、主体明确的横图或方图。
-                    </p>
                   </div>
                 </div>
               </AdminField>
@@ -517,7 +492,7 @@ export default function DashboardWorksPage() {
             </div>
           </AdminSection>
 
-          <AdminSection title="发布设置" description="控制排序和前台是否可见。">
+          <AdminSection title="发布设置">
             <div className="grid gap-4 md:grid-cols-2">
               <AdminField label="排序">
                 <input
@@ -542,17 +517,16 @@ export default function DashboardWorksPage() {
               </AdminField>
             </div>
           </AdminSection>
+        </div>
 
-          {form.id ? (
-            <div className="flex justify-end">
-              <Button variant="danger" onClick={handleDelete} loading={deleting}>
-                <MaterialSymbol icon="delete" size={18} />
-                删除项目
-              </Button>
-            </div>
-          ) : null}
-        </AdminPanel>
-      </div>
+        <input
+          ref={coverInputRef}
+          type="file"
+          accept="image/*"
+          className="hidden"
+          onChange={handleCoverUpload}
+        />
+      </AdminDialog>
     </div>
   )
 }

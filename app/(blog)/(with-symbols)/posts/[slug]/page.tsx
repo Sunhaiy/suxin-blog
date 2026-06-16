@@ -154,7 +154,7 @@ export default async function PostPage({
                 <Link
                   key={tag}
                   href={`/posts?tags=${encodeURIComponent(tag)}`}
-                  className="rounded-full border border-white/32 bg-black/76 px-3.5 py-1.5 text-xs font-semibold text-white backdrop-blur-xl transition-colors hover:border-white/42 hover:bg-black/84 dark:border-white/28 dark:bg-zinc-950/72 dark:text-white dark:hover:bg-zinc-950/82"
+                  className="scene-chip px-3.5 py-1.5 text-xs font-semibold transition-colors hover:brightness-110"
                 >
                   {tag}
                 </Link>
@@ -174,24 +174,24 @@ export default async function PostPage({
         </div>
 
         <div className="absolute inset-x-0 bottom-0 flex justify-center px-6 pb-6">
-          <div className="divide-x flex items-center gap-0 overflow-hidden rounded-2xl border border-white/34 bg-black/78 text-xs font-semibold text-white backdrop-blur-2xl divide-white/18">
-            <div className="px-4 py-2.5 text-white">
+          <div className="scene-panel flex items-center divide-x divide-hero-border/20 overflow-hidden rounded-2xl text-xs font-semibold text-hero-muted">
+            <div className="px-4 py-2.5 text-hero">
               {siteProfile.ownerName}
             </div>
 
             {publishedAtIso ? (
-              <div className="flex items-center gap-1.5 px-4 py-2.5 text-white">
-                <RiTimeLine size={12} className="shrink-0 text-white/90" />
-                <time className="text-white" dateTime={publishedAtIso}>{publishedAtLabel}</time>
+              <div className="flex items-center gap-1.5 px-4 py-2.5">
+                <RiTimeLine size={12} className="shrink-0 opacity-70" />
+                <time dateTime={publishedAtIso}>{publishedAtLabel}</time>
               </div>
             ) : null}
 
-            <div className="flex items-center gap-1.5 px-4 py-2.5 text-white">
-              <RiEyeLine size={12} className="shrink-0 text-white/90" />
-              <span className="text-white">{post.view_count}</span>
+            <div className="flex items-center gap-1.5 px-4 py-2.5">
+              <RiEyeLine size={12} className="shrink-0 opacity-70" />
+              <span>{post.view_count}</span>
             </div>
 
-            <div className="px-4 py-2.5 text-white">
+            <div className="px-4 py-2.5">
               约 {readTime} 分钟
             </div>
           </div>

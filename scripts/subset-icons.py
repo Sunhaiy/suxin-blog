@@ -9,7 +9,7 @@ from fontTools.ttLib import TTFont
 
 SRC = "node_modules/@fontsource-variable/material-symbols-rounded/files/material-symbols-rounded-latin-wght-normal.woff2"
 ICONS_FILE = "scripts/_used-icons.txt"
-OUT = "public/fonts/material-symbols/msr-subset.woff2"
+OUT = "app/fonts/msr-subset.woff2"
 
 icons = [l.strip() for l in open(ICONS_FILE, encoding="utf-8") if l.strip()]
 font = TTFont(SRC)

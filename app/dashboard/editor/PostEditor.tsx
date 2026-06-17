@@ -162,6 +162,7 @@ export function PostEditor({ post }: PostEditorProps) {
   const [saveState, setSaveState] = useState<SaveState>(legacyContentDetected ? 'dirty' : 'idle')
   const [coverUploading, setCoverUploading] = useState(false)
   const [error, setError] = useState('')
+  const [sidebarOpen, setSidebarOpen] = useState(true)
 
   useEffect(() => {
     fetch('/api/categories')
@@ -364,34 +365,42 @@ export function PostEditor({ post }: PostEditorProps) {
   }
 
   return (
-    <div className="-mx-4 -mt-4 flex min-h-full flex-col pb-8 sm:-mx-6 sm:-mt-6 sm:pb-10 lg:-mx-8 lg:-mt-8 lg:pb-12">
-      <div className="sticky top-0 z-30 border-b border-border/70 bg-background/88 px-4 backdrop-blur-2xl sm:px-6 lg:px-8">
-        <div className="mx-auto flex min-h-16 max-w-[1560px] flex-wrap items-center gap-3 py-3">
+    <div className="-mx-4 -mt-4 flex min-h-full flex-col sm:-mx-6 sm:-mt-6 lg:-mx-8 lg:-mt-8">
+      {/* ── Top bar ── */}
+      <div className="sticky top-0 z-30 border-b border-border/70 bg-background/92 px-4 backdrop-blur-2xl sm:px-6 lg:px-8">
+        <div className="mx-auto flex h-12 max-w-[1680px] items-center gap-2.5">
           <Link
             href="/dashboard/posts"
-            className="inline-flex items-center gap-1.5 rounded-full border border-border/70 bg-background/55 px-3 py-2 text-xs text-muted-foreground transition-colors hover:text-foreground"
+            className="inline-flex shrink-0 items-center gap-1 rounded-lg border border-border/70 bg-background/50 px-2.5 py-1.5 text-xs text-muted-foreground transition-colors hover:text-foreground"
           >
-            <MaterialSymbol icon="arrow_back" size={16} />
-            返回文章列表
+            <MaterialSymbol icon="arrow_back" size={14} />
+            文章
           </Link>
 
           <EditorStatusBadge saveState={saveState} status={status} />
-          <AdminStatusBadge tone="neutral">字数 {stats.words}</AdminStatusBadge>
-          <AdminStatusBadge tone="neutral">阅读 {stats.readingMinutes} 分钟</AdminStatusBadge>
-          <AdminStatusBadge tone="neutral">当前块 {stats.activeBlockLabel}</AdminStatusBadge>
-          {isFeatured ? <AdminStatusBadge tone="accent">推荐文章</AdminStatusBadge> : null}
-          {legacyContentDetected ? <AdminStatusBadge tone="warning">旧正文已重置为 V2 草稿</AdminStatusBadge> : null}
-          {error ? <span className="max-w-[360px] truncate text-xs text-red-300">{error}</span> : null}
 
-          <div className="ml-auto flex flex-wrap items-center gap-2">
+          {legacyContentDetected ? (
+            <AdminStatusBadge tone="warning">旧格式</AdminStatusBadge>
+          ) : null}
+
+          {error ? (
+            <span className="max-w-[240px] truncate text-xs text-red-400">{error}</span>
+          ) : null}
+
+          {/* stats — subtle, mid-bar */}
+          <span className="hidden text-xs text-muted-foreground/60 sm:block">
+            {stats.words} 字 · {stats.readingMinutes} 分钟 · {stats.activeBlockLabel}
+          </span>
+
+          <div className="ml-auto flex items-center gap-2">
             {previewHref ? (
               <a
                 href={previewHref}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="inline-flex items-center gap-1.5 rounded-full border border-border/70 bg-background/55 px-3 py-2 text-xs text-muted-foreground transition-colors hover:text-foreground"
+                className="inline-flex items-center gap-1 rounded-lg border border-border/70 bg-background/50 px-2.5 py-1.5 text-xs text-muted-foreground transition-colors hover:text-foreground"
               >
-                <MaterialSymbol icon="preview" size={16} />
+                <MaterialSymbol icon="preview" size={14} />
                 预览
               </a>
             ) : null}
@@ -402,8 +411,8 @@ export function PostEditor({ post }: PostEditorProps) {
               loading={saving && (saveTarget === 'draft' || saveTarget === 'auto')}
               onClick={() => void persist('draft', 'manual')}
             >
-              <MaterialSymbol icon="save" size={16} />
-              保存草稿
+              <MaterialSymbol icon="save" size={15} />
+              草稿
             </Button>
 
             <Button
@@ -411,196 +420,184 @@ export function PostEditor({ post }: PostEditorProps) {
               loading={saving && saveTarget === 'published'}
               onClick={() => void persist('published', 'manual')}
             >
-              <MaterialSymbol icon="send" size={16} />
-              {status === 'published' ? '更新发布' : '发布文章'}
+              <MaterialSymbol icon="send" size={15} />
+              {status === 'published' ? '更新' : '发布'}
             </Button>
+
+            {/* Sidebar toggle */}
+            <button
+              type="button"
+              onClick={() => setSidebarOpen((v) => !v)}
+              title={sidebarOpen ? '收起侧栏' : '展开侧栏'}
+              className={cn(
+                'flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border transition-colors',
+                sidebarOpen
+                  ? 'border-primary/20 bg-primary/10 text-primary'
+                  : 'border-border/70 bg-background/50 text-muted-foreground hover:text-foreground'
+              )}
+            >
+              <MaterialSymbol icon="view_column" size={16} />
+            </button>
           </div>
         </div>
       </div>
 
-      <div className="mx-auto flex min-h-0 w-full max-w-[1560px] flex-1 flex-col xl:flex-row">
-        <section className="min-w-0 flex-1 px-4 py-6 sm:px-6 xl:px-8">
-          <div className="space-y-6">
-            <div className="rounded-[30px] border border-border/75 bg-card/78 p-6 backdrop-blur-2xl sm:p-8">
-              <p className="text-[11px] font-mono uppercase tracking-[0.28em] text-muted-foreground">
-                Article Header
-              </p>
-              <input
-                type="text"
-                value={title}
-                onChange={(event) => setTitle(event.target.value)}
-                placeholder="在这里输入文章标题"
-                className="mt-4 w-full bg-transparent text-[2.2rem] font-semibold leading-tight tracking-[-0.04em] text-foreground outline-none placeholder:text-foreground/18"
-              />
-              <div className="mt-4 flex items-center gap-2 rounded-[20px] border border-border/70 bg-background/55 px-4 py-3 text-xs font-mono text-muted-foreground">
-                <MaterialSymbol icon="link" size={15} />
-                <span>/posts/</span>
-                <span className="truncate text-foreground/72">{resolvedSlug || 'url-slug'}</span>
-              </div>
-              <p className="mt-3 text-sm leading-6 text-muted-foreground">
-                正文编辑区只负责创作，发布、SEO、封面、分类和目录都收进右侧检查器，保持写作节奏更干净。
-              </p>
-            </div>
+      {/* ── Main ── */}
+      <div className="mx-auto flex min-h-0 w-full max-w-[1680px] flex-1 flex-col xl:flex-row">
 
+        {/* Writing canvas */}
+        <section className="min-w-0 flex-1 overflow-x-hidden px-4 pt-10 pb-20 sm:px-8 xl:px-14">
+          {/* Title block — no card, flows into editor */}
+          <div className="mx-auto w-full max-w-[760px]">
+            {isFeatured ? (
+              <div className="mb-4">
+                <AdminStatusBadge tone="accent">推荐文章</AdminStatusBadge>
+              </div>
+            ) : null}
+            <input
+              type="text"
+              value={title}
+              onChange={(event) => setTitle(event.target.value)}
+              placeholder="文章标题"
+              className="w-full bg-transparent text-[2.6rem] font-semibold leading-[1.2] tracking-[-0.05em] text-foreground outline-none placeholder:text-foreground/18"
+            />
+            <div className="mt-3 flex items-center gap-1.5 font-mono text-xs text-muted-foreground/50">
+              <MaterialSymbol icon="link" size={12} />
+              /posts/{resolvedSlug || 'url-slug'}
+            </div>
+          </div>
+
+          <div className="mt-8">
             <ArticleEditorV2
               initialContent={content}
               onChange={setContent}
               onStatsChange={setStats}
-              placeholder="从这里开始写文章正文。输入 / 可以插入提示块、FAQ、时间线、文件树、终端演示和图片卡片。"
-              className="pb-10"
+              placeholder="从这里开始写正文。输入 / 插入提示块、FAQ、时间线、文件树、终端演示和图片卡片。"
             />
           </div>
         </section>
 
-        <aside className="w-full shrink-0 border-t border-border/70 bg-card/70 backdrop-blur-2xl xl:w-[420px] xl:border-l xl:border-t-0">
-          <div className="sticky top-20 max-h-[calc(100vh-5rem)] overflow-y-auto px-4 py-6 sm:px-6">
-            <div className="space-y-6 rounded-[30px] border border-border/70 bg-background/30 p-5">
-              <div>
-                <p className="text-[11px] font-mono uppercase tracking-[0.28em] text-muted-foreground">
-                  Article Inspector
-                </p>
-                <h2 className="mt-2 text-lg font-semibold text-foreground">发布与检查器</h2>
-                <p className="mt-2 text-sm leading-6 text-muted-foreground">
-                  这里集中处理目录、slug、分类、封面、SEO 和状态，写作和发布不会再互相打断。
-                </p>
-              </div>
+        {/* Inspector sidebar */}
+        {sidebarOpen ? (
+          <aside className="w-full shrink-0 border-t border-border/70 bg-card/60 backdrop-blur-xl xl:w-[360px] xl:border-l xl:border-t-0">
+            <div className="sticky top-12 max-h-[calc(100vh-3rem)] overflow-y-auto">
+              <div className="space-y-0 divide-y divide-border/60">
 
-              <section className="space-y-4 border-t border-border/65 pt-5">
-                <div>
-                  <p className="text-sm font-semibold text-foreground">文档结构</p>
-                  <p className="mt-1 text-sm leading-6 text-muted-foreground">
-                    跟随正文实时更新，方便你随时看结构有没有写散。
-                  </p>
-                </div>
-                <div className="rounded-[22px] border border-border/70 bg-background/42 p-4">
-                  <div className="flex items-center justify-between gap-3">
-                    <p className="text-sm font-medium text-foreground">当前聚焦块</p>
-                    <AdminStatusBadge tone="neutral">{stats.activeBlockLabel}</AdminStatusBadge>
+                {/* Structure */}
+                <div className="px-5 py-5">
+                  <p className="mb-3 text-xs font-semibold uppercase tracking-widest text-muted-foreground">文档结构</p>
+                  <div className="flex items-center justify-between text-xs text-muted-foreground mb-2">
+                    <span>当前块</span>
+                    <span className="font-mono">{stats.activeBlockLabel}</span>
                   </div>
-                  <div className="mt-4 space-y-2">
+                  <div className="space-y-1.5">
                     {stats.headings.length > 0 ? (
                       stats.headings.map((heading, index) => (
                         <div
                           key={`${heading.id}-${index}`}
-                          className="rounded-2xl border border-border/60 bg-background/55 px-3 py-2 text-sm text-foreground/82"
-                          style={{ marginLeft: `${Math.max(0, heading.level - 1) * 12}px` }}
+                          className="truncate rounded-lg border border-border/60 bg-background/50 px-3 py-1.5 text-xs text-foreground/80"
+                          style={{ marginLeft: `${Math.max(0, heading.level - 1) * 10}px` }}
                         >
                           {heading.text}
                         </div>
                       ))
                     ) : (
-                      <p className="text-sm text-muted-foreground">还没有标题，建议先用 H1-H6 把结构立起来。</p>
+                      <p className="text-xs text-muted-foreground">还没有标题，先用 H1-H6 把结构立起来。</p>
                     )}
                   </div>
                 </div>
-              </section>
 
-              <section className="space-y-4 border-t border-border/65 pt-5">
-                <AdminField label="URL Slug" hint="不填时会根据标题自动生成。">
-                  <input
-                    type="text"
-                    value={slug}
-                    onChange={(event) => setSlug(event.target.value)}
-                    placeholder={resolvedSlug || 'url-slug'}
-                    className={`${ADMIN_INPUT_CLASS} font-mono text-xs`}
-                  />
-                </AdminField>
+                {/* Basic info */}
+                <div className="space-y-4 px-5 py-5">
+                  <p className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">基础信息</p>
 
-                <AdminField label="分类" hint="可以选已有分类，也可以临时新建。">
-                  {creatingCategory ? (
-                    <div className="flex gap-2">
-                      <input
-                        autoFocus
-                        type="text"
-                        value={draftCategoryName}
-                        onChange={(event) => setDraftCategoryName(event.target.value)}
-                        placeholder="输入新分类名"
-                        className={`${ADMIN_INPUT_CLASS} flex-1`}
-                        onKeyDown={(event) => {
-                          if (event.key === 'Enter') {
-                            event.preventDefault()
-                            commitNewCategory()
-                          }
-                          if (event.key === 'Escape') {
-                            cancelNewCategory()
-                          }
-                        }}
-                      />
-                      <Button variant="secondary" size="sm" onClick={commitNewCategory}>
-                        完成
-                      </Button>
-                    </div>
-                  ) : (
-                    <>
+                  <AdminField label="URL Slug" hint="为空时根据标题自动生成">
+                    <input
+                      type="text"
+                      value={slug}
+                      onChange={(event) => setSlug(event.target.value)}
+                      placeholder={resolvedSlug || 'url-slug'}
+                      className={`${ADMIN_INPUT_CLASS} font-mono text-xs`}
+                    />
+                  </AdminField>
+
+                  <AdminField label="分类">
+                    {creatingCategory ? (
+                      <div className="flex gap-2">
+                        <input
+                          autoFocus
+                          type="text"
+                          value={draftCategoryName}
+                          onChange={(event) => setDraftCategoryName(event.target.value)}
+                          placeholder="输入新分类名"
+                          className={`${ADMIN_INPUT_CLASS} flex-1`}
+                          onKeyDown={(event) => {
+                            if (event.key === 'Enter') { event.preventDefault(); commitNewCategory() }
+                            if (event.key === 'Escape') cancelNewCategory()
+                          }}
+                        />
+                        <Button variant="secondary" size="sm" onClick={commitNewCategory}>完成</Button>
+                      </div>
+                    ) : (
                       <select
                         value={categoryOptions.includes(category) ? category : '__other__'}
                         onChange={(event) => {
-                          if (event.target.value === '__new__') {
-                            setDraftCategoryName('')
-                            setCreatingCategory(true)
-                            return
-                          }
-                          if (event.target.value !== '__other__') {
-                            setCategory(event.target.value)
-                          }
+                          if (event.target.value === '__new__') { setDraftCategoryName(''); setCreatingCategory(true); return }
+                          if (event.target.value !== '__other__') setCategory(event.target.value)
                         }}
                         className={ADMIN_INPUT_CLASS}
                       >
                         {categoryOptions.map((item, index) => (
-                          <option key={`${item}-${index}`} value={item}>
-                            {item}
-                          </option>
+                          <option key={`${item}-${index}`} value={item}>{item}</option>
                         ))}
                         {!categoryOptions.includes(category) ? (
                           <option value="__other__">{category || '未分类'}</option>
                         ) : null}
                         <option value="__new__">+ 新建分类</option>
                       </select>
-                      <p className="mt-2 text-xs text-muted-foreground">
-                        当前分类：<span className="text-foreground">{category || '未分类'}</span>
-                      </p>
-                    </>
-                  )}
-                </AdminField>
+                    )}
+                  </AdminField>
 
-                <AdminField label="标签" hint="多个标签用英文逗号分隔。">
-                  <input
-                    type="text"
-                    value={tags}
-                    onChange={(event) => setTags(event.target.value)}
-                    placeholder="LLM, 教程, AI, Python"
-                    className={ADMIN_INPUT_CLASS}
-                  />
-                  {tagsList.length > 0 ? (
-                    <div className="mt-3 flex flex-wrap gap-2">
-                      {tagsList.map((tag, index) => (
-                        <button
-                          key={`${tag}-${index}`}
-                          type="button"
-                          onClick={() => removeTag(tag)}
-                          className="inline-flex items-center gap-1 rounded-full border border-primary/20 bg-primary/10 px-2.5 py-1 text-[11px] font-mono text-primary"
-                        >
-                          {tag}
-                          <MaterialSymbol icon="close" size={14} />
-                        </button>
-                      ))}
-                    </div>
-                  ) : null}
-                </AdminField>
+                  <AdminField label="标签" hint="逗号分隔">
+                    <input
+                      type="text"
+                      value={tags}
+                      onChange={(event) => setTags(event.target.value)}
+                      placeholder="LLM, 教程, AI"
+                      className={ADMIN_INPUT_CLASS}
+                    />
+                    {tagsList.length > 0 ? (
+                      <div className="mt-2 flex flex-wrap gap-1.5">
+                        {tagsList.map((tag, index) => (
+                          <button
+                            key={`${tag}-${index}`}
+                            type="button"
+                            onClick={() => removeTag(tag)}
+                            className="inline-flex items-center gap-1 rounded-full border border-primary/20 bg-primary/10 px-2 py-0.5 text-[11px] font-mono text-primary"
+                          >
+                            {tag}
+                            <MaterialSymbol icon="close" size={12} />
+                          </button>
+                        ))}
+                      </div>
+                    ) : null}
+                  </AdminField>
 
-                <AdminField label="摘要" hint="建议控制在 120 到 160 字。">
-                  <textarea
-                    value={excerpt}
-                    onChange={(event) => setExcerpt(event.target.value)}
-                    placeholder="写一段能概括全文核心收益的摘要。"
-                    rows={5}
-                    className={`${ADMIN_TEXTAREA_CLASS} min-h-[132px] resize-none`}
-                  />
-                </AdminField>
-              </section>
+                  <AdminField label="摘要" hint="建议 120–160 字">
+                    <textarea
+                      value={excerpt}
+                      onChange={(event) => setExcerpt(event.target.value)}
+                      placeholder="一句话说清楚这篇文章的核心收益。"
+                      rows={4}
+                      className={`${ADMIN_TEXTAREA_CLASS} resize-none`}
+                    />
+                  </AdminField>
+                </div>
 
-              <section className="space-y-4 border-t border-border/65 pt-5">
-                <AdminField label="封面图" hint="支持上传、替换、清空，也可以从相册里复用。">
+                {/* Cover */}
+                <div className="space-y-4 px-5 py-5">
+                  <p className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">封面</p>
+
                   <input
                     ref={coverInputRef}
                     type="file"
@@ -613,183 +610,132 @@ export function PostEditor({ post }: PostEditorProps) {
                     }}
                   />
 
-                  <div className={`${ADMIN_MUTED_PANEL_CLASS} overflow-hidden`}>
-                    <div className="aspect-[16/10] bg-background/40">
+                  <div className="overflow-hidden rounded-xl border border-border/70 bg-background/30">
+                    <div className="aspect-[16/9] bg-background/40">
                       {coverUrl ? (
                         <img src={coverUrl} alt="封面预览" className="h-full w-full object-cover" />
                       ) : (
-                        <div className="flex h-full items-center justify-center text-sm text-muted-foreground">
+                        <div className="flex h-full items-center justify-center text-xs text-muted-foreground">
                           暂无封面
                         </div>
                       )}
                     </div>
-                    <div className="flex flex-wrap gap-2 p-4">
-                      <Button
-                        variant="secondary"
-                        size="sm"
-                        disabled={coverUploading}
-                        onClick={() => coverInputRef.current?.click()}
-                      >
-                        <MaterialSymbol icon="image_arrow_up" size={16} />
-                        {coverUploading ? '上传中' : coverUrl ? '替换封面' : '上传封面'}
+                    <div className="flex flex-wrap gap-2 border-t border-border/60 p-3">
+                      <Button variant="secondary" size="sm" disabled={coverUploading} onClick={() => coverInputRef.current?.click()}>
+                        <MaterialSymbol icon="image_arrow_up" size={14} />
+                        {coverUploading ? '上传中' : coverUrl ? '替换' : '上传'}
                       </Button>
-                      <MediaLibraryPicker
-                        value={coverUrl}
-                        onSelect={setCoverUrl}
-                        category="artwork"
-                        buttonLabel="从相册选择"
-                        dialogTitle="选择文章封面"
-                        description="可以直接复用已经上传到相册里的图片，也可以在弹窗里继续上传新图。"
-                      />
-                      <Button variant="ghost" size="sm" disabled={!coverUrl} onClick={() => setCoverUrl('')}>
-                        <MaterialSymbol icon="delete" size={16} />
-                        清空
-                      </Button>
+                      <MediaLibraryPicker value={coverUrl} onSelect={setCoverUrl} category="artwork" buttonLabel="相册" dialogTitle="选择封面" />
+                      {coverUrl ? (
+                        <Button variant="ghost" size="sm" onClick={() => setCoverUrl('')}>
+                          <MaterialSymbol icon="delete" size={14} />
+                        </Button>
+                      ) : null}
                     </div>
                   </div>
-                </AdminField>
 
-                <AdminField label="封面 Alt" hint="给前台语义化和 SEO 使用。">
-                  <input
-                    type="text"
-                    value={coverAlt}
-                    onChange={(event) => setCoverAlt(event.target.value)}
-                    placeholder="例如：桌面上的机械键盘特写"
-                    className={ADMIN_INPUT_CLASS}
-                  />
-                </AdminField>
+                  <AdminField label="封面 Alt">
+                    <input
+                      type="text"
+                      value={coverAlt}
+                      onChange={(event) => setCoverAlt(event.target.value)}
+                      placeholder="例：桌面上的机械键盘特写"
+                      className={ADMIN_INPUT_CLASS}
+                    />
+                  </AdminField>
 
-                <label className="flex items-start gap-3 rounded-[22px] border border-border/70 bg-background/38 px-4 py-4">
-                  <input
-                    type="checkbox"
-                    checked={isFeatured}
-                    onChange={(event) => setIsFeatured(event.target.checked)}
-                    className="mt-1 h-4 w-4 rounded border-border bg-background"
-                  />
-                  <span>
-                    <span className="block text-sm font-medium text-foreground">推荐文章</span>
-                    <span className="mt-1 block text-sm text-muted-foreground">
-                      打开后会优先进入前台推荐位，也方便后台筛出重点内容。
-                    </span>
-                  </span>
-                </label>
-              </section>
-
-              <section className="space-y-4 border-t border-border/65 pt-5">
-                <div>
-                  <p className="text-sm font-semibold text-foreground">SEO 信息</p>
-                  <p className="mt-1 text-sm leading-6 text-muted-foreground">
-                    这组字段和正文分开维护，读者看不见，但搜索结果和社交分享会用到。
-                  </p>
+                  <label className="flex cursor-pointer items-center gap-3 rounded-xl border border-border/70 bg-background/30 px-4 py-3">
+                    <input
+                      type="checkbox"
+                      checked={isFeatured}
+                      onChange={(event) => setIsFeatured(event.target.checked)}
+                      className="h-4 w-4 rounded border-border bg-background"
+                    />
+                    <span className="text-sm text-foreground">推荐文章</span>
+                  </label>
                 </div>
 
-                <AdminField label="SEO 标题" hint="为空时默认回落到文章标题。">
-                  <input
-                    type="text"
-                    value={seoTitle}
-                    onChange={(event) => setSeoTitle(event.target.value)}
-                    placeholder={title || '建议控制在 60 字以内'}
-                    className={ADMIN_INPUT_CLASS}
-                  />
-                </AdminField>
+                {/* Publish */}
+                <div className="space-y-4 px-5 py-5">
+                  <p className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">发布状态</p>
 
-                <AdminField label="SEO 描述" hint="为空时默认回落到文章摘要。">
-                  <textarea
-                    value={seoDescription}
-                    onChange={(event) => setSeoDescription(event.target.value)}
-                    placeholder={excerpt || '建议控制在 140 到 160 字'}
-                    rows={4}
-                    className={`${ADMIN_TEXTAREA_CLASS} resize-none`}
-                  />
-                </AdminField>
-              </section>
-
-              <section className="space-y-4 border-t border-border/65 pt-5">
-                <div>
-                  <p className="text-sm font-semibold text-foreground">内容状态</p>
-                  <p className="mt-1 text-sm leading-6 text-muted-foreground">
-                    保存状态、发布时间和正文体量都集中在这里，一眼就知道文章当前处于什么阶段。
-                  </p>
-                </div>
-
-                <div className="space-y-3">
-                  {POST_STATUS_OPTIONS.map((item) => {
-                    const active = item.value === status
-                    return (
-                      <div
+                  <div className="flex gap-1.5 rounded-xl border border-border/70 bg-background/30 p-1">
+                    {POST_STATUS_OPTIONS.map((item) => (
+                      <button
                         key={item.value}
+                        type="button"
+                        onClick={() => void persist(item.value, 'manual')}
+                        disabled={saving}
                         className={cn(
-                          'rounded-[22px] border px-4 py-4 transition-colors',
-                          active ? 'border-primary/24 bg-primary/10' : 'border-border/70 bg-background/42'
+                          'flex-1 rounded-lg px-2 py-1.5 text-xs font-medium transition-colors',
+                          status === item.value
+                            ? 'bg-card text-foreground shadow-sm'
+                            : 'text-muted-foreground hover:text-foreground'
                         )}
                       >
-                        <div className="flex items-start justify-between gap-3">
-                          <div>
-                            <div className="flex items-center gap-2">
-                              <p className="text-sm font-medium text-foreground">{item.label}</p>
-                              <AdminStatusBadge tone={active ? item.tone : 'neutral'}>
-                                {active ? '当前状态' : item.label}
-                              </AdminStatusBadge>
-                            </div>
-                            <p className="mt-2 text-sm leading-6 text-muted-foreground">
-                              {item.description}
-                            </p>
-                          </div>
-                          {!active ? (
-                            <Button
-                              variant="secondary"
-                              size="sm"
-                              loading={saving && saveTarget === item.value}
-                              onClick={() => void persist(item.value, 'manual')}
-                            >
-                              <MaterialSymbol
-                                icon={
-                                  item.value === 'published'
-                                    ? 'send'
-                                    : item.value === 'archived'
-                                      ? 'inventory_2'
-                                      : 'draft'
-                                }
-                                size={16}
-                              />
-                              切换
-                            </Button>
-                          ) : null}
-                        </div>
-                      </div>
-                    )
-                  })}
-                </div>
-
-                <AdminField label="发布时间" hint="可以手动调整文章对外显示的发布时间。">
-                  <div className="flex gap-2">
-                    <input
-                      type="datetime-local"
-                      value={publishedAt}
-                      onChange={(event) => setPublishedAt(event.target.value)}
-                      className={`${ADMIN_INPUT_CLASS} flex-1`}
-                    />
-                    <Button variant="ghost" size="sm" disabled={!publishedAt} onClick={() => setPublishedAt('')}>
-                      <MaterialSymbol icon="event_busy" size={16} />
-                      清空
-                    </Button>
+                        {saving && saveTarget === item.value ? '…' : item.label}
+                      </button>
+                    ))}
                   </div>
-                </AdminField>
 
-                <div className="grid gap-3 sm:grid-cols-2">
-                  <StatCard label="字数" value={String(stats.words)} hint={`${stats.characters} 个有效字符`} />
-                  <StatCard label="阅读时长" value={`${stats.readingMinutes} 分钟`} hint="按正文长度动态估算" />
-                  <StatCard label="最近保存" value={formatDateTime(lastSavedAt)} hint="自动保存和手动保存都会更新" />
-                  <StatCard
-                    label="发布时间"
-                    value={formatDateTime(publishedAt ? new Date(publishedAt).toISOString() : null)}
-                    hint={status === 'published' ? '已公开' : '尚未发布'}
-                  />
+                  <AdminField label="发布时间">
+                    <div className="flex gap-2">
+                      <input
+                        type="datetime-local"
+                        value={publishedAt}
+                        onChange={(event) => setPublishedAt(event.target.value)}
+                        className={`${ADMIN_INPUT_CLASS} flex-1`}
+                      />
+                      <Button variant="ghost" size="sm" disabled={!publishedAt} onClick={() => setPublishedAt('')}>
+                        <MaterialSymbol icon="event_busy" size={14} />
+                      </Button>
+                    </div>
+                  </AdminField>
+
+                  <div className="grid grid-cols-2 gap-2 text-xs">
+                    {[
+                      { label: '字数', value: String(stats.words) },
+                      { label: '阅读', value: `${stats.readingMinutes} 分钟` },
+                      { label: '保存', value: formatDateTime(lastSavedAt).replace(/\d{4}\//, '') },
+                      { label: '状态', value: POST_STATUS_OPTIONS.find((o) => o.value === status)?.label ?? '草稿' },
+                    ].map((item) => (
+                      <div key={item.label} className="rounded-lg border border-border/60 bg-background/40 px-3 py-2">
+                        <p className="text-muted-foreground">{item.label}</p>
+                        <p className="mt-1 font-medium text-foreground">{item.value}</p>
+                      </div>
+                    ))}
+                  </div>
                 </div>
-              </section>
+
+                {/* SEO */}
+                <div className="space-y-4 px-5 py-5">
+                  <p className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">SEO</p>
+
+                  <AdminField label="SEO 标题" hint="为空时回落到文章标题">
+                    <input
+                      type="text"
+                      value={seoTitle}
+                      onChange={(event) => setSeoTitle(event.target.value)}
+                      placeholder={title || '建议 60 字以内'}
+                      className={ADMIN_INPUT_CLASS}
+                    />
+                  </AdminField>
+
+                  <AdminField label="SEO 描述" hint="为空时回落到摘要">
+                    <textarea
+                      value={seoDescription}
+                      onChange={(event) => setSeoDescription(event.target.value)}
+                      placeholder={excerpt || '建议 140–160 字'}
+                      rows={3}
+                      className={`${ADMIN_TEXTAREA_CLASS} resize-none`}
+                    />
+                  </AdminField>
+                </div>
+
+              </div>
             </div>
-          </div>
-        </aside>
+          </aside>
+        ) : null}
       </div>
     </div>
   )
@@ -820,24 +766,6 @@ function EditorStatusBadge({
 
   const current = POST_STATUS_OPTIONS.find((item) => item.value === status)
   return <AdminStatusBadge tone={current?.tone ?? 'neutral'}>{current?.label ?? '草稿'}</AdminStatusBadge>
-}
-
-function StatCard({
-  label,
-  value,
-  hint,
-}: {
-  label: string
-  value: string
-  hint: string
-}) {
-  return (
-    <div className="rounded-[20px] border border-border/70 bg-background/42 px-4 py-4">
-      <p className="text-[11px] font-mono uppercase tracking-[0.24em] text-muted-foreground">{label}</p>
-      <p className="mt-3 text-sm font-medium text-foreground">{value}</p>
-      <p className="mt-2 text-xs leading-5 text-muted-foreground">{hint}</p>
-    </div>
-  )
 }
 
 function cn(...values: Array<string | false | null | undefined>) {

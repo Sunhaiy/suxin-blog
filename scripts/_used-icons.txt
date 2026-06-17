@@ -47,6 +47,12 @@ event_busy
 expand_less
 expand_more
 favorite
+filter_1
+filter_2
+filter_3
+filter_4
+filter_5
+filter_6
 filter_alt
 folder
 folder_managed
@@ -66,6 +72,7 @@ format_strikethrough
 horizontal_rule
 html
 link_off
+quiz
 priority_high
 progress_activity
 redo
@@ -131,7 +138,9 @@ south_west
 sports_esports
 stadia_controller
 star
+table_chart
 task_alt
+timeline
 travel_explore
 tune
 tv

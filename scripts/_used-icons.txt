@@ -1,6 +1,7 @@
 account_circle
 add
 add_link
+add_photo_alternate
 alternate_email
 arrow_back
 arrow_forward

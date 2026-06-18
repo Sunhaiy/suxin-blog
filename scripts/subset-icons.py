@@ -58,7 +58,7 @@ print(f"resolved glyphs: {len(keep_glyphs)} / {len(icons)}")
 if missing:
     print("WARN missing (not in font or wrong name):", " ".join(missing))
 
-letters = "abcdefghijklmnopqrstuvwxyz_"
+letters = "abcdefghijklmnopqrstuvwxyz_0123456789"
 font.close()
 
 cmd = [

@@ -15,6 +15,18 @@ import { MaterialSymbol } from '@/components/ui/MaterialSymbol'
 import { TiptapEditor } from '@/features/editor/TiptapEditor'
 import { useCreateMoment, useDeleteMoment, useMoments, useUpdateMoment } from '@/features/moments/hooks'
 import { extractPlainTextFromRichContent } from '@/lib/utils/extractHeadings'
+
+function extractImagesFromDoc(doc: JSONContent): string[] {
+  const urls: string[] = []
+  function walk(node: JSONContent) {
+    if (node.type === 'image' && typeof node.attrs?.src === 'string') {
+      urls.push(node.attrs.src as string)
+    }
+    node.content?.forEach(walk)
+  }
+  walk(doc)
+  return urls
+}
 import type { MomentRow, MomentType } from '@/types/moment'
 
 const EMPTY_DOC: JSONContent = {
@@ -75,7 +87,8 @@ export default function DashboardMomentsPage() {
     }
 
     setError('')
-    const payload = { type, contentJson: content, isPublic }
+    const images = extractImagesFromDoc(content)
+    const payload = { type, contentJson: content, isPublic, images }
 
     try {
       if (activeMoment) {

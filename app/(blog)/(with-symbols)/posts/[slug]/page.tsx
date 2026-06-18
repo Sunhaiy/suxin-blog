@@ -236,7 +236,7 @@ export default async function PostPage({
               </div>
             </div>
 
-            <section className="mt-6 overflow-hidden rounded-[30px] border border-border/70 bg-card/82 shadow-[0_20px_60px_rgba(0,0,0,0.08)] backdrop-blur-xl">
+            <section className="mt-6 overflow-hidden rounded-[30px] border border-border/70 bg-card/82 backdrop-blur-xl">
               <div className="relative px-5 py-5 sm:px-6">
                 <div
                   aria-hidden

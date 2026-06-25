@@ -3,7 +3,7 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server'
-import { auth } from '@/auth'
+import { isAdmin } from '@/lib/auth/requireAdmin'
 import { findLinks, insertLink } from '@/lib/db/dao/linkDao'
 import { z } from 'zod'
 
@@ -28,15 +28,14 @@ const createSchema = z.object({
 })
 
 export async function GET(req: NextRequest) {
-  const session = await auth()
+  const admin = await isAdmin(req)
   // 管理员可查看全部（包括 inactive），访客只看 active
-  const links = await findLinks(!session)
+  const links = await findLinks(!admin)
   return NextResponse.json(links)
 }
 
 export async function POST(req: NextRequest) {
-  const session = await auth()
-  if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  if (!await isAdmin(req)) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
   const parsed = createSchema.safeParse(await req.json())
   if (!parsed.success) return NextResponse.json({ error: parsed.error.flatten() }, { status: 400 })

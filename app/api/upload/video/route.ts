@@ -1,13 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { auth } from '@/auth'
+import { isAdmin } from '@/lib/auth/requireAdmin'
 import { storage } from '@/lib/storage/LocalStorage'
 
 const ALLOWED_TYPES = ['video/mp4', 'video/webm', 'video/ogg', 'video/quicktime']
 const MAX_SIZE = 200 * 1024 * 1024
 
 export async function POST(req: NextRequest) {
-  const session = await auth()
-  if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  if (!await isAdmin(req)) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
   let formData: FormData
   try {

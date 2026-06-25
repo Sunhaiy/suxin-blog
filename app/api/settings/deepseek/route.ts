@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { z } from 'zod'
-import { auth } from '@/auth'
+import { isAdmin } from '@/lib/auth/requireAdmin'
 import { getDeepSeekPublicStatus, type DeepSeekStoredConfig } from '@/lib/ai/deepseek'
 import { SETTINGS_KEYS } from '@/lib/constants/settings'
 import { deleteSetting, getSetting, setSetting } from '@/lib/db/dao/settingsDao'
@@ -26,20 +26,14 @@ function normalizeBaseUrl(value: string | null) {
   }
 }
 
-export async function GET() {
-  const session = await auth()
-  if (!session) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-  }
+export async function GET(req: NextRequest) {
+  if (!await isAdmin(req)) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
   return NextResponse.json(await getDeepSeekPublicStatus())
 }
 
 export async function PATCH(req: NextRequest) {
-  const session = await auth()
-  if (!session) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-  }
+  if (!await isAdmin(req)) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
   const payload = await req.json().catch(() => null)
   const parsed = requestSchema.safeParse(payload)

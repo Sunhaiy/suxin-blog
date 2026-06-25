@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { z } from 'zod'
-import { auth } from '@/auth'
+import { isAdmin } from '@/lib/auth/requireAdmin'
 import {
   findApprovedComments,
   findCommentById,
@@ -119,8 +119,7 @@ export async function POST(
   }
 
   try {
-    const [session, siteProfile] = await Promise.all([auth(), getSiteProfile()])
-    const isByAuthor = Boolean(session?.user)
+    const [isByAuthor, siteProfile] = await Promise.all([isAdmin(req), getSiteProfile()])
     const userAgent = req.headers.get('user-agent')
 
     const comment = await insertComment({

@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { z } from 'zod'
-import { auth } from '@/auth'
+import { isAdmin } from '@/lib/auth/requireAdmin'
 import { getAdminCredentialsProfile, saveAdminCredentials } from '@/lib/auth/adminCredentials'
 
 const updateAdminAccountSchema = z
@@ -30,9 +30,8 @@ function readApiError(error: unknown, fallback: string) {
   return fallback
 }
 
-export async function GET() {
-  const session = await auth()
-  if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+export async function GET(req: NextRequest) {
+  if (!await isAdmin(req)) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
   const profile = await getAdminCredentialsProfile()
   if (!profile) {
@@ -43,8 +42,7 @@ export async function GET() {
 }
 
 export async function PATCH(req: NextRequest) {
-  const session = await auth()
-  if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  if (!await isAdmin(req)) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
   const parsed = updateAdminAccountSchema.safeParse(await req.json())
   if (!parsed.success) {

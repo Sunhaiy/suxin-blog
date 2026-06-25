@@ -1,13 +1,12 @@
-import { NextResponse } from 'next/server'
-import { auth } from '@/auth'
+import { NextRequest, NextResponse } from 'next/server'
+import { isAdmin } from '@/lib/auth/requireAdmin'
 import { deleteLinkCategory } from '@/lib/db/dao/linkCategoryDao'
 
 export async function DELETE(
-  _req: Request,
+  req: NextRequest,
   { params }: { params: Promise<{ slug: string }> }
 ) {
-  const session = await auth()
-  if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  if (!await isAdmin(req)) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
   const { slug } = await params
   const result = await deleteLinkCategory(decodeURIComponent(slug))

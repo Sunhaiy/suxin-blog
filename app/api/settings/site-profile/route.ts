@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { auth } from '@/auth'
+import { isAdmin } from '@/lib/auth/requireAdmin'
 import { getSiteProfile, normalizeSiteProfile, persistSiteProfile } from '@/lib/site'
 import { siteProfileSchema } from '@/lib/validation/site'
 
@@ -9,8 +9,7 @@ export async function GET() {
 }
 
 export async function PATCH(req: NextRequest) {
-  const session = await auth()
-  if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  if (!await isAdmin(req)) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
   const parsed = siteProfileSchema.safeParse(await req.json())
   if (!parsed.success) {

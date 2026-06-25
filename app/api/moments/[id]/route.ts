@@ -3,7 +3,7 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server'
-import { auth } from '@/auth'
+import { isAdmin } from '@/lib/auth/requireAdmin'
 import { findMomentById, updateMoment, deleteMoment } from '@/lib/db/dao/momentDao'
 import { z } from 'zod'
 
@@ -28,20 +28,18 @@ const updateSchema = z.object({
   isPublic: z.boolean().optional(),
 })
 
-export async function GET(_req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+export async function GET(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
   const moment = await findMomentById(Number(id))
   if (!moment) return NextResponse.json({ error: 'Not found' }, { status: 404 })
-  if (!moment.is_public) {
-    const session = await auth()
-    if (!session) return NextResponse.json({ error: 'Not found' }, { status: 404 })
+  if (!moment.is_public && !await isAdmin(req)) {
+    return NextResponse.json({ error: 'Not found' }, { status: 404 })
   }
   return NextResponse.json(moment)
 }
 
 export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
-  const session = await auth()
-  if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  if (!await isAdmin(req)) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
   const { id } = await params
   const body = await req.json()
@@ -53,9 +51,8 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
   return NextResponse.json(moment)
 }
 
-export async function DELETE(_req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
-  const session = await auth()
-  if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+export async function DELETE(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+  if (!await isAdmin(req)) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
   const { id } = await params
   const ok = await deleteMoment(Number(id))

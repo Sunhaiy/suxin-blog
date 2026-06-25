@@ -6,7 +6,7 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server'
-import { auth } from '@/auth'
+import { isAdmin } from '@/lib/auth/requireAdmin'
 import { findMoments, insertMoment } from '@/lib/db/dao/momentDao'
 import { z } from 'zod'
 
@@ -33,20 +33,19 @@ const createSchema = z.object({
 
 export async function GET(req: NextRequest) {
   const { searchParams } = req.nextUrl
-  const session = await auth()
+  const admin = await isAdmin(req)
 
   const result = await findMoments({
     page: Number(searchParams.get('page') ?? 1),
     pageSize: Number(searchParams.get('pageSize') ?? 20),
     type: searchParams.get('type') ?? undefined,
-    publicOnly: !session,
+    publicOnly: !admin,
   })
   return NextResponse.json(result)
 }
 
 export async function POST(req: NextRequest) {
-  const session = await auth()
-  if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  if (!await isAdmin(req)) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
   const body = await req.json()
   const parsed = createSchema.safeParse(body)

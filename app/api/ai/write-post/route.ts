@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { z } from 'zod'
-import { auth } from '@/auth'
+import { isAdmin } from '@/lib/auth/requireAdmin'
 import { generateArticleFromMaterials } from '@/lib/ai/articleWriter'
 import { getDeepSeekPublicStatus } from '@/lib/ai/deepseek'
 import { findPostBySlug, insertPost } from '@/lib/db/dao/postDao'
@@ -52,20 +52,14 @@ async function createUniquePostSlug(title: string) {
   return candidate
 }
 
-export async function GET() {
-  const session = await auth()
-  if (!session) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-  }
+export async function GET(req: NextRequest) {
+  if (!await isAdmin(req)) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
   return NextResponse.json(await getDeepSeekPublicStatus())
 }
 
 export async function POST(req: NextRequest) {
-  const session = await auth()
-  if (!session) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-  }
+  if (!await isAdmin(req)) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
   const body = await req.json().catch(() => null)
   const parsed = requestSchema.safeParse(body)

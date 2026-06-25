@@ -1,25 +1,23 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { auth } from '@/auth'
+import { isAdmin } from '@/lib/auth/requireAdmin'
 import { findWorkDetails, findWorks, insertWork } from '@/lib/db/dao/worksDao'
 import { workSchema } from '@/lib/validation/work'
 
 export async function GET(req: NextRequest) {
-  const session = await auth()
-  const admin = req.nextUrl.searchParams.get('admin') === 'true'
+  const adminParam = req.nextUrl.searchParams.get('admin') === 'true'
 
-  if (admin && !session) {
+  if (adminParam && !await isAdmin(req)) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
 
-  const works = admin && session
+  const works = adminParam
     ? await findWorkDetails({ includeUnpublished: true })
     : await findWorks({ includeUnpublished: false })
   return NextResponse.json(works)
 }
 
 export async function POST(req: NextRequest) {
-  const session = await auth()
-  if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  if (!await isAdmin(req)) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
   const parsed = workSchema.safeParse(await req.json())
   if (!parsed.success) {

@@ -1,13 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { auth } from '@/auth'
+import { isAdmin } from '@/lib/auth/requireAdmin'
 import { findWorkById, updateWork, deleteWork } from '@/lib/db/dao/worksDao'
 import { updateWorkSchema } from '@/lib/validation/work'
 
 export async function GET(
-  _req: NextRequest,
+  req: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  const session = await auth()
   const { id } = await params
   const work = await findWorkById(Number(id))
 
@@ -15,7 +14,7 @@ export async function GET(
     return NextResponse.json({ error: 'Not found' }, { status: 404 })
   }
 
-  if (!work.is_published && !session) {
+  if (!work.is_published && !await isAdmin(req)) {
     return NextResponse.json({ error: 'Not found' }, { status: 404 })
   }
 
@@ -26,8 +25,7 @@ export async function PATCH(
   req: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  const session = await auth()
-  if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  if (!await isAdmin(req)) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
   const parsed = updateWorkSchema.safeParse(await req.json())
   if (!parsed.success) {
@@ -50,11 +48,10 @@ export async function PATCH(
 }
 
 export async function DELETE(
-  _req: NextRequest,
+  req: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  const session = await auth()
-  if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  if (!await isAdmin(req)) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
   const { id } = await params
   const ok = await deleteWork(Number(id))

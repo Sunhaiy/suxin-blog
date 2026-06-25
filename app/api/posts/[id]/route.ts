@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { z } from 'zod'
-import { auth } from '@/auth'
+import { isAdmin } from '@/lib/auth/requireAdmin'
 import { articleDocSchema } from '@/lib/articles/document'
 import {
   deletePost,
@@ -27,15 +27,14 @@ const updateSchema = z.object({
   publishedAt: z.string().datetime().nullable().optional(),
 })
 
-export async function GET(_: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+export async function GET(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
   const isNumeric = /^\d+$/.test(id)
   const post = isNumeric ? await findPostById(Number(id)) : await findPostBySlug(id)
 
   if (!post) return NextResponse.json({ error: 'Not found' }, { status: 404 })
 
-  const session = await auth()
-  if (!session && post.status !== 'published') {
+  if (!await isAdmin(req) && post.status !== 'published') {
     return NextResponse.json({ error: 'Not found' }, { status: 404 })
   }
 
@@ -47,8 +46,7 @@ export async function GET(_: NextRequest, { params }: { params: Promise<{ id: st
 }
 
 export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
-  const session = await auth()
-  if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  if (!await isAdmin(req)) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
   const { id } = await params
   const existingPost = await findPostById(Number(id))
@@ -68,9 +66,8 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
   return NextResponse.json(post)
 }
 
-export async function DELETE(_: NextRequest, { params }: { params: Promise<{ id: string }> }) {
-  const session = await auth()
-  if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+export async function DELETE(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+  if (!await isAdmin(req)) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
   const { id } = await params
   const existingPost = await findPostById(Number(id))

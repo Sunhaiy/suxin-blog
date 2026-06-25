@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { z } from 'zod'
-import { auth } from '@/auth'
+import { isAdmin } from '@/lib/auth/requireAdmin'
 import { findLinkSubmissions, insertLinkSubmission } from '@/lib/db/dao/linkSubmissionDao'
 
 function isAbsoluteUrl(value: string) {
@@ -35,9 +35,8 @@ const createSchema = z.object({
   contactNote: z.string().trim().max(500).optional(),
 })
 
-export async function GET() {
-  const session = await auth()
-  if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+export async function GET(req: NextRequest) {
+  if (!await isAdmin(req)) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
   const submissions = await findLinkSubmissions()
   return NextResponse.json(submissions)

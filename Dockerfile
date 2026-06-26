@@ -11,6 +11,8 @@ RUN npm install
 
 FROM deps AS builder
 
+ARG CACHE_BUST=0
+
 ARG DATABASE_URL
 ARG PGHOST
 ARG PGPORT

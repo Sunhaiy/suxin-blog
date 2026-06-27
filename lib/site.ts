@@ -393,7 +393,14 @@ export function normalizeSiteProfile(input?: Partial<SiteProfile> | null): SiteP
     ).filter((item): item is string => Boolean(item)),
     homeGreetingPool: normalizeGreetingPool(source.homeGreetingPool),
     homeQuotePool: normalizeHomeQuotePool(source.homeQuotePool),
-    homeProfileLinks: normalizeHomeProfileLinks(source.homeProfileLinks, homeProfileLinkDefaults),
+    homeProfileLinks: normalizeHomeProfileLinks(source.homeProfileLinks, homeProfileLinkDefaults).map(
+      (link) => {
+        if (link.id === 'github') return { ...link, href: githubUrl }
+        if (link.id === 'email') return { ...link, href: `mailto:${email}` }
+        if (link.id === 'rss') return { ...link, href: rssUrl }
+        return link
+      }
+    ),
     gamesHeroImageUrl: normalizeAssetUrl(source.gamesHeroImageUrl, siteUrl),
     siteUrl,
     rssUrl,

@@ -14,15 +14,9 @@ export default async function WorksPage() {
   const [works, siteProfile] = await Promise.all([findWorks(), getSiteProfile()])
 
   return (
-    <main className="min-h-[calc(100vh-64px)] overflow-hidden">
+    <main className="min-h-[calc(100vh-64px)] overflow-hidden bg-background">
       {works.length === 0 ? (
-        <div
-          className="flex min-h-[calc(100vh-64px)] items-center justify-center px-6 text-center"
-          style={{
-            backgroundColor: 'var(--works-stage)',
-            color: 'var(--works-stage-muted)',
-          }}
-        >
+        <div className="flex min-h-[calc(100vh-64px)] items-center justify-center px-6 text-center text-muted-foreground">
           暂无项目，敬请期待。
         </div>
       ) : (

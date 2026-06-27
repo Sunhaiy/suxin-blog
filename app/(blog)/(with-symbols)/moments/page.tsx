@@ -28,7 +28,8 @@ export default async function MomentsPage() {
   ])
 
   return (
-    <div className="relative z-10 mx-auto max-w-[700px] px-4 pb-20 pt-8 sm:px-6 sm:pt-10">
+    <div className="relative min-h-[calc(100vh-4rem)] bg-background">
+    <div className="mx-auto max-w-[700px] px-4 pb-20 pt-8 sm:px-6 sm:pt-10">
       {moments.length === 0 ? (
         <div className="rounded-[28px] border border-border/75 bg-card/92 px-8 py-24 text-center backdrop-blur-2xl">
           <p className="text-lg font-semibold text-foreground">暂时还没有新的瞬间。</p>
@@ -47,6 +48,7 @@ export default async function MomentsPage() {
           ))}
         </div>
       )}
+    </div>
     </div>
   )
 }

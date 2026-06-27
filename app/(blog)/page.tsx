@@ -113,7 +113,7 @@ export default async function HomePage() {
         </div>
       </section>
 
-      <section className="relative z-10 -mt-16 rounded-t-[2rem] bg-background/94 shadow-[0_-20px_48px_rgba(15,23,42,0.04)] backdrop-blur-2xl dark:shadow-[0_-20px_48px_rgba(0,0,0,0.12)]">
+      <section className="relative z-10 -mt-16 rounded-t-[2rem] bg-background shadow-[0_-20px_48px_rgba(15,23,42,0.04)] dark:shadow-[0_-20px_48px_rgba(0,0,0,0.12)]">
         <div className="mx-auto max-w-6xl px-4">
           <div className="grid grid-cols-1 items-start gap-8 pb-20 pt-14 lg:grid-cols-[1fr_280px]">
             <div className="min-w-0" id="latest-posts">

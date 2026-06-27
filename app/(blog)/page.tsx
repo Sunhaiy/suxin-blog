@@ -61,7 +61,7 @@ export default async function HomePage() {
 
   return (
     <>
-      <section className="relative -mt-16 flex min-h-[85vh] flex-col overflow-hidden bg-background">
+      <section className="relative -mt-16 flex min-h-[60vh] flex-col overflow-hidden bg-background">
         {hasSceneImage && heroSceneUrl ? (
           <div
             aria-hidden

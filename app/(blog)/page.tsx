@@ -7,14 +7,11 @@ import { ActivityHeatmap } from '@/components/ui/ActivityHeatmap'
 import { HomeSidebarVisitorCard } from '@/components/ui/HomeSidebarVisitorCard'
 import { PostCard } from '@/components/ui/PostCard'
 import { getActivityHeatmap } from '@/lib/db/dao/activityDao'
-import { findRecentPublicMoments } from '@/lib/db/dao/momentDao'
 import { getHomepagePostSnapshot } from '@/lib/db/dao/postDao'
 import { preload } from 'react-dom'
 import { getOptimizedMediaUrl } from '@/lib/media'
 import { getBackgroundSceneSettings } from '@/lib/scene'
 import { getSiteProfile } from '@/lib/site'
-import { extractPlainTextFromRichContent } from '@/lib/utils/extractHeadings'
-import type { MomentRow } from '@/types/moment'
 
 export const metadata: Metadata = {
   title: '\u9996\u9875',
@@ -23,47 +20,6 @@ export const metadata: Metadata = {
 
 export const revalidate = 60
 
-function getMomentPreview(moment: MomentRow): { text: string; mono: boolean } | null {
-  if (moment.content) return { text: moment.content, mono: false }
-
-  if (moment.content_json) {
-    const text = extractPlainTextFromRichContent(moment.content_json)
-    if (text) return { text, mono: false }
-  }
-
-  if (!moment.meta) return null
-
-  if (moment.type === 'sleep') {
-    const meta = moment.meta as {
-      sleepStart?: string
-      sleepEnd?: string
-      deepSleepMinutes?: number
-      score?: number | null
-    }
-    const parts: string[] = []
-    if (meta.sleepStart && meta.sleepEnd) parts.push(`入睡 ${meta.sleepStart} / 起床 ${meta.sleepEnd}`)
-    if (meta.deepSleepMinutes != null) parts.push(`深睡 ${meta.deepSleepMinutes} min`)
-    if (meta.score != null) parts.push(`评分 ${meta.score}`)
-    return parts.length > 0 ? { text: parts.join('\n'), mono: true } : null
-  }
-
-  if (moment.type === 'steps') {
-    const meta = moment.meta as { steps?: number; distance?: number; calories?: number }
-    const parts: string[] = []
-    if (meta.steps != null) parts.push(`${meta.steps.toLocaleString()} \u6b65`)
-    if (meta.distance != null) parts.push(`${meta.distance} km`)
-    if (meta.calories != null) parts.push(`${meta.calories} kcal`)
-    return parts.length > 0 ? { text: parts.join('  '), mono: true } : null
-  }
-
-  if (moment.type === 'link') {
-    const meta = moment.meta as { title?: string; url?: string }
-    const text = meta.title || meta.url
-    return text ? { text, mono: false } : null
-  }
-
-  return null
-}
 
 function getYearProgress(year: number) {
   const start = new Date(year, 0, 1).getTime()
@@ -81,9 +37,8 @@ function pickSidebarGreeting(pool: string[]) {
 }
 
 export default async function HomePage() {
-  const [postsSnapshot, moments, scene, activityData, siteProfile] = await Promise.all([
+  const [postsSnapshot, scene, activityData, siteProfile] = await Promise.all([
     getHomepagePostSnapshot(),
-    findRecentPublicMoments(10),
     getBackgroundSceneSettings(),
     getActivityHeatmap(365),
     getSiteProfile(),
@@ -155,87 +110,6 @@ export default async function HomePage() {
             </div>
           </div>
 
-          {moments.length > 0 ? (
-            <div className="mt-auto hidden pt-16 md:block">
-              <div className="scene-panel mx-auto max-w-5xl overflow-hidden rounded-[32px] p-5 sm:p-6">
-                <div className="mb-5 flex items-center justify-between gap-4">
-                  <div className="flex items-center gap-2.5">
-                    <span className="scene-icon-badge h-8 w-8 rounded-2xl text-primary">
-                      <PublicSymbol icon="chat_bubble" size={16} />
-                    </span>
-                    <span className="text-sm font-medium text-foreground">瞬间</span>
-                  </div>
-                  <Link
-                    href="/moments"
-                    className="scene-action h-8 w-8 justify-center rounded-full p-0 text-muted-foreground hover:text-primary"
-                    aria-label="查看全部瞬间"
-                  >
-                    <PublicSymbol icon="arrow_forward" size={16} />
-                  </Link>
-                </div>
-
-                <div className="flex gap-3 overflow-x-auto px-0.5 pb-1 pt-0.5 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-                  {moments.map((moment) => {
-                    const preview = getMomentPreview(moment)
-
-                    return (
-                      <Link
-                        key={moment.id}
-                        href="/moments"
-                        className="scene-panel-soft group relative flex min-h-[172px] w-[18rem] flex-shrink-0 flex-col justify-between overflow-hidden rounded-[24px] p-4 transition-all duration-300 hover:-translate-y-0.5 sm:w-[19rem]"
-                      >
-                        <div className="scene-terminal-grid absolute inset-0 opacity-[0.025]" />
-                        <div className="relative z-10">
-                          {moment.images.length > 0 ? (
-                            <div className="mb-3 aspect-[16/9] overflow-hidden rounded-[18px] border border-border/45 bg-background/20 dark:bg-black/10">
-                              <ProgressiveImage
-                                src={getOptimizedMediaUrl(moment.images[0], { width: 828, quality: 70 }) ?? moment.images[0]}
-                                alt=""
-                                loading="lazy"
-                                decoding="async"
-                                fetchPriority="low"
-                                wrapperClassName="h-full w-full"
-                                className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-[1.04]"
-                              />
-                            </div>
-                          ) : null}
-
-                          {preview ? (
-                            <p
-                              className={`line-clamp-4 whitespace-pre-line text-[13px] leading-6 text-foreground/78 ${
-                                preview.mono ? 'font-mono' : ''
-                              }`}
-                            >
-                              {preview.text}
-                            </p>
-                          ) : (
-                            <p className="text-xs leading-6 text-muted-foreground">
-                              {'\u8fd9\u4e00\u523b\u8fd8\u6ca1\u6709\u7559\u4e0b\u6587\u5b57\u3002'}
-                            </p>
-                          )}
-                        </div>
-
-                        <div className="relative z-10 mt-5 flex items-center justify-between text-[10px] font-mono uppercase tracking-[0.12em] text-muted-foreground">
-                          <span className="inline-flex items-center gap-1.5">
-                            <PublicSymbol icon="schedule" size={13} />
-                            {new Date(moment.created_at).toLocaleString('zh-CN', {
-                              month: '2-digit',
-                              day: '2-digit',
-                              hour: '2-digit',
-                              minute: '2-digit',
-                            })}
-                          </span>
-                            <span className="scene-action inline-flex h-7 w-7 items-center justify-center rounded-full p-0 text-muted-foreground group-hover:text-primary">
-                            <PublicSymbol icon="arrow_outward" size={13} />
-                          </span>
-                        </div>
-                      </Link>
-                    )
-                  })}
-                </div>
-              </div>
-            </div>
-          ) : null}
         </div>
       </section>
 

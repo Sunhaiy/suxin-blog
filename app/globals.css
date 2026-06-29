@@ -174,7 +174,7 @@
   }
 
   .works-theme {
-    --works-stage: #f4efe8;
+    --works-stage: hsl(var(--background));
     --works-stage-copy: #161616;
     --works-stage-subtle: rgba(22, 22, 22, 0.72);
     --works-stage-muted: rgba(22, 22, 22, 0.52);
@@ -241,7 +241,7 @@
   }
 
   .dark .works-theme {
-    --works-stage: #050505;
+    --works-stage: hsl(var(--background));
     --works-stage-copy: #f4efe8;
     --works-stage-subtle: rgba(244, 239, 232, 0.82);
     --works-stage-muted: rgba(244, 239, 232, 0.6);
@@ -385,13 +385,6 @@
   }
 
   .admin-theme {
-    background-image:
-      radial-gradient(circle at top, hsl(var(--primary) / 0.08), transparent 32%),
-      radial-gradient(circle at 85% 10%, hsl(var(--primary) / 0.05), transparent 18%),
-      linear-gradient(180deg, hsl(var(--background)) 0%, hsl(var(--background)) 100%);
-  }
-
-  .scene-page-moments {
     background-image:
       radial-gradient(circle at top, hsl(var(--primary) / 0.08), transparent 32%),
       radial-gradient(circle at 85% 10%, hsl(var(--primary) / 0.05), transparent 18%),

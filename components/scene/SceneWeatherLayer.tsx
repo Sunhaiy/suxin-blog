@@ -115,7 +115,7 @@ export function SceneWeatherLayer({
   if (!enabled || preset !== 'storm') return null
 
   return (
-    <div className="pointer-events-none absolute inset-0 z-[2] overflow-hidden">
+    <div className="pointer-events-none absolute inset-0 z-[20] overflow-hidden">
       <div className="absolute inset-0">
         {drops.map((drop, index) => (
           <span
@@ -148,7 +148,7 @@ export function SceneWeatherLayer({
         ))}
       </div>
 
-      <div className="absolute inset-0 z-[5]">
+      <div className="absolute inset-0 z-[25]">
         <div
           className={`absolute inset-0 transition-opacity duration-75 ${isFlashing ? 'opacity-100' : 'opacity-0'}`}
           style={{
@@ -159,7 +159,7 @@ export function SceneWeatherLayer({
 
         {isFlashing ? (
           <div
-            className="absolute top-0 bottom-0 z-[6] w-[3px] blur-[1.5px]"
+            className="absolute top-0 bottom-0 z-[26] w-[3px] blur-[1.5px]"
             style={{
               left: `${boltPos}%`,
               background: 'hsl(var(--weather-flash))',

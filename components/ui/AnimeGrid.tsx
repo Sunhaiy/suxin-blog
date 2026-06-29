@@ -1,6 +1,6 @@
 'use client'
 
-import { useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { MaterialSymbol } from '@/components/ui/MaterialSymbol'
 import { ProgressiveImage } from '@/components/ui/ProgressiveImage'
 import { getOptimizedMediaUrl } from '@/lib/media'
@@ -8,7 +8,12 @@ import type { AnimeRow } from '@/types/acg'
 
 interface Props {
   animes: AnimeRow[]
+  total?: number
+  statusCounts?: Record<string, number>
+  pageSize?: number
 }
+
+const DEFAULT_PAGE_SIZE = 15
 
 const STATUS_TABS = [
   { key: 'all', label: '全部' },
@@ -44,23 +49,116 @@ function getEpisodeText(anime: AnimeRow) {
   return undefined
 }
 
-export function AnimeGrid({ animes }: Props) {
+export function AnimeGrid({
+  animes,
+  total = animes.length,
+  statusCounts,
+  pageSize = DEFAULT_PAGE_SIZE,
+}: Props) {
   const [activeStatus, setActiveStatus] = useState<StatusKey>('all')
+  const [items, setItems] = useState(animes)
+  const [page, setPage] = useState(1)
+  const [loading, setLoading] = useState(false)
+  const [loadError, setLoadError] = useState(false)
+  const sentinelRef = useRef<HTMLDivElement | null>(null)
+  const requestIdRef = useRef(0)
 
   const counts = useMemo(() => {
-    const nextCounts: Record<string, number> = { all: animes.length }
+    if (statusCounts) return { ...statusCounts, all: total }
+
+    const nextCounts: Record<string, number> = { all: total }
 
     for (const anime of animes) {
       nextCounts[anime.status] = (nextCounts[anime.status] ?? 0) + 1
     }
 
     return nextCounts
-  }, [animes])
+  }, [animes, statusCounts, total])
 
   const visibleTabs = STATUS_TABS.filter((tab) => tab.key === 'all' || (counts[tab.key] ?? 0) > 0)
 
-  const filtered =
-    activeStatus === 'all' ? animes : animes.filter((anime) => anime.status === activeStatus)
+  const activeTotal = activeStatus === 'all' ? total : (counts[activeStatus] ?? 0)
+  const hasMore = items.length < activeTotal
+
+  useEffect(() => {
+    const requestId = ++requestIdRef.current
+    setLoadError(false)
+    setPage(1)
+
+    if (activeStatus === 'all') {
+      setItems(animes)
+      setLoading(false)
+      return
+    }
+
+    setItems([])
+    setLoading(true)
+    const params = new URLSearchParams({
+      page: '1',
+      pageSize: String(pageSize),
+      status: activeStatus,
+    })
+
+    fetch(`/api/acg/anime?${params.toString()}`)
+      .then((response) => {
+        if (!response.ok) throw new Error('Failed to load anime')
+        return response.json() as Promise<{ data: AnimeRow[] }>
+      })
+      .then((result) => {
+        if (requestId === requestIdRef.current) setItems(result.data)
+      })
+      .catch(() => {
+        if (requestId === requestIdRef.current) setLoadError(true)
+      })
+      .finally(() => {
+        if (requestId === requestIdRef.current) setLoading(false)
+      })
+  }, [activeStatus, animes, pageSize])
+
+  const loadMore = useCallback(async () => {
+    if (loading || !hasMore) return
+
+    const nextPage = page + 1
+    const requestId = requestIdRef.current
+    const params = new URLSearchParams({
+      page: String(nextPage),
+      pageSize: String(pageSize),
+    })
+    if (activeStatus !== 'all') params.set('status', activeStatus)
+
+    setLoading(true)
+    setLoadError(false)
+    try {
+      const response = await fetch(`/api/acg/anime?${params.toString()}`)
+      if (!response.ok) throw new Error('Failed to load anime')
+      const result = (await response.json()) as { data: AnimeRow[] }
+      if (requestId !== requestIdRef.current) return
+
+      setItems((current) => {
+        const knownIds = new Set(current.map((item) => item.id))
+        return [...current, ...result.data.filter((item) => !knownIds.has(item.id))]
+      })
+      setPage(nextPage)
+    } catch {
+      if (requestId === requestIdRef.current) setLoadError(true)
+    } finally {
+      if (requestId === requestIdRef.current) setLoading(false)
+    }
+  }, [activeStatus, hasMore, loading, page, pageSize])
+
+  useEffect(() => {
+    const sentinel = sentinelRef.current
+    if (!sentinel || !hasMore || loading) return
+
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) void loadMore()
+      },
+      { rootMargin: '600px 0px' }
+    )
+    observer.observe(sentinel)
+    return () => observer.disconnect()
+  }, [hasMore, loadMore, loading])
 
   return (
     <>
@@ -81,14 +179,19 @@ export function AnimeGrid({ animes }: Props) {
           </button>
         ))}
 
-        <span className="ml-auto text-xs font-mono text-muted-foreground">共 {filtered.length} 部</span>
+        <span className="ml-auto text-xs font-mono text-muted-foreground">共 {activeTotal} 部</span>
       </div>
 
-      {filtered.length === 0 ? (
-        <div className="py-20 text-center text-sm text-muted-foreground">暂无记录</div>
+      {items.length === 0 && loading ? (
+        <div className="py-20 text-center text-sm text-muted-foreground">正在加载…</div>
+      ) : items.length === 0 ? (
+        <div className="py-20 text-center text-sm text-muted-foreground">
+          {loadError ? '加载失败，请稍后重试' : '暂无记录'}
+        </div>
       ) : (
-        <div className="mt-6 grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
-          {filtered.map((anime) => {
+        <>
+          <div className="mt-6 grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
+          {items.map((anime, index) => {
             const badge = STATUS_BADGE[anime.status]
             const episodeText = getEpisodeText(anime)
             const title = anime.title_cn ?? anime.title
@@ -106,9 +209,9 @@ export function AnimeGrid({ animes }: Props) {
                     <ProgressiveImage
                       src={optimizedCoverUrl}
                       alt={title}
-                      loading="lazy"
+                      loading={index < 5 ? 'eager' : 'lazy'}
                       decoding="async"
-                      fetchPriority="low"
+                      fetchPriority={index < 2 ? 'high' : 'low'}
                       wrapperClassName="h-full w-full"
                       className="object-cover transition-transform duration-500 group-hover:scale-[1.04]"
                     />
@@ -168,7 +271,16 @@ export function AnimeGrid({ animes }: Props) {
               </article>
             )
           })}
-        </div>
+          </div>
+
+          <div ref={sentinelRef} className="flex min-h-20 items-center justify-center py-6 text-xs font-mono text-muted-foreground">
+            {loading ? '正在加载下一批…' : loadError ? (
+              <button type="button" onClick={() => void loadMore()} className="transition-colors hover:text-foreground">
+                加载失败，点击重试
+              </button>
+            ) : hasMore ? `继续向下滚动 · 已显示 ${items.length}/${activeTotal}` : `已显示全部 ${activeTotal} 部`}
+          </div>
+        </>
       )}
     </>
   )

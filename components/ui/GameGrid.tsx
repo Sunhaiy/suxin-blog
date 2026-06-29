@@ -1,3 +1,6 @@
+'use client'
+
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { MaterialSymbol } from '@/components/ui/MaterialSymbol'
 import { ProgressiveImage } from '@/components/ui/ProgressiveImage'
 import { getOptimizedMediaUrl } from '@/lib/media'
@@ -5,7 +8,11 @@ import type { GameRow } from '@/types/acg'
 
 interface Props {
   games: GameRow[]
+  total?: number
+  pageSize?: number
 }
+
+const DEFAULT_PAGE_SIZE = 15
 
 const STATUS_META: Record<string, { label: string; dotClass: string }> = {
   playing: { label: '游玩中', dotClass: 'bg-emerald-300' },
@@ -41,14 +48,74 @@ function getFootnote(game: GameRow) {
   return '记录中'
 }
 
-export function GameGrid({ games }: Props) {
-  if (games.length === 0) {
+export function GameGrid({
+  games,
+  total = games.length,
+  pageSize = DEFAULT_PAGE_SIZE,
+}: Props) {
+  const [items, setItems] = useState(games)
+  const [page, setPage] = useState(1)
+  const [loading, setLoading] = useState(false)
+  const [loadError, setLoadError] = useState(false)
+  const sentinelRef = useRef<HTMLDivElement | null>(null)
+  const hasMore = items.length < total
+
+  useEffect(() => {
+    setItems(games)
+    setPage(1)
+    setLoading(false)
+    setLoadError(false)
+  }, [games])
+
+  const loadMore = useCallback(async () => {
+    if (loading || !hasMore) return
+
+    const nextPage = page + 1
+    setLoading(true)
+    setLoadError(false)
+    try {
+      const params = new URLSearchParams({
+        page: String(nextPage),
+        pageSize: String(pageSize),
+      })
+      const response = await fetch(`/api/acg/game?${params.toString()}`)
+      if (!response.ok) throw new Error('Failed to load games')
+      const result = (await response.json()) as { data: GameRow[] }
+
+      setItems((current) => {
+        const knownIds = new Set(current.map((item) => item.id))
+        return [...current, ...result.data.filter((item) => !knownIds.has(item.id))]
+      })
+      setPage(nextPage)
+    } catch {
+      setLoadError(true)
+    } finally {
+      setLoading(false)
+    }
+  }, [hasMore, loading, page, pageSize])
+
+  useEffect(() => {
+    const sentinel = sentinelRef.current
+    if (!sentinel || !hasMore || loading) return
+
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) void loadMore()
+      },
+      { rootMargin: '600px 0px' }
+    )
+    observer.observe(sentinel)
+    return () => observer.disconnect()
+  }, [hasMore, loadMore, loading])
+
+  if (items.length === 0) {
     return <p className="py-20 text-center text-sm text-muted-foreground">暂无游戏记录</p>
   }
 
   return (
-    <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
-      {games.map((game) => {
+    <>
+      <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
+      {items.map((game, index) => {
         const status = STATUS_META[game.status] ?? STATUS_META.completed
         const platform = PLATFORM_META[game.platform] ?? PLATFORM_META.other
         const rating = game.rating != null ? Number(game.rating) : null
@@ -65,9 +132,9 @@ export function GameGrid({ games }: Props) {
                 <ProgressiveImage
                   src={optimizedCoverUrl}
                   alt={game.title}
-                  loading="lazy"
+                  loading={index < 5 ? 'eager' : 'lazy'}
                   decoding="async"
-                  fetchPriority="low"
+                  fetchPriority={index < 2 ? 'high' : 'low'}
                   wrapperClassName="h-full w-full"
                   className="object-cover transition-transform duration-500 group-hover:scale-[1.04]"
                 />
@@ -128,6 +195,15 @@ export function GameGrid({ games }: Props) {
           </article>
         )
       })}
-    </div>
+      </div>
+
+      <div ref={sentinelRef} className="flex min-h-20 items-center justify-center py-6 text-xs font-mono text-muted-foreground">
+        {loading ? '正在加载下一批…' : loadError ? (
+          <button type="button" onClick={() => void loadMore()} className="transition-colors hover:text-foreground">
+            加载失败，点击重试
+          </button>
+        ) : hasMore ? `继续向下滚动 · 已显示 ${items.length}/${total}` : `已显示全部 ${total} 个`}
+      </div>
+    </>
   )
 }

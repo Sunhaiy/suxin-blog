@@ -1,7 +1,9 @@
 import type { Metadata } from 'next'
 import { AnimeGrid } from '@/components/ui/AnimeGrid'
-import { findAnimes } from '@/lib/db/dao/acgDao'
+import { findAnimes, findAnimeStatusCounts } from '@/lib/db/dao/acgDao'
 import { getOptimizedMediaUrl } from '@/lib/media'
+
+const PAGE_SIZE = 15
 
 export const metadata: Metadata = {
   title: '追番列表 · 素心',
@@ -10,7 +12,10 @@ export const metadata: Metadata = {
 export const revalidate = 3600
 
 export default async function AnimePage() {
-  const { data: animes } = await findAnimes({ pageSize: 200, includeTotal: false })
+  const [{ data: animes, total }, statusCounts] = await Promise.all([
+    findAnimes({ pageSize: PAGE_SIZE }),
+    findAnimeStatusCounts(),
+  ])
 
   const coverPool = animes.filter((anime) => anime.cover_url)
   const heroBg =
@@ -21,9 +26,8 @@ export default async function AnimePage() {
     ? (getOptimizedMediaUrl(heroBg, { width: 1200, quality: 68 }) ?? heroBg)
     : null
 
-  const total = animes.length
-  const completed = animes.filter((anime) => anime.status === 'completed').length
-  const watching = animes.filter((anime) => anime.status === 'watching').length
+  const completed = statusCounts.completed ?? 0
+  const watching = statusCounts.watching ?? 0
 
   return (
     <div className="-mt-16">
@@ -71,7 +75,12 @@ export default async function AnimePage() {
         {animes.length === 0 ? (
           <p className="py-20 text-center text-muted-foreground">暂无动画记录</p>
         ) : (
-          <AnimeGrid animes={animes} />
+          <AnimeGrid
+            animes={animes}
+            total={total}
+            statusCounts={statusCounts}
+            pageSize={PAGE_SIZE}
+          />
         )}
       </div>
     </div>

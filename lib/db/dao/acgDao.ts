@@ -36,7 +36,7 @@ async function findAnimesUncached(params: {
   if (status) values.push(status)
   const offset = (page - 1) * pageSize
 
-  const dataSql = `SELECT * FROM animes ${where} ORDER BY updated_at DESC LIMIT $${idx++} OFFSET $${idx++}`
+  const dataSql = `SELECT * FROM animes ${where} ORDER BY updated_at DESC, id DESC LIMIT $${idx++} OFFSET $${idx++}`
   const dataParams = [...values, pageSize, offset]
 
   if (!includeTotal) {
@@ -72,6 +72,24 @@ export async function findAnimes(params: {
   includeTotal?: boolean
 } = {}): Promise<{ data: AnimeRow[]; total: number }> {
   return findAnimesCached(serializeListParams(params))
+}
+
+const findAnimeStatusCountsCached = unstable_cache(
+  async (): Promise<Record<string, number>> => {
+    const result = await query<{ status: string; count: string }>(
+      'SELECT status, COUNT(*) AS count FROM animes GROUP BY status'
+    )
+    return Object.fromEntries(result.rows.map((row) => [row.status, Number(row.count)]))
+  },
+  ['anime-status-counts'],
+  {
+    revalidate: 300,
+    tags: [ANIMES_TAG],
+  }
+)
+
+export async function findAnimeStatusCounts(): Promise<Record<string, number>> {
+  return findAnimeStatusCountsCached()
 }
 
 export async function findAnimeById(id: number): Promise<AnimeRow | null> {
@@ -172,7 +190,7 @@ async function findGamesUncached(params: {
   const where = conditions.length ? `WHERE ${conditions.join(' AND ')}` : ''
   const offset = (page - 1) * pageSize
 
-  const dataSql = `SELECT * FROM games ${where} ORDER BY updated_at DESC LIMIT $${idx++} OFFSET $${idx++}`
+  const dataSql = `SELECT * FROM games ${where} ORDER BY updated_at DESC, id DESC LIMIT $${idx++} OFFSET $${idx++}`
   const dataParams = [...values, pageSize, offset]
 
   if (!includeTotal) {
@@ -214,6 +232,24 @@ export async function findGames(params: {
   includeTotal?: boolean
 } = {}): Promise<{ data: GameRow[]; total: number }> {
   return findGamesCached(serializeListParams(params))
+}
+
+const findGameStatusCountsCached = unstable_cache(
+  async (): Promise<Record<string, number>> => {
+    const result = await query<{ status: string; count: string }>(
+      'SELECT status, COUNT(*) AS count FROM games GROUP BY status'
+    )
+    return Object.fromEntries(result.rows.map((row) => [row.status, Number(row.count)]))
+  },
+  ['game-status-counts'],
+  {
+    revalidate: 300,
+    tags: [GAMES_TAG],
+  }
+)
+
+export async function findGameStatusCounts(): Promise<Record<string, number>> {
+  return findGameStatusCountsCached()
 }
 
 export async function findGameById(id: number): Promise<GameRow | null> {

@@ -314,35 +314,6 @@ export function WorksCarousel({ works, siteUrl }: Props) {
       }}
       data-works-stage
     >
-      <div
-        className="pointer-events-none absolute inset-0"
-        style={{
-          background:
-            'radial-gradient(circle at 50% 18%, var(--works-glow-primary) 0%, var(--works-glow-secondary) 24%, transparent 58%)',
-        }}
-      />
-      <div
-        className="pointer-events-none absolute inset-0"
-        style={{
-          background:
-            'linear-gradient(90deg, var(--works-edge-glow) 0%, transparent 14%, transparent 86%, var(--works-edge-glow) 100%)',
-        }}
-      />
-      <div
-        className="pointer-events-none absolute left-1/2 top-16 h-72 w-72 -translate-x-1/2 rounded-full blur-[110px]"
-        style={{ backgroundColor: 'var(--works-stage-halo)' }}
-      />
-      <div
-        className="pointer-events-none absolute left-1/2 top-[28%] h-[28rem] w-[28rem] -translate-x-1/2 rounded-full blur-[130px]"
-        style={{ backgroundColor: 'var(--works-stage-bloom)' }}
-      />
-      <div
-        className="pointer-events-none absolute inset-x-0 bottom-0 h-56"
-        style={{
-          background: 'linear-gradient(180deg, transparent 0%, var(--works-stage-shadow-fade) 100%)',
-        }}
-      />
-
       <div className="relative mx-auto flex w-full flex-col items-center">
         <div className="relative w-full max-w-[19.4rem] sm:max-w-[20rem]" data-ticket-shell>
           <div

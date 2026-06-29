@@ -1,8 +1,10 @@
 import type { Metadata } from 'next'
 import { GameGrid } from '@/components/ui/GameGrid'
-import { findGames } from '@/lib/db/dao/acgDao'
+import { findGames, findGameStatusCounts } from '@/lib/db/dao/acgDao'
 import { getOptimizedMediaUrl } from '@/lib/media'
 import { getSiteProfile } from '@/lib/site'
+
+const PAGE_SIZE = 15
 
 export const metadata: Metadata = {
   title: '游戏收藏',
@@ -15,8 +17,9 @@ export const metadata: Metadata = {
 export const revalidate = 3600
 
 export default async function GamesPage() {
-  const [{ data: games }, siteProfile] = await Promise.all([
-    findGames({ pageSize: 200, includeTotal: false }),
+  const [{ data: games, total }, statusCounts, siteProfile] = await Promise.all([
+    findGames({ pageSize: PAGE_SIZE }),
+    findGameStatusCounts(),
     getSiteProfile(),
   ])
 
@@ -26,10 +29,8 @@ export default async function GamesPage() {
     ? (getOptimizedMediaUrl(heroBg, { width: 1200, quality: 68 }) ?? heroBg)
     : null
 
-  const completed = games.filter(
-    (game) => game.status === 'completed' || game.status === 'platinum'
-  ).length
-  const playing = games.filter((game) => game.status === 'playing').length
+  const completed = (statusCounts.completed ?? 0) + (statusCounts.platinum ?? 0)
+  const playing = statusCounts.playing ?? 0
 
   return (
     <div className="-mt-16">
@@ -59,7 +60,7 @@ export default async function GamesPage() {
 
             <div className="flex flex-wrap items-center gap-2 text-sm">
               <span className="inline-flex h-10 w-[92px] items-center justify-center gap-1 rounded-full border border-border/70 bg-[hsl(var(--background)/0.72)] font-mono dark:bg-white/[0.08]">
-                <span className="text-lg font-bold leading-none text-ember">{games.length}</span>
+                <span className="text-lg font-bold leading-none text-ember">{total}</span>
                 <span className="text-muted-foreground">部合计</span>
               </span>
               <span className="inline-flex h-10 w-[92px] items-center justify-center gap-1 rounded-full border border-border/70 bg-[hsl(var(--background)/0.72)] text-muted-foreground dark:bg-white/[0.08]">
@@ -77,7 +78,7 @@ export default async function GamesPage() {
         {games.length === 0 ? (
           <p className="py-20 text-center text-muted-foreground">暂无游戏记录</p>
         ) : (
-          <GameGrid games={games} />
+          <GameGrid games={games} total={total} pageSize={PAGE_SIZE} />
         )}
       </div>
     </div>

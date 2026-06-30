@@ -20,7 +20,7 @@ export function PostCard({ post, fallbackCoverUrl, fallbackCoverPool }: PostCard
   const optimizedCoverUrl = getOptimizedMediaUrl(coverUrl, { width: 828, quality: 72 })
 
   return (
-    <Link href={`/posts/${post.slug}`} className="group block h-full">
+    <Link data-route-reveal href={`/posts/${post.slug}`} className="group block h-full">
       <div
         className={`relative flex h-full flex-col overflow-hidden rounded-[22px] border border-border/80 bg-card/92 backdrop-blur-sm
                       transition-all duration-300 hover:-translate-y-0.5 hover:border-border/90`}

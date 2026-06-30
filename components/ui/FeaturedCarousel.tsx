@@ -38,6 +38,7 @@ export function FeaturedCarousel({
           return (
             <Link
               key={post.id}
+              data-route-reveal
               href={`/posts/${post.slug}`}
               className="group relative block aspect-[3/2] overflow-hidden rounded-xl border border-border/80 bg-card/92 transition-colors duration-300 hover:border-border/90"
             >

@@ -1,7 +1,8 @@
-import type React from 'react'
+import React, { Suspense } from 'react'
 import Link from 'next/link'
 import { SceneShell } from '@/components/scene/SceneShell'
 import { NavBar } from '@/components/ui/NavBar'
+import { RouteProgress } from '@/components/ui/RouteProgress'
 import { findCategories } from '@/lib/db/dao/postDao'
 import { getBackgroundSceneSettings } from '@/lib/scene'
 import { getSiteProfile } from '@/lib/site'
@@ -82,6 +83,10 @@ export default async function BlogLayout({ children }: { children: React.ReactNo
         className="public-theme flex min-h-screen flex-col bg-background text-foreground"
         style={themeStyle}
       >
+        <Suspense fallback={null}>
+          <RouteProgress />
+        </Suspense>
+
         <NavBar
           categories={categories}
           siteProfile={{

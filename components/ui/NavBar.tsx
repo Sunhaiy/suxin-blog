@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from 'react'
 import Link from 'next/link'
+import { usePathname } from 'next/navigation'
 import { PublicSymbol } from '@/components/ui/PublicSymbol'
 import { ThemeToggle } from '@/components/ui/ThemeToggle'
 
@@ -64,11 +65,17 @@ interface MenuPos {
   bottom: number
 }
 
+interface PostScrollTitleState {
+  title: string
+  visible: boolean
+}
+
 function getCategoryIcon(name: string) {
   return CATEGORY_ICONS[name] ?? 'folder'
 }
 
 export function NavBar({ categories, siteProfile }: NavBarProps) {
+  const pathname = usePathname()
   const [mounted, setMounted] = useState(false)
   const [postMenuOpen, setPostMenuOpen] = useState(false)
   const [collectionMenuOpen, setCollectionMenuOpen] = useState(false)
@@ -79,8 +86,29 @@ export function NavBar({ categories, siteProfile }: NavBarProps) {
   const collectionTriggerRef = useRef<HTMLDivElement>(null)
   const [postPos, setPostPos] = useState<MenuPos>({ centerX: 0, bottom: 0 })
   const [collectionPos, setCollectionPos] = useState<MenuPos>({ centerX: 0, bottom: 0 })
+  const [postScrollTitle, setPostScrollTitle] = useState<PostScrollTitleState>({
+    title: '',
+    visible: false,
+  })
+  const isPostDetail = /^\/posts\/(?!archive\/?$|categories\/?$|tags\/?$)[^/]+\/?$/.test(pathname)
+  const showPostScrollTitle = isPostDetail && postScrollTitle.visible && Boolean(postScrollTitle.title)
 
   useEffect(() => setMounted(true), [])
+
+  useEffect(() => {
+    const handlePostScrollTitle = (event: Event) => {
+      const { title, visible } = (event as CustomEvent<PostScrollTitleState>).detail
+      setPostScrollTitle({ title, visible })
+      if (visible) {
+        setPostMenuOpen(false)
+        setCollectionMenuOpen(false)
+        setMobileMenuOpen(false)
+      }
+    }
+
+    window.addEventListener('post-scroll-title-change', handlePostScrollTitle)
+    return () => window.removeEventListener('post-scroll-title-change', handlePostScrollTitle)
+  }, [])
 
   function openPostMenu() {
     setMobileMenuOpen(false)
@@ -123,9 +151,23 @@ export function NavBar({ categories, siteProfile }: NavBarProps) {
 
   return (
     <>
-      <header className={`fixed inset-x-0 top-0 z-50 ${NAV_SURFACE_CLS}`}>
+      <header
+        data-site-navbar
+        data-testid="site-navbar"
+        className={`fixed inset-x-0 top-0 z-50 ${NAV_SURFACE_CLS}`}
+      >
         <div className="pointer-events-none absolute inset-x-0 bottom-0 h-px bg-border/75 dark:bg-white/8" />
-        <nav className="mx-auto flex h-16 max-w-5xl items-center justify-between px-6">
+        <nav className="relative mx-auto flex h-16 max-w-5xl items-center px-6">
+          <div
+            data-testid="site-navbar-content"
+            aria-hidden={showPostScrollTitle}
+            inert={showPostScrollTitle}
+            className={`flex w-full items-center justify-between transition-[opacity,transform] duration-200 motion-reduce:transition-none ${
+              showPostScrollTitle
+                ? 'pointer-events-none -translate-y-2 opacity-0'
+                : 'translate-y-0 opacity-100'
+            }`}
+          >
           <Link
             href="/"
             className="text-lg font-semibold tracking-tight text-foreground transition-colors hover:text-primary"
@@ -222,6 +264,30 @@ export function NavBar({ categories, siteProfile }: NavBarProps) {
               <PublicSymbol icon={mobileMenuOpen ? 'close' : 'menu'} size={18} />
             </button>
           </div>
+          </div>
+
+          <button
+            type="button"
+            data-testid="post-scroll-title"
+            tabIndex={showPostScrollTitle ? 0 : -1}
+            aria-hidden={!showPostScrollTitle}
+            aria-label={`返回顶部：${postScrollTitle.title}`}
+            onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+            className={`group absolute left-1/2 flex h-10 w-[min(68vw,28rem)] -translate-x-1/2 items-center justify-center px-4 text-sm font-semibold text-foreground transition-[opacity,transform] duration-200 focus-visible:outline-none motion-reduce:transition-none sm:w-[min(52vw,28rem)] ${
+              showPostScrollTitle
+                ? 'pointer-events-auto translate-y-0 opacity-100'
+                : 'pointer-events-none -translate-y-2 opacity-0'
+            }`}
+          >
+            <span className="max-w-full truncate transition-[opacity,transform] duration-150 group-hover:-translate-y-1.5 group-hover:opacity-0 group-focus-visible:-translate-y-1.5 group-focus-visible:opacity-0 motion-reduce:transition-none">
+              {postScrollTitle.title}
+            </span>
+            <span className="absolute inset-0 flex translate-y-1.5 items-center justify-center opacity-0 transition-[opacity,transform] duration-150 group-hover:translate-y-0 group-hover:opacity-100 group-focus-visible:translate-y-0 group-focus-visible:opacity-100 motion-reduce:transition-none">
+              <span className="flex h-8 min-w-28 items-center justify-center rounded-full bg-primary px-4 text-primary-foreground">
+                返回顶部
+              </span>
+            </span>
+          </button>
         </nav>
       </header>
 

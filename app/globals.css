@@ -1350,6 +1350,52 @@
   }
 }
 
+@keyframes hero-wind-chime-sway {
+  0%,
+  100% {
+    transform: rotate(-2.2deg);
+  }
+
+  50% {
+    transform: rotate(2.2deg);
+  }
+}
+
+@keyframes hero-wind-chime-dangle {
+  0%,
+  100% {
+    transform: rotate(0.9deg);
+  }
+
+  50% {
+    transform: rotate(-0.9deg);
+  }
+}
+
+.hero-wind-chime {
+  transform-origin: 50% 0;
+  animation: hero-wind-chime-sway 6.2s ease-in-out infinite;
+  will-change: transform;
+}
+
+.hero-wind-chime-right {
+  animation-delay: -3.1s;
+  animation-duration: 6.8s;
+}
+
+.hero-wind-chime-dangles {
+  transform-box: fill-box;
+  transform-origin: center top;
+  animation: hero-wind-chime-dangle 3.8s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hero-wind-chime,
+  .hero-wind-chime-dangles {
+    animation: none;
+  }
+}
+
 @keyframes scene-lightning-flash {
   0%,
   100% {

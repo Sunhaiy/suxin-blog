@@ -5,6 +5,7 @@ import { ProgressiveImage } from '@/components/ui/ProgressiveImage'
 import { SceneFilterLayer } from '@/components/scene/SceneFilterLayer'
 import { ActivityHeatmap } from '@/components/ui/ActivityHeatmap'
 import { HomeSidebarVisitorCard } from '@/components/ui/HomeSidebarVisitorCard'
+import { HeroWindChimes } from '@/components/ui/HeroWindChimes'
 import { PostCard } from '@/components/ui/PostCard'
 import { getActivityHeatmap } from '@/lib/db/dao/activityDao'
 import { getHomepagePostSnapshot } from '@/lib/db/dao/postDao'
@@ -78,6 +79,8 @@ export default async function HomePage() {
         <div aria-hidden className="pointer-events-none absolute inset-0 overflow-hidden">
           <SceneFilterLayer scene={scene} />
         </div>
+
+        <HeroWindChimes />
 
         <div className="relative mx-auto flex w-full max-w-6xl flex-1 flex-col justify-center px-6 pb-20 pt-28 sm:px-8 md:justify-start lg:px-10">
           <div className="mx-auto max-w-3xl -translate-y-8 text-center md:translate-y-0">

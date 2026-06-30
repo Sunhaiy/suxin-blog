@@ -8,6 +8,7 @@ import {
 } from '@remixicon/react'
 import { auth } from '@/auth'
 import { ProgressiveImage } from '@/components/ui/ProgressiveImage'
+import { PostScrollTitle } from '@/components/ui/PostScrollTitle'
 import { TOC } from '@/components/ui/TOC'
 import { getOptimizedMediaUrl, pickDeterministicMediaUrl, resolveMediaUrl } from '@/lib/media'
 import {
@@ -117,7 +118,9 @@ export default async function PostPage({
 
   return (
     <>
-      <section className="relative overflow-hidden" style={{ minHeight: '420px' }}>
+      <PostScrollTitle title={post.title} />
+
+      <section id="post-detail-hero" className="relative overflow-hidden" style={{ minHeight: '420px' }}>
         {optimizedCoverUrl ? (
           <div className="absolute inset-0">
             <ProgressiveImage

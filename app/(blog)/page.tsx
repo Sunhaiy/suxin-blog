@@ -131,7 +131,7 @@ export default async function HomePage() {
 
       <section
         data-home-main-panel
-        className="relative z-10 -mt-10 rounded-t-[2rem] bg-[linear-gradient(to_bottom,hsl(var(--background)/0.58)_0px,hsl(var(--background)/0.88)_46px,hsl(var(--background))_104px)] backdrop-blur-[22px] backdrop-saturate-150"
+        className="relative z-10 -mt-28 rounded-t-[2rem] bg-[linear-gradient(to_bottom,hsl(var(--background)/0.24)_0px,hsl(var(--background)/0.7)_58px,hsl(var(--background))_112px)] backdrop-blur-[18px] backdrop-saturate-150"
       >
         <div className="mx-auto max-w-6xl px-4">
           <div className="grid grid-cols-1 items-start gap-8 pb-20 pt-10 lg:grid-cols-[1fr_280px]">

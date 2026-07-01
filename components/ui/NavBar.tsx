@@ -5,6 +5,7 @@ import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { PublicSymbol } from '@/components/ui/PublicSymbol'
 import { ThemeToggle } from '@/components/ui/ThemeToggle'
+import { HeroWindChimes } from '@/components/ui/HeroWindChimes'
 
 interface Category {
   category: string
@@ -288,6 +289,8 @@ export function NavBar({ categories, siteProfile }: NavBarProps) {
               </span>
             </span>
           </button>
+
+          {pathname === '/' ? <HeroWindChimes /> : null}
         </nav>
       </header>
 

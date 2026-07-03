@@ -136,10 +136,12 @@ export default async function HomePage() {
         <div className="mx-auto max-w-6xl px-4">
           <div className="grid grid-cols-1 items-start gap-8 pb-20 pt-10 lg:grid-cols-[1fr_280px]">
             <div className="min-w-0" id="latest-posts">
-              <ActivityHeatmap data={activityData} />
+              <div data-scroll-reveal>
+                <ActivityHeatmap data={activityData} />
+              </div>
 
               <div className="mt-8">
-                <div className="mb-6 flex items-center justify-between">
+                <div data-scroll-reveal className="mb-6 flex items-center justify-between">
                   <h2 className="text-xl font-semibold tracking-[-0.03em] text-foreground">
                     {'\u6700\u65b0\u6587\u7ae0'}
                   </h2>
@@ -188,7 +190,7 @@ export default async function HomePage() {
             <aside className="hidden flex-col gap-3 lg:sticky lg:top-20 lg:flex lg:self-start">
               <HomeSidebarVisitorCard />
 
-              <div className="rounded-[24px] border border-border/75 bg-card/78 p-4 backdrop-blur-xl">
+              <div data-scroll-reveal className="rounded-[24px] border border-border/75 bg-card/78 p-4 backdrop-blur-xl">
                 <div className="relative mx-auto w-fit rounded-full border border-border/70 bg-background/52 px-4 py-1.5 text-xs font-semibold text-muted-foreground">
                   {sidebarGreeting}
                   <span className="absolute left-1/2 top-full h-3 w-3 -translate-x-1/2 -translate-y-1/2 rotate-45 border-b border-r border-border/70 bg-background/52" />
@@ -267,7 +269,7 @@ export default async function HomePage() {
                 </div>
               </div>
 
-              <div className="rounded-[24px] border border-border/75 bg-card/78 p-5 backdrop-blur-xl">
+              <div data-scroll-reveal className="rounded-[24px] border border-border/75 bg-card/78 p-5 backdrop-blur-xl">
                 <div className="flex items-center justify-between">
                   <p className="text-base font-semibold text-foreground">
                     2026
@@ -284,7 +286,7 @@ export default async function HomePage() {
                 </div>
               </div>
 
-              <div className="rounded-[24px] border border-border/75 bg-card/78 p-4 backdrop-blur-xl">
+              <div data-scroll-reveal className="rounded-[24px] border border-border/75 bg-card/78 p-4 backdrop-blur-xl">
                 <div className="flex items-center justify-between gap-3">
                   <p className="text-[11px] font-mono uppercase tracking-[0.18em] text-muted-foreground">
                     归档
@@ -314,7 +316,7 @@ export default async function HomePage() {
                 </div>
               </div>
 
-              <div className="rounded-[24px] border border-border/75 bg-card/78 p-4 backdrop-blur-xl">
+              <div data-scroll-reveal className="rounded-[24px] border border-border/75 bg-card/78 p-4 backdrop-blur-xl">
                 <p className="text-[11px] font-mono uppercase tracking-[0.18em] text-muted-foreground">
                   {'\u6807\u7b7e\u4e91'}
                 </p>

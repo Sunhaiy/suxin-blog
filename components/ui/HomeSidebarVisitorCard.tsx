@@ -54,7 +54,7 @@ export function HomeSidebarVisitorCard() {
   }, [])
 
   return (
-    <div className="rounded-[24px] border border-border/75 bg-card/76 p-4 backdrop-blur-xl">
+    <div data-scroll-reveal className="rounded-[24px] border border-border/75 bg-card/76 p-4 backdrop-blur-xl">
       <div className="flex items-center justify-between gap-3">
         <p className="text-[11px] font-mono uppercase tracking-[0.18em] text-muted-foreground">
           一言

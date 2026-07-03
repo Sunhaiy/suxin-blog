@@ -654,9 +654,21 @@
   }
 
   .route-reveal-item {
-    animation: route-item-enter 460ms cubic-bezier(0.16, 1, 0.3, 1) both;
-    animation-delay: var(--route-stagger, 0ms);
-    will-change: opacity, transform;
+    opacity: 0;
+    filter: blur(6px);
+    transform: translate3d(0, 46px, 0) scale(0.99);
+    transition:
+      opacity 900ms cubic-bezier(0.5, 0, 0, 1),
+      filter 900ms cubic-bezier(0.5, 0, 0, 1),
+      transform 900ms cubic-bezier(0.5, 0, 0, 1);
+    transition-delay: var(--route-stagger, 0ms);
+    will-change: opacity, filter, transform;
+  }
+
+  .route-reveal-item.route-reveal-visible {
+    opacity: 1;
+    filter: none;
+    transform: translate3d(0, 0, 0) scale(1);
   }
 
   @media (prefers-reduced-motion: reduce) {
@@ -664,8 +676,10 @@
     .page-transition-frame::before,
     .route-reveal-item {
       animation: none !important;
+      opacity: 1 !important;
       transform: none !important;
       filter: none !important;
+      transition: none !important;
     }
   }
 

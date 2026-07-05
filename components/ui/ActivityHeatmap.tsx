@@ -2,6 +2,7 @@
 
 import { useMemo, useRef, useState, type CSSProperties, type MouseEvent } from 'react'
 import type { ActivityDay } from '@/lib/db/dao/activityDao'
+import { PublicSymbol } from '@/components/ui/PublicSymbol'
 
 const COLUMN_WIDTH = 14
 const GRID_MIN_WIDTH = 728
@@ -130,7 +131,10 @@ export function ActivityHeatmap({ data }: Props) {
   return (
     <div className="relative max-w-full overflow-hidden">
       <div className="mb-3 flex flex-wrap items-end justify-between gap-3">
-        <h2 className="text-xl font-bold text-foreground">创作活跃度</h2>
+        <h2 className="flex items-center gap-2.5 text-xl font-semibold tracking-[-0.035em] text-foreground sm:text-2xl">
+        <PublicSymbol icon="timeline" size={22} className="text-muted-foreground" />
+          创作活跃度
+        </h2>
         <p className="text-sm text-muted-foreground">
           过去一年 · <span className="font-medium text-foreground">{total}</span> 条 ·{' '}
           <span className="font-medium text-foreground">{activeDays}</span> 天活跃

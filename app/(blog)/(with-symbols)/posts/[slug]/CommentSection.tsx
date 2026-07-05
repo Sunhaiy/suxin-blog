@@ -10,6 +10,7 @@ import {
   RiShieldStarLine,
   RiUserLine,
 } from '@remixicon/react'
+import { CommentAvatar } from '@/components/ui/CommentAvatar'
 
 interface CommentRecord {
   id: number
@@ -81,8 +82,8 @@ function MetaPill({ children, accent = false }: { children: React.ReactNode; acc
     <span
       className={`inline-flex items-center rounded-full border px-2.5 py-1 text-[11px] ${
         accent
-          ? 'border-primary/28 bg-primary/10 text-primary'
-          : 'border-border/80 bg-background/55 text-muted-foreground'
+          ? 'border-foreground/12 bg-foreground/[0.045] text-foreground'
+          : 'border-border/70 bg-background/40 text-muted-foreground'
       }`}
     >
       {children}
@@ -106,16 +107,14 @@ function CommentItem({
   ].filter(Boolean) as string[]
 
   return (
-    <article className={depth > 0 ? 'border-l border-border/70 pl-5' : ''}>
-      <div className="rounded-[26px] border border-border/70 bg-card/78 p-5 backdrop-blur-xl">
-        <div className="flex items-start gap-4">
-          <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full border border-primary/18 bg-primary/10 text-sm font-semibold text-primary">
-            {comment.author_name.trim().charAt(0).toUpperCase()}
-          </div>
+    <article className={depth > 0 ? 'ml-5 border-l border-border/70 pl-4 sm:ml-8 sm:pl-5' : ''}>
+      <div className="border-b border-border/65 py-5">
+        <div className="flex items-start gap-3.5">
+          <CommentAvatar name={comment.author_name} className="h-10 w-10" />
 
           <div className="min-w-0 flex-1">
             <div className="flex flex-wrap items-center gap-2">
-              <span className="text-lg font-semibold text-foreground">{comment.author_name}</span>
+              <span className="text-sm font-semibold text-foreground">{comment.author_name}</span>
               {comment.is_by_author ? (
                 <MetaPill accent>
                   <RiShieldStarLine className="mr-1" size={12} />
@@ -124,33 +123,33 @@ function CommentItem({
               ) : null}
             </div>
 
-            <div className="mt-1 text-sm text-muted-foreground">
+            <div className="mt-1 font-mono text-[10px] text-muted-foreground">
               {formatRelativeTime(comment.created_at)}
             </div>
 
             {comment.reply_to_name ? (
-              <p className="mt-3 text-sm text-muted-foreground">
+              <p className="mt-3 text-xs text-muted-foreground">
                 回复 <span className="text-foreground">@{comment.reply_to_name}</span>：
               </p>
             ) : null}
 
-            <div className="mt-3 whitespace-pre-wrap text-[1rem] leading-8 text-foreground/90">
+            <div className="mt-2.5 whitespace-pre-wrap text-sm leading-7 text-foreground/90">
               {comment.content}
             </div>
 
             {badges.length > 0 ? (
-              <div className="mt-4 flex flex-wrap gap-2">
+              <div className="mt-3 flex flex-wrap gap-1.5">
                 {badges.map((badge) => (
                   <MetaPill key={`${comment.id}-${badge}`}>{badge}</MetaPill>
                 ))}
               </div>
             ) : null}
 
-            <div className="mt-4">
+            <div className="mt-3">
               <button
                 type="button"
                 onClick={() => onReply(comment)}
-                className="inline-flex items-center gap-1.5 text-sm text-primary transition-colors hover:text-primary/80"
+                className="inline-flex items-center gap-1.5 text-xs text-muted-foreground transition-colors hover:text-foreground"
               >
                 <RiArrowGoBackLine size={16} />
                 回复
@@ -161,7 +160,7 @@ function CommentItem({
       </div>
 
       {comment.children.length > 0 ? (
-        <div className="mt-4 space-y-4">
+        <div>
           {comment.children.map((child) => (
             <CommentItem key={child.id} comment={child} depth={depth + 1} onReply={onReply} />
           ))}
@@ -258,51 +257,53 @@ export function CommentSection({
   }
 
   return (
-    <section className="mt-16">
-      <div className="mb-6 flex items-center gap-3">
-        <span className="flex h-10 w-10 items-center justify-center rounded-2xl border border-primary/18 bg-primary/10 text-primary">
-          <RiMessage2Line size={18} />
-        </span>
+    <section id="comments" className="mt-12">
+      <div className="flex items-end justify-between gap-4 border-b border-border/75 pb-4">
         <div>
-          <h2 className="text-xl font-semibold text-foreground">
+          <h2 className="flex items-center gap-2.5 text-xl font-semibold tracking-[-0.03em] text-foreground">
+            <RiMessage2Line size={19} className="text-muted-foreground" />
             评论{comments.length > 0 ? ` · ${comments.length}` : ''}
           </h2>
-          <p className="mt-1 text-sm text-muted-foreground">欢迎留下想法，也可以直接回复某一条评论。</p>
+          <p className="mt-1.5 text-xs text-muted-foreground">认真交流，保持友善。</p>
         </div>
       </div>
 
       {loading ? (
-        <div className="flex items-center justify-center py-10">
+        <div className="flex items-center justify-center border-b border-border/65 py-8">
           <RiLoader4Line size={20} className="animate-spin text-muted-foreground" />
         </div>
       ) : tree.length === 0 ? (
-        <div className="rounded-[24px] border border-dashed border-border/80 bg-card/55 px-5 py-10 text-center text-sm text-muted-foreground">
-          还没有评论，来留下第一条吧。
+        <div className="flex items-center gap-3 border-b border-border/65 py-7 text-sm text-muted-foreground">
+          <CommentAvatar name="第一位访客" className="h-9 w-9 opacity-75" />
+          <span>这里还很安静，欢迎留下第一条评论。</span>
         </div>
       ) : (
-        <div className="space-y-5">
+        <div>
           {tree.map((comment) => (
             <CommentItem key={comment.id} comment={comment} onReply={setReplyTo} />
           ))}
         </div>
       )}
 
-      <div className="mt-8 rounded-[30px] border border-border/70 bg-card/80 p-6 backdrop-blur-xl sm:p-7">
-        <div className="mb-5 flex flex-wrap items-start justify-between gap-3">
-          <div>
-            <p className="text-lg font-semibold text-foreground">留下评论</p>
-            <p className="mt-1 text-sm text-muted-foreground">
+      <div className="mt-8 rounded-[22px] border border-border/75 bg-card/48 p-4 sm:p-5">
+        <div className="mb-4 flex flex-wrap items-start justify-between gap-3">
+          <div className="flex items-center gap-3">
+            <CommentAvatar name={name || '新访客'} className="h-10 w-10" />
+            <div>
+              <p className="text-base font-semibold text-foreground">参与讨论</p>
+              <p className="mt-0.5 text-xs text-muted-foreground">
               {viewerIsAuthor
-                ? '你当前已登录后台，本次留言会以站长身份直接发布。'
-                : '评论提交后会先进入审核队列，通过后再显示在文章下方。'}
-            </p>
+                  ? '以站长身份直接发布'
+                  : '首次评论需要审核，邮箱不会公开'}
+              </p>
+            </div>
           </div>
 
           {replyTo ? (
             <button
               type="button"
               onClick={() => setReplyTo(null)}
-              className="rounded-full border border-primary/18 bg-primary/10 px-3 py-1.5 text-xs text-primary transition-colors hover:bg-primary/14"
+              className="rounded-full border border-border/75 bg-background/50 px-3 py-1.5 text-xs text-foreground transition-colors hover:border-foreground/20"
             >
               正在回复 @{replyTo.author_name} · 取消
             </button>
@@ -310,7 +311,7 @@ export function CommentSection({
         </div>
 
         {submitState === 'success' && successMsg ? (
-          <div className="mb-4 rounded-2xl border border-primary/18 bg-primary/10 px-4 py-3 text-sm text-foreground">
+          <div className="mb-4 rounded-xl border border-primary/18 bg-primary/8 px-3.5 py-2.5 text-xs text-foreground">
             {successMsg}
           </div>
         ) : null}
@@ -330,7 +331,7 @@ export function CommentSection({
                 maxLength={50}
                 required
                 disabled={viewerIsAuthor}
-                className="h-11 w-full rounded-2xl border border-border/75 bg-background/58 pl-10 pr-4 text-sm text-foreground outline-none transition-colors focus:border-primary/28 focus:ring-2 focus:ring-primary/12"
+                className="h-10 w-full rounded-xl border border-border/75 bg-background/58 pl-10 pr-4 text-sm text-foreground outline-none transition-colors focus:border-primary/32 focus:ring-2 focus:ring-primary/10"
               />
             </label>
 
@@ -344,7 +345,7 @@ export function CommentSection({
                 value={email}
                 onChange={(event) => setEmail(event.target.value)}
                 placeholder="邮箱（选填，不公开）"
-                className="h-11 w-full rounded-2xl border border-border/75 bg-background/58 pl-10 pr-4 text-sm text-foreground outline-none transition-colors focus:border-primary/28 focus:ring-2 focus:ring-primary/12"
+                className="h-10 w-full rounded-xl border border-border/75 bg-background/58 pl-10 pr-4 text-sm text-foreground outline-none transition-colors focus:border-primary/32 focus:ring-2 focus:ring-primary/10"
               />
             </label>
           </div>
@@ -353,10 +354,10 @@ export function CommentSection({
             value={content}
             onChange={(event) => setContent(event.target.value)}
             placeholder={replyTo ? `回复 @${replyTo.author_name}…` : '写下你的想法…'}
-            rows={5}
+            rows={4}
             maxLength={2000}
             required
-            className="min-h-[148px] w-full resize-none rounded-[24px] border border-border/75 bg-background/58 px-4 py-3 text-sm leading-7 text-foreground outline-none transition-colors focus:border-primary/28 focus:ring-2 focus:ring-primary/12"
+            className="min-h-[116px] w-full resize-y rounded-xl border border-border/75 bg-background/58 px-3.5 py-3 text-sm leading-6 text-foreground outline-none transition-colors focus:border-primary/32 focus:ring-2 focus:ring-primary/10"
           />
 
           {submitState === 'error' && errorMsg ? (
@@ -364,13 +365,13 @@ export function CommentSection({
           ) : null}
 
           <div className="flex flex-wrap items-center justify-between gap-3">
-            <p className="text-xs text-muted-foreground">
-              提交后会自动记录基础环境信息，用来帮助区分不同访客设备。
+            <p className="max-w-lg text-[11px] leading-5 text-muted-foreground">
+              提交即表示愿意友善交流；基础设备信息仅用于区分访客。
             </p>
             <button
               type="submit"
               disabled={submitting || !name.trim() || !content.trim()}
-              className="inline-flex items-center gap-2 rounded-2xl border border-primary/18 bg-primary px-4 py-2.5 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90 disabled:cursor-not-allowed disabled:opacity-50"
+              className="inline-flex items-center gap-2 rounded-full bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90 disabled:cursor-not-allowed disabled:opacity-50"
             >
               {submitting ? (
                 <>

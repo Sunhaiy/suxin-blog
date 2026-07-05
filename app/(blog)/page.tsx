@@ -5,9 +5,14 @@ import { ProgressiveImage } from '@/components/ui/ProgressiveImage'
 import { SceneFilterLayer } from '@/components/scene/SceneFilterLayer'
 import { ActivityHeatmap } from '@/components/ui/ActivityHeatmap'
 import { HomeSidebarVisitorCard } from '@/components/ui/HomeSidebarVisitorCard'
-import { PostCard } from '@/components/ui/PostCard'
+import { HomeProjectRail } from '@/components/ui/HomeProjectRail'
+import { HomeMomentsSection } from '@/components/ui/HomeMomentsSection'
+import { HomePopularArticles } from '@/components/ui/HomeRecentArticles'
+import { HomeArticleCards } from '@/components/ui/HomeArticleCards'
 import { getActivityHeatmap } from '@/lib/db/dao/activityDao'
+import { findRecentPublicMoments } from '@/lib/db/dao/momentDao'
 import { getHomepagePostSnapshot } from '@/lib/db/dao/postDao'
+import { findWorks } from '@/lib/db/dao/worksDao'
 import { preload } from 'react-dom'
 import { getOptimizedMediaUrl } from '@/lib/media'
 import { getBackgroundSceneSettings } from '@/lib/scene'
@@ -41,11 +46,13 @@ function pickSidebarGreeting(pool: string[]) {
 }
 
 export default async function HomePage() {
-  const [postsSnapshot, scene, activityData, siteProfile] = await Promise.all([
+  const [postsSnapshot, scene, activityData, siteProfile, works, moments] = await Promise.all([
     getHomepagePostSnapshot(),
     getBackgroundSceneSettings(),
     getActivityHeatmap(365),
     getSiteProfile(),
+    findWorks(),
+    findRecentPublicMoments(2),
   ])
 
   const hasSceneImage = Boolean(scene.image.url)
@@ -135,56 +142,22 @@ export default async function HomePage() {
       >
         <div className="mx-auto max-w-6xl px-4">
           <div className="grid grid-cols-1 items-start gap-8 pb-20 pt-10 lg:grid-cols-[1fr_280px]">
-            <div className="min-w-0" id="latest-posts">
+            <div className="min-w-0">
               <div data-scroll-reveal>
                 <ActivityHeatmap data={activityData} />
               </div>
-
-              <div className="mt-8">
-                <div data-scroll-reveal className="mb-6 flex items-center justify-between">
-                  <h2 className="text-xl font-semibold tracking-[-0.03em] text-foreground">
-                    {'\u6700\u65b0\u6587\u7ae0'}
-                  </h2>
-                  <Link
-                    href="/posts"
-                    className="inline-flex items-center gap-1.5 text-sm text-primary transition-colors hover:text-primary/75"
-                  >
-                    查看全部
-                    <PublicSymbol icon="arrow_forward" size={16} />
-                  </Link>
-                </div>
-
-                {postsSnapshot.posts.length === 0 ? (
-                  <p className="py-8 text-center text-sm text-muted-foreground">
-                    {'\u6682\u65f6\u8fd8\u6ca1\u6709\u6587\u7ae0\u3002'}
-                  </p>
-                ) : (
-                  <>
-                    <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-                      {postsSnapshot.posts.map((post) => (
-                        <PostCard
-                          key={post.id}
-                          post={post}
-                          fallbackCoverUrl={siteProfile.defaultPostCoverUrl}
-                          fallbackCoverPool={siteProfile.postCoverPoolUrls}
-                        />
-                      ))}
-                    </div>
-
-                    {postsSnapshot.totalPublished > 6 ? (
-                      <div className="mt-8 flex justify-center">
-                        <Link
-                          href="/posts"
-                          className="inline-flex items-center gap-2 rounded-full border border-border px-4 py-2 text-sm text-muted-foreground transition-colors hover:border-primary/40 hover:text-primary"
-                        >
-                          浏览更多文章
-                          <PublicSymbol icon="arrow_forward" size={16} />
-                        </Link>
-                      </div>
-                    ) : null}
-                  </>
-                )}
-              </div>
+              <HomeMomentsSection
+                moments={moments}
+                ownerName={siteProfile.ownerName}
+                avatarUrl={sidebarAvatarUrl}
+              />
+              <HomeArticleCards
+                posts={postsSnapshot.posts}
+                fallbackCoverUrl={siteProfile.defaultPostCoverUrl}
+                fallbackCoverPool={siteProfile.postCoverPoolUrls}
+              />
+              <HomeProjectRail works={works.slice(0, 8)} />
+              <HomePopularArticles posts={postsSnapshot.popularPosts} />
             </div>
 
             <aside className="hidden flex-col gap-3 lg:sticky lg:top-20 lg:flex lg:self-start">

@@ -8,8 +8,8 @@ node_modules/
 .next-dev/
 out/
 output/
-backups/
-data/
+/backups/
+/data/
 deploy-assets/
 
 # Environment files

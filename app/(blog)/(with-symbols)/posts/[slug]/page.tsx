@@ -3,7 +3,10 @@ import { preload } from 'react-dom'
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import {
+  RiArrowRightUpLine,
+  RiCalendarLine,
   RiEyeLine,
+  RiFileCopyLine,
   RiTimeLine,
 } from '@remixicon/react'
 import { auth } from '@/auth'
@@ -203,75 +206,69 @@ export default async function PostPage({
 
       <div className="bg-background">
         <div className="mx-auto max-w-7xl overflow-visible px-3 py-10 sm:px-5">
-          <div className="grid grid-cols-1 items-start gap-10 lg:grid-cols-[minmax(0,1fr)_240px]">
+          <div className="post-detail-layout grid grid-cols-1 items-start gap-10 lg:grid-cols-[minmax(0,1fr)_240px]">
           <article id="post-reading-surface" className="min-w-0">
             <PostContent content={post.content as object} headings={headings} />
 
-            <div className="mb-8 mt-12 border-t border-border" />
-
-            <div className="flex items-center gap-5 rounded-2xl border border-border bg-card p-6">
-                <div className="flex h-14 w-14 shrink-0 items-center justify-center overflow-hidden rounded-full border border-primary/25 bg-gradient-to-br from-primary/30 to-primary/8">
-                {optimizedAvatarUrl ? (
-                  <ProgressiveImage
-                    src={optimizedAvatarUrl}
-                    alt={siteProfile.ownerName}
-                    width={56}
-                    height={56}
-                    loading="lazy"
-                    decoding="async"
-                    wrapperClassName="h-full w-full rounded-full"
-                    className="h-full w-full object-cover"
-                  />
-                ) : (
-                  <span className="select-none text-xl font-bold text-primary">
-                    {siteProfile.ownerInitial}
-                  </span>
-                )}
-              </div>
-              <div className="min-w-0 flex-1">
-                <p className="mb-0.5 text-sm font-semibold text-foreground">
-                  {siteProfile.ownerName}
-                </p>
-                <p className="mb-2 text-[11px] tracking-[0.02em] text-primary">
-                  {siteProfile.roleLine}
-                </p>
-                <p className="text-xs leading-relaxed text-muted-foreground">{siteProfile.bio}</p>
-              </div>
-            </div>
-
-            <section className="mt-6 overflow-hidden rounded-[30px] border border-border/70 bg-card/82 backdrop-blur-xl">
-              <div className="relative px-5 py-5 sm:px-6">
-                <div
-                  aria-hidden
-                  className="pointer-events-none absolute right-3 top-1 text-[6.5rem] font-semibold leading-none text-foreground/6 sm:right-5 sm:text-[8rem]"
-                >
-                  CC
-                </div>
-                <div className="relative">
-                  <p className="text-sm font-semibold text-foreground">{post.title}</p>
-                  <a
-                    href={canonicalUrl}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="mt-1 block break-all text-sm text-primary hover:text-primary/80"
-                  >
-                    {canonicalUrl}
-                  </a>
-                  <div className="mt-5 grid gap-4 text-sm text-muted-foreground sm:grid-cols-3">
-                    <div>
-                      <p className="mb-1 text-xs text-muted-foreground/80">作者</p>
-                      <p className="font-medium text-foreground">{siteProfile.ownerName}</p>
-                    </div>
-                    <div>
-                      <p className="mb-1 text-xs text-muted-foreground/80">发布于</p>
-                      <p className="font-medium text-foreground">{publishedAtLabel || '未发布'}</p>
-                    </div>
-                    <div>
-                      <p className="mb-1 text-xs text-muted-foreground/80">许可协议</p>
-                      <p className="font-medium text-primary">{licenseName}</p>
-                    </div>
+            <section aria-label="文章信息" className="mt-14 border-y border-border/75 py-6">
+              <div className="grid gap-6 md:grid-cols-[minmax(0,1fr)_auto] md:items-center">
+                <div className="flex min-w-0 items-center gap-4">
+                  <div className="flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded-full border border-border bg-muted">
+                    {optimizedAvatarUrl ? (
+                      <ProgressiveImage
+                        src={optimizedAvatarUrl}
+                        alt={siteProfile.ownerName}
+                        width={48}
+                        height={48}
+                        loading="lazy"
+                        decoding="async"
+                        wrapperClassName="h-full w-full rounded-full"
+                        className="h-full w-full object-cover"
+                      />
+                    ) : (
+                      <span className="select-none text-base font-semibold text-muted-foreground">
+                        {siteProfile.ownerInitial}
+                      </span>
+                    )}
+                  </div>
+                  <div className="min-w-0">
+                    <p className="font-mono text-[9px] uppercase tracking-[0.18em] text-muted-foreground">Written by</p>
+                    <p className="mt-1 text-sm font-semibold text-foreground">{siteProfile.ownerName}</p>
+                    <p className="mt-1 line-clamp-1 text-xs leading-5 text-muted-foreground">{siteProfile.bio}</p>
                   </div>
                 </div>
+
+                <dl className="grid grid-cols-2 gap-x-8 gap-y-4 text-xs sm:min-w-[280px]">
+                  <div>
+                    <dt className="flex items-center gap-1.5 text-muted-foreground">
+                      <RiCalendarLine size={13} />
+                      发布日期
+                    </dt>
+                    <dd className="mt-1.5 font-medium text-foreground">{publishedAtLabel || '未发布'}</dd>
+                  </div>
+                  <div>
+                    <dt className="flex items-center gap-1.5 text-muted-foreground">
+                      <RiFileCopyLine size={13} />
+                      内容许可
+                    </dt>
+                    <dd className="mt-1.5 font-medium text-foreground">{licenseName}</dd>
+                  </div>
+                </dl>
+              </div>
+
+              <div className="mt-5 flex flex-col gap-3 border-t border-border/65 pt-4 sm:flex-row sm:items-center sm:justify-between">
+                <p className="min-w-0 truncate text-xs text-muted-foreground">
+                  本文标题：<span className="text-foreground/82">{post.title}</span>
+                </p>
+                <a
+                  href={canonicalUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex shrink-0 items-center gap-1.5 text-xs font-medium text-foreground transition-colors hover:text-primary"
+                >
+                  永久链接
+                  <RiArrowRightUpLine size={14} />
+                </a>
               </div>
             </section>
 
@@ -282,7 +279,7 @@ export default async function PostPage({
             />
           </article>
 
-          <aside className="sticky top-24 hidden self-start lg:block">
+          <aside className="post-detail-toc sticky top-24 hidden self-start lg:block">
             <div className="z-20 w-[240px] max-h-[calc(100vh-7rem)] overflow-y-auto pr-1">
               <TOC
                 headings={headings}

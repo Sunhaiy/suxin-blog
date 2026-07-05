@@ -1520,6 +1520,27 @@
   line-height: 1.9;
 }
 
+html[data-reader-size='large'] .post-content .ProseMirror {
+  font-size: 1.1rem;
+  line-height: 1.96;
+}
+
+html[data-reader-size='xlarge'] .post-content .ProseMirror {
+  font-size: 1.2rem;
+  line-height: 2;
+}
+
+@media (min-width: 1024px) {
+  html[data-reader-focus='true'] .post-detail-layout {
+    grid-template-columns: minmax(0, 860px) !important;
+    justify-content: center;
+  }
+
+  html[data-reader-focus='true'] .post-detail-toc {
+    display: none !important;
+  }
+}
+
 :where(.article-doc, .article-read-surface .ProseMirror):focus {
   outline: none;
 }

@@ -139,8 +139,17 @@ export function NavBar({ categories, siteProfile }: NavBarProps) {
     collectionTimer.current = setTimeout(() => setCollectionMenuOpen(false), 180)
   }
 
-  const navLinkClass =
-    'flex items-center gap-1.5 rounded-full px-3 py-1.5 text-sm text-muted-foreground transition-all duration-200 hover:bg-muted hover:text-foreground'
+  const isPathActive = (href: string) =>
+    href === '/' ? pathname === '/' : pathname === href || pathname.startsWith(`${href}/`)
+  const activeNavClass =
+    'bg-primary/10 font-medium text-primary shadow-[inset_0_0_0_1px_hsl(var(--primary)/0.12)]'
+  const inactiveNavClass = 'text-muted-foreground hover:bg-muted hover:text-foreground'
+  const navLinkClass = (href: string) =>
+    `flex items-center gap-1.5 rounded-full px-3 py-1.5 text-sm transition-all duration-200 ${
+      isPathActive(href) ? activeNavClass : inactiveNavClass
+    }`
+  const postsActive = isPathActive('/posts')
+  const collectionActive = COLLECTION_ITEMS.some((item) => isPathActive(item.href))
   const postMenuItemClass =
     'group flex flex-col items-center gap-1 rounded-2xl px-2 py-2.5 transition-all duration-200 hover:bg-muted hover:text-foreground'
   const postCategoryItemClass =
@@ -149,6 +158,12 @@ export function NavBar({ categories, siteProfile }: NavBarProps) {
     'group flex items-center gap-3 rounded-2xl px-3 py-2.5 transition-all duration-200 hover:bg-muted hover:text-foreground'
   const mobileMenuItemClass =
     'group flex items-center gap-2.5 rounded-2xl border border-border/65 bg-background/58 px-3 py-2.5 text-sm font-medium text-foreground transition-colors hover:border-primary/28 hover:bg-primary/6 hover:text-primary dark:border-white/[0.07] dark:bg-card/55'
+  const mobileNavItemClass = (href: string) =>
+    `${mobileMenuItemClass} ${
+      isPathActive(href)
+        ? 'border-primary/30 bg-primary/10 text-primary dark:border-primary/25 dark:bg-primary/10'
+        : ''
+    }`
 
   return (
     <>
@@ -180,7 +195,7 @@ export function NavBar({ categories, siteProfile }: NavBarProps) {
           </Link>
 
           <div className="hidden items-center gap-1 sm:flex">
-            <Link href="/" className={navLinkClass}>
+            <Link href="/" className={navLinkClass('/')} aria-current={isPathActive('/') ? 'page' : undefined}>
               <PublicSymbol icon="home" size={16} />
               首页
             </Link>
@@ -194,22 +209,21 @@ export function NavBar({ categories, siteProfile }: NavBarProps) {
               <Link
                 href="/posts"
                 className={`flex items-center gap-1.5 rounded-full px-3 py-1.5 text-sm transition-all duration-200 ${
-                  postMenuOpen
-                    ? 'bg-muted text-foreground'
-                    : 'text-muted-foreground hover:bg-muted hover:text-foreground'
+                  postMenuOpen || postsActive ? activeNavClass : inactiveNavClass
                 }`}
+                aria-current={postsActive ? 'page' : undefined}
               >
                 <PublicSymbol icon="article" size={16} />
                 文章
               </Link>
             </div>
 
-            <Link href="/moments" className={navLinkClass}>
+            <Link href="/moments" className={navLinkClass('/moments')} aria-current={isPathActive('/moments') ? 'page' : undefined}>
               <PublicSymbol icon="bolt" size={16} />
               瞬间
             </Link>
 
-            <Link href="/works" className={navLinkClass}>
+            <Link href="/works" className={navLinkClass('/works')} aria-current={isPathActive('/works') ? 'page' : undefined}>
               <PublicSymbol icon="deployed_code" size={16} />
               项目
             </Link>
@@ -223,22 +237,21 @@ export function NavBar({ categories, siteProfile }: NavBarProps) {
               <button
                 type="button"
                 className={`flex items-center gap-1.5 rounded-full px-3 py-1.5 text-sm transition-all duration-200 ${
-                  collectionMenuOpen
-                    ? 'bg-muted text-foreground'
-                    : 'text-muted-foreground hover:bg-muted hover:text-foreground'
+                  collectionMenuOpen || collectionActive ? activeNavClass : inactiveNavClass
                 }`}
+                aria-current={collectionActive ? 'page' : undefined}
               >
                 <PublicSymbol icon="star" size={16} />
                 收藏
               </button>
             </div>
 
-            <Link href="/links" className={navLinkClass}>
+            <Link href="/links" className={navLinkClass('/links')} aria-current={isPathActive('/links') ? 'page' : undefined}>
               <PublicSymbol icon="link" size={16} />
               友情链接
             </Link>
 
-            <Link href="/about" className={navLinkClass}>
+            <Link href="/about" className={navLinkClass('/about')} aria-current={isPathActive('/about') ? 'page' : undefined}>
               <PublicSymbol icon="person" size={16} />
               关于
             </Link>
@@ -313,7 +326,8 @@ export function NavBar({ categories, siteProfile }: NavBarProps) {
                     key={item.href}
                     href={item.href}
                     onClick={() => setMobileMenuOpen(false)}
-                    className={mobileMenuItemClass}
+                    className={mobileNavItemClass(item.href)}
+                    aria-current={isPathActive(item.href) ? 'page' : undefined}
                   >
                     <span className="text-muted-foreground transition-colors group-hover:text-primary">
                       <PublicSymbol icon={item.icon} size={16} />

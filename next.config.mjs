@@ -18,7 +18,7 @@ const nextConfig = {
     minimumCacheTTL: 31536000,
   },
   // Next.js 15: serverComponentsExternalPackages 已提升为顶层配置
-  serverExternalPackages: ['pg', 'sharp', 'exifr'],
+  serverExternalPackages: ['pg', 'sharp', 'exifr', 'node-cron'],
   async headers() {
     return [
       {

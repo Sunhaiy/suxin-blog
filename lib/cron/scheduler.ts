@@ -20,6 +20,7 @@
 
 import cron from 'node-cron'
 import { syncMiBandData } from './jobs/miBandSync'
+import { createSiteBackup, ensureRecentAutomaticBackup } from '@/lib/backup/siteBackup'
 
 let initialized = false
 
@@ -43,4 +44,30 @@ export function startScheduler() {
     })
     console.log(`[Cron] MiBand sync scheduled: ${miBandCron}`)
   }
+
+  const backupCron = process.env.SITE_BACKUP_CRON ?? '30 3 * * *'
+  const backupTimezone = process.env.SITE_BACKUP_TIMEZONE ?? 'Asia/Shanghai'
+  if (cron.validate(backupCron)) {
+    cron.schedule(
+      backupCron,
+      async () => {
+        console.log('[Cron] Running automatic site backup...')
+        try {
+          const backup = await createSiteBackup('automatic')
+          console.log(`[Cron] Automatic backup created: ${backup.name}`)
+        } catch (error) {
+          console.error('[Cron] Automatic site backup failed:', error)
+        }
+      },
+      { timezone: backupTimezone }
+    )
+    console.log(`[Cron] Site backup scheduled: ${backupCron} (${backupTimezone})`)
+  }
+
+  const startupCheck = setTimeout(() => {
+    void ensureRecentAutomaticBackup().catch((error) => {
+      console.error('[Cron] Startup backup check failed:', error)
+    })
+  }, 15_000)
+  startupCheck.unref()
 }

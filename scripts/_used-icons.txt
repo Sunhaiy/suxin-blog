@@ -9,6 +9,7 @@ arrow_outward
 arrow_upward
 article
 auto_awesome
+backup
 badge
 bolt
 bookmark
@@ -30,6 +31,7 @@ create_new_folder
 dark_mode
 dashboard
 dashboard_customize
+database
 delete
 deployed_code
 desktop_windows
@@ -99,6 +101,7 @@ language
 light_mode
 lightbulb
 link
+local_fire_department
 logout
 mail
 mark_email_unread
@@ -145,6 +148,8 @@ travel_explore
 tune
 tv
 upload
+upload_file
+verified_user
 view_column
 visibility
 visibility_off

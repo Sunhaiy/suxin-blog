@@ -1,4 +1,4 @@
-/* Material Symbols Rounded — 子集版（仅站点用到的 102 个图标，44KB，替代默认 5.2MB 全量）。
+/* Material Symbols Rounded — 仅包含站点实际使用图标的轻量子集。
    保留 wght 轴与 ligature，图标用法(组件渲染 ligature 文本)完全不变。
    重新生成： python scripts/subset-icons.py （图标取自 scripts/_used-icons.txt）。
    font-display: block —— 字体未到时不显示 ligature 文字(如 "arrow_outward")，到了直接出现。 */

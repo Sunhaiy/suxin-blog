@@ -113,6 +113,12 @@ export const DASHBOARD_NAV_GROUPS: DashboardNavGroup[] = [
         icon: 'shield_lock',
         description: '修改管理员邮箱与密码',
       },
+      {
+        href: '/dashboard/backups',
+        label: '全站备份',
+        icon: 'database',
+        description: '导入、导出与自动备份',
+      },
     ],
   },
 ]

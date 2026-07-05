@@ -38,6 +38,7 @@ export type HomepagePostCardRow = Pick<
 
 export interface HomepagePostSnapshot {
   posts: HomepagePostCardRow[]
+  popularPosts: HomepagePostCardRow[]
   totalPublished: number
   topTags: { tag: string; count: number }[]
   totalTags: number
@@ -187,7 +188,7 @@ export async function findPosts(params: PostQueryParams = {}): Promise<Paginated
 
 const getHomepagePostSnapshotCached = unstable_cache(
   async (): Promise<HomepagePostSnapshot> => {
-    const [postsResult, tagsResult, archiveResult] = await Promise.all([
+    const [postsResult, tagsResult, archiveResult, popularResult] = await Promise.all([
       query<
         HomepagePostCardRow & {
           total_count: number
@@ -253,6 +254,29 @@ const getHomepagePostSnapshotCached = unstable_cache(
          ORDER BY month_bucket DESC
          LIMIT 5`
       ),
+      query<HomepagePostCardRow>(
+        `SELECT
+           id,
+           title,
+           slug,
+           excerpt,
+           cover_url,
+           cover_alt,
+           seo_title,
+           seo_description,
+           is_featured,
+           status,
+           tags,
+           category,
+           view_count,
+           created_at,
+           updated_at,
+           published_at
+         FROM posts
+         WHERE status = 'published'
+         ORDER BY view_count DESC, published_at DESC NULLS LAST, created_at DESC
+         LIMIT 6`
+      ),
     ])
 
     const totalPublished = postsResult.rows[0]?.total_count ?? 0
@@ -268,6 +292,7 @@ const getHomepagePostSnapshotCached = unstable_cache(
 
     return {
       posts,
+      popularPosts: popularResult.rows,
       totalPublished,
       topTags,
       totalTags: tagsResult.rows[0]?.total_tags ?? 0,

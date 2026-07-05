@@ -43,11 +43,16 @@ services:
       PGPASSWORD: ${POSTGRES_PASSWORD}
       UPLOAD_DIR: /app/data/uploads
       UPLOAD_PUBLIC_PATH: /uploads
+      BACKUP_DIR: /app/data/backups
+      SITE_BACKUP_ENABLED: 'true'
+      SITE_BACKUP_CRON: '30 3 * * *'
+      SITE_BACKUP_TIMEZONE: Asia/Shanghai
     depends_on:
       db:
         condition: service_healthy
     volumes:
       - ./data/uploads:/app/data/uploads
+      - ./data/backups:/app/data/backups
       - ./deploy-assets:/app/deploy-assets:ro
 
   caddy:

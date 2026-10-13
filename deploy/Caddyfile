@@ -3,3 +3,53 @@ haiy.space {
 
   reverse_proxy app:3000
 }
+
+www.reflex.ink {
+  redir https://reflex.ink{uri} permanent
+}
+
+reflex.ink {
+  encode zstd gzip
+  root * /srv/reflex
+  file_server
+}
+
+ai.haiy.space {
+  encode zstd gzip
+
+  @media path /suxin-media/*
+  handle @media {
+    reverse_proxy suxin-ai-minio:9000 {
+      header_up Host {http.request.host}
+    }
+  }
+
+  handle {
+    reverse_proxy suxin-ai-web:3000
+  }
+}
+
+suxin.haiy.space {
+    encode zstd gzip
+    request_body {
+        max_size 11MB
+    }
+    header {
+        Strict-Transport-Security "max-age=31536000"
+        X-Content-Type-Options nosniff
+        Referrer-Policy no-referrer
+        -Server
+    }
+    @privacy path /privacy /privacy/ /privacy.html
+    handle @privacy {
+        root * /config/public/suxin
+        rewrite * /privacy.html
+        header Content-Type "text/html; charset=utf-8"
+        header Cache-Control "no-cache"
+        header Content-Security-Policy "default-src 'none'; style-src 'unsafe-inline'; base-uri 'none'; frame-ancestors 'none'; form-action 'none'"
+        file_server
+    }
+    handle {
+        reverse_proxy suxin-life-api:3000
+    }
+}

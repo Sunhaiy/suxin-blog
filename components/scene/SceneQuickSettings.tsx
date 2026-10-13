@@ -218,7 +218,7 @@ export function SceneQuickSettings({
       {open ? (
         <section
           aria-label="页面快捷工具"
-          className="w-[min(17.5rem,calc(100vw-2rem))] rounded-[22px] border border-border/70 bg-card/88 p-2 shadow-[0_18px_55px_rgba(0,0,0,0.18)] backdrop-blur-2xl"
+          className="w-[min(17.5rem,calc(100vw-2rem))] rounded-[22px] border border-border/70 bg-card/92 p-2 backdrop-blur-2xl"
         >
           <div className="flex items-center justify-between px-2.5 pb-2 pt-1.5">
             <div>
@@ -312,12 +312,9 @@ export function SceneQuickSettings({
         aria-expanded={open}
         title="快捷工具"
         onClick={() => setOpen((current) => !current)}
-        className="rounded-[18px] p-[1px] shadow-[0_12px_32px_rgba(0,0,0,0.16)] transition-transform duration-200 hover:-translate-y-0.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-foreground/25"
-        style={{
-          background: `conic-gradient(hsl(var(--foreground) / 0.78) ${scrollProgress}%, hsl(var(--border) / 0.9) ${scrollProgress}% 100%)`,
-        }}
+        className="rounded-[18px] border border-border/75 bg-card/78 p-0 text-foreground backdrop-blur-xl transition-colors duration-200 hover:bg-card focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-border"
       >
-        <span className="flex h-[46px] w-[46px] items-center justify-center rounded-[17px] bg-background/92 text-foreground backdrop-blur-2xl">
+        <span className="flex h-[46px] w-[46px] items-center justify-center rounded-[17px]">
           <PublicSymbol icon={open ? 'close' : 'widgets'} size={20} />
         </span>
       </button>

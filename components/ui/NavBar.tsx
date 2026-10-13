@@ -141,8 +141,7 @@ export function NavBar({ categories, siteProfile }: NavBarProps) {
 
   const isPathActive = (href: string) =>
     href === '/' ? pathname === '/' : pathname === href || pathname.startsWith(`${href}/`)
-  const activeNavClass =
-    'bg-primary/10 font-medium text-primary shadow-[inset_0_0_0_1px_hsl(var(--primary)/0.12)]'
+  const activeNavClass = 'bg-foreground font-medium text-background'
   const inactiveNavClass = 'text-muted-foreground hover:bg-muted hover:text-foreground'
   const navLinkClass = (href: string) =>
     `flex items-center gap-1.5 rounded-full px-3 py-1.5 text-sm transition-all duration-200 ${
@@ -161,7 +160,7 @@ export function NavBar({ categories, siteProfile }: NavBarProps) {
   const mobileNavItemClass = (href: string) =>
     `${mobileMenuItemClass} ${
       isPathActive(href)
-        ? 'border-primary/30 bg-primary/10 text-primary dark:border-primary/25 dark:bg-primary/10'
+        ? 'border-foreground bg-foreground text-background dark:border-foreground dark:bg-foreground dark:text-background'
         : ''
     }`
 

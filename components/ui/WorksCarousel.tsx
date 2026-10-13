@@ -7,11 +7,13 @@ import { MaterialSymbol } from '@/components/ui/MaterialSymbol'
 import { ProgressiveImage } from '@/components/ui/ProgressiveImage'
 import { useGsapScope } from '@/hooks/useGsapScope'
 import { getOptimizedMediaUrl, resolveMediaUrl } from '@/lib/media'
+import type { WorkGitHubActivity, WorkGitHubActivityMap } from '@/types/github'
 import type { WorkListItem } from '@/types/work'
 
 interface Props {
   works: WorkListItem[]
   siteUrl: string
+  githubActivity: WorkGitHubActivityMap
 }
 
 const dateFormatter = new Intl.DateTimeFormat('en-US', {
@@ -26,13 +28,14 @@ const timeFormatter = new Intl.DateTimeFormat('en-US', {
   hour12: true,
 })
 
-export function WorksCarousel({ works, siteUrl }: Props) {
+export function WorksCarousel({ works, siteUrl, githubActivity }: Props) {
   const [active, setActive] = useState(() => resolveActiveIndexFromHash(works))
   const [transitionKey, setTransitionKey] = useState(0)
   const directionRef = useRef<1 | -1>(1)
   const initialRenderRef = useRef(true)
   const gestureLockRef = useRef(0)
   const activeWork = works[active]
+  const activeGitHubActivity = githubActivity[activeWork.id] ?? null
   const activeWorkCoverUrl = useMemo(
     () => resolveMediaUrl(activeWork.cover_url, activeWork.hero_image_url),
     [activeWork.cover_url, activeWork.hero_image_url]
@@ -67,6 +70,8 @@ export function WorksCarousel({ works, siteUrl }: Props) {
     const content = scope.querySelector('[data-ticket-content]')
     const controls = scope.querySelector('[data-ticket-controls]')
     const meta = scope.querySelector('[data-ticket-meta]')
+    const commitPanel = scope.querySelector('[data-commit-panel]')
+    const briefPanel = scope.querySelector('[data-brief-panel]')
     const postmark = scope.querySelector('[data-ticket-postmark]')
     const direction = directionRef.current
 
@@ -104,6 +109,22 @@ export function WorksCarousel({ works, siteUrl }: Props) {
         '-=0.3'
       )
       tl.fromTo(meta, { autoAlpha: 0, y: 12 }, { autoAlpha: 1, y: 0, duration: 0.42 }, '-=0.28')
+      if (commitPanel) {
+        tl.fromTo(
+          commitPanel,
+          { autoAlpha: 0, x: -18 },
+          { autoAlpha: 1, x: 0, duration: 0.46 },
+          '-=0.4'
+        )
+      }
+      if (briefPanel) {
+        tl.fromTo(
+          briefPanel,
+          { autoAlpha: 0, x: 18 },
+          { autoAlpha: 1, x: 0, duration: 0.46 },
+          '-=0.46'
+        )
+      }
       return
     }
 
@@ -193,6 +214,23 @@ export function WorksCarousel({ works, siteUrl }: Props) {
     )
 
     tl.fromTo(meta, { autoAlpha: 0, y: 12 }, { autoAlpha: 1, y: 0, duration: 0.36 }, '-=0.24')
+
+    if (commitPanel) {
+      tl.fromTo(
+        commitPanel,
+        { autoAlpha: 0, x: direction * 24 },
+        { autoAlpha: 1, x: 0, duration: 0.42 },
+        '-=0.34'
+      )
+    }
+    if (briefPanel) {
+      tl.fromTo(
+        briefPanel,
+        { autoAlpha: 0, x: direction * 24 },
+        { autoAlpha: 1, x: 0, duration: 0.42 },
+        '-=0.42'
+      )
+    }
   }, [active, transitionKey])
 
   useEffect(() => {
@@ -315,6 +353,13 @@ export function WorksCarousel({ works, siteUrl }: Props) {
       data-works-stage
     >
       <div className="relative mx-auto flex w-full flex-col items-center">
+        <div className="grid w-full max-w-[70rem] items-center justify-items-center gap-8 xl:grid-cols-[21rem_20rem_21rem] xl:justify-center">
+        <RecentCommits
+          key={`commits-${activeWork.id}`}
+          activity={activeGitHubActivity}
+          projectTitle={activeWork.title}
+        />
+
         <div className="relative w-full max-w-[19.4rem] sm:max-w-[20rem]" data-ticket-shell>
           <div
             className="pointer-events-none absolute inset-x-7 top-4 h-full rounded-[2rem] blur-[20px]"
@@ -541,6 +586,13 @@ export function WorksCarousel({ works, siteUrl }: Props) {
           </article>
         </div>
 
+        <ProjectBrief
+          key={`brief-${activeWork.id}`}
+          work={activeWork}
+          activity={activeGitHubActivity}
+        />
+        </div>
+
         <div className="mt-9 flex items-center gap-3" data-ticket-controls>
           <button
             type="button"
@@ -645,6 +697,210 @@ export function WorksCarousel({ works, siteUrl }: Props) {
       </div>
     </section>
   )
+}
+
+function RecentCommits({
+  activity,
+  projectTitle,
+}: {
+  activity: WorkGitHubActivity | null
+  projectTitle: string
+}) {
+  return (
+    <aside
+      className="hidden w-full max-w-[21rem] xl:block"
+      aria-label={`${projectTitle} 最近的 GitHub 提交记录`}
+      data-commit-panel
+    >
+      <div
+        className="overflow-hidden rounded-[1.5rem] border"
+        style={{
+          borderColor: 'var(--works-ticket-border)',
+          backgroundColor: 'var(--works-fact-bg)',
+          color: 'var(--works-panel-copy)',
+        }}
+      >
+        <header className="flex items-start justify-between gap-5 px-5 pb-4 pt-5">
+          <div className="min-w-0">
+            <p
+              className="truncate font-mono text-[0.62rem] uppercase tracking-[0.22em]"
+              style={{ color: 'var(--works-ticket-muted)' }}
+            >
+              GitHub / {activity?.repository || 'repository'}
+            </p>
+            <h2 className="mt-2 text-[1.08rem] font-semibold tracking-[-0.035em]">
+              最近 Commits
+            </h2>
+          </div>
+          {activity ? (
+            <a
+              href={activity.repositoryUrl}
+              target="_blank"
+              rel="noreferrer"
+              aria-label={`打开 ${activity.repository} 仓库`}
+              className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full border transition-colors hover:bg-foreground/[0.06]"
+              style={{ borderColor: 'var(--works-ticket-border)' }}
+            >
+              <MaterialSymbol icon="open_in_new" size={17} />
+            </a>
+          ) : null}
+        </header>
+
+        {activity?.commits.length ? (
+          <div
+            className="max-h-[25rem] overflow-y-auto overscroll-contain border-t [scrollbar-color:rgba(100,116,139,0.38)_transparent] [scrollbar-width:thin]"
+            style={{ borderColor: 'var(--works-ticket-border)' }}
+          >
+            {activity.commits.map((commit) => (
+              <a
+                key={commit.sha}
+                href={commit.url}
+                target="_blank"
+                rel="noreferrer"
+                className="group flex items-start gap-3 border-b px-5 py-3 transition-colors last:border-b-0 hover:bg-foreground/[0.035]"
+                style={{ borderColor: 'var(--works-ticket-border)' }}
+              >
+                <span
+                  className="mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-full border"
+                  style={{ borderColor: 'var(--works-ticket-border)' }}
+                >
+                  <MaterialSymbol icon="code_blocks" size={13} />
+                </span>
+                <span className="min-w-0 flex-1">
+                  <span className="line-clamp-1 text-[0.82rem] font-medium leading-5 tracking-[-0.02em]">
+                    {commit.message}
+                  </span>
+                  <span
+                    className="mt-1 flex min-w-0 items-center gap-2 font-mono text-[0.58rem] tracking-[0.06em]"
+                    style={{ color: 'var(--works-ticket-muted)' }}
+                  >
+                    <span>{commit.sha.slice(0, 7)}</span>
+                    <span aria-hidden="true">·</span>
+                    <span className="truncate">{commit.author}</span>
+                    <span aria-hidden="true">·</span>
+                    <span className="shrink-0">{formatCommitDate(commit.authoredAt)}</span>
+                  </span>
+                </span>
+                <MaterialSymbol
+                  icon="open_in_new"
+                  size={15}
+                  className="mt-1 shrink-0 opacity-45 transition-opacity group-hover:opacity-100"
+                />
+              </a>
+            ))}
+          </div>
+        ) : (
+          <div
+            className="border-t px-5 py-8"
+            style={{ borderColor: 'var(--works-ticket-border)' }}
+          >
+            <p className="text-sm font-medium">暂时没有公开提交</p>
+            <p className="mt-1.5 text-xs leading-5" style={{ color: 'var(--works-ticket-muted)' }}>
+              {activity ? '这个仓库还很安静，新的提交会显示在这里。' : '该项目尚未绑定公开的 GitHub 仓库。'}
+            </p>
+          </div>
+        )}
+      </div>
+    </aside>
+  )
+}
+
+function ProjectBrief({
+  work,
+  activity,
+}: {
+  work: WorkListItem
+  activity: WorkGitHubActivity | null
+}) {
+  const brief = work.summary || work.description || work.subtitle || activity?.description || '这个项目还没有填写简讯。'
+  const language = activity?.language || work.tags[0] || '—'
+
+  return (
+    <aside
+      className="hidden w-full max-w-[21rem] xl:block"
+      aria-label={`${work.title} 项目简讯`}
+      data-brief-panel
+    >
+      <div
+        className="overflow-hidden rounded-[1.5rem] border"
+        style={{
+          borderColor: 'var(--works-ticket-border)',
+          backgroundColor: 'var(--works-fact-bg)',
+          color: 'var(--works-panel-copy)',
+        }}
+      >
+        <header className="px-5 pb-4 pt-5">
+          <p
+            className="font-mono text-[0.62rem] uppercase tracking-[0.22em]"
+            style={{ color: 'var(--works-ticket-muted)' }}
+          >
+            Project brief
+          </p>
+          <h2 className="mt-2 text-[1.08rem] font-semibold tracking-[-0.035em]">项目简讯</h2>
+          <p
+            className="mt-3 line-clamp-4 text-[0.78rem] leading-5"
+            style={{ color: 'var(--works-ticket-muted)' }}
+          >
+            {brief}
+          </p>
+        </header>
+
+        <dl className="grid grid-cols-2 border-t" style={{ borderColor: 'var(--works-ticket-border)' }}>
+          <ProjectFact label="Language" value={language} />
+          <ProjectFact label="Branch" value={activity?.defaultBranch || '—'} />
+          <ProjectFact label="Stars" value={String(activity?.stars ?? 0)} />
+          <ProjectFact label="Forks" value={String(activity?.forks ?? 0)} />
+        </dl>
+
+        {work.tags.length ? (
+          <div className="flex flex-wrap gap-1.5 border-t px-5 py-4" style={{ borderColor: 'var(--works-ticket-border)' }}>
+            {work.tags.slice(0, 4).map((tag) => (
+              <span
+                key={tag}
+                className="rounded-full border px-2.5 py-1 text-[0.62rem]"
+                style={{ borderColor: 'var(--works-ticket-border)', color: 'var(--works-ticket-muted)' }}
+              >
+                {tag}
+              </span>
+            ))}
+          </div>
+        ) : null}
+
+        <Link
+          href={`/works/${work.slug}`}
+          className="flex items-center justify-between border-t px-5 py-4 text-xs font-medium transition-colors hover:bg-foreground/[0.035]"
+          style={{ borderColor: 'var(--works-ticket-border)' }}
+        >
+          查看项目详情
+          <MaterialSymbol icon="arrow_forward" size={16} />
+        </Link>
+      </div>
+    </aside>
+  )
+}
+
+function ProjectFact({ label, value }: { label: string; value: string }) {
+  return (
+    <div
+      className="border-b border-r px-4 py-3.5 even:border-r-0 [&:nth-last-child(-n+2)]:border-b-0"
+      style={{ borderColor: 'var(--works-ticket-border)' }}
+    >
+      <dt
+        className="font-mono text-[0.55rem] uppercase tracking-[0.16em]"
+        style={{ color: 'var(--works-ticket-muted)' }}
+      >
+        {label}
+      </dt>
+      <dd className="mt-1.5 truncate text-[0.78rem] font-medium">{value}</dd>
+    </div>
+  )
+}
+
+function formatCommitDate(value: string) {
+  const date = new Date(value)
+  if (Number.isNaN(date.getTime())) return '--/--'
+
+  return `${String(date.getUTCMonth() + 1).padStart(2, '0')}/${String(date.getUTCDate()).padStart(2, '0')}`
 }
 
 function resolveActiveIndexFromHash(works: WorkListItem[]) {

@@ -1,6 +1,7 @@
 import type { Metadata } from 'next'
 import { WorksCarousel } from '@/components/ui/WorksCarousel'
 import { findWorks } from '@/lib/db/dao/worksDao'
+import { getWorksGitHubActivity } from '@/lib/github'
 import { getSiteProfile } from '@/lib/site'
 
 export const metadata: Metadata = {
@@ -12,6 +13,7 @@ export const revalidate = 60
 
 export default async function WorksPage() {
   const [works, siteProfile] = await Promise.all([findWorks(), getSiteProfile()])
+  const githubActivity = await getWorksGitHubActivity(works)
 
   return (
     <main className="min-h-[calc(100vh-64px)] overflow-hidden bg-background">
@@ -20,7 +22,11 @@ export default async function WorksPage() {
           暂无项目，敬请期待。
         </div>
       ) : (
-        <WorksCarousel works={works} siteUrl={siteProfile.siteUrl} />
+        <WorksCarousel
+          works={works}
+          siteUrl={siteProfile.siteUrl}
+          githubActivity={githubActivity}
+        />
       )}
     </main>
   )

@@ -319,7 +319,7 @@ export default function DashboardAboutPage() {
                     className={ADMIN_INPUT_CLASS}
                     value={profileForm.aboutHeroName}
                     onChange={(event) => updateProfile('aboutHeroName', event.target.value)}
-                    placeholder="孙海洋"
+                    placeholder="素心"
                   />
                 </AdminField>
                 <AdminField label="英文名">

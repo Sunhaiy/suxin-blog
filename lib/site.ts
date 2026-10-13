@@ -134,8 +134,8 @@ export const DEFAULT_SITE_PROFILE: SiteProfile = {
   footerPoliceNumber: '',
   footerPoliceUrl: '',
   footerText: '认知驾驶风险',
-  aboutHeroName: '孙海洋',
-  aboutHeroNameEn: 'Sun Haiyang',
+  aboutHeroName: '素心',
+  aboutHeroNameEn: 'Suxin',
   aboutHeroRoleLine: '全栈开发者 / Android 开发者 / AI Builder',
   aboutHeroBio:
     '崇拜技术力量，热爱探索未知边界，享受从 0 到 1 创造产品。独立开发并上线移动端 App「来生」、个人全栈博客「素心」，以及 AI 驱动的跨平台 SSH 终端工具「Reflex」。擅长将创意、设计、编码、部署与上线完整打通。',

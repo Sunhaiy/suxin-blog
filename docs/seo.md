@@ -2,6 +2,12 @@
 
 ## 2026-10 SEO 修复与回归检查
 
+### Bing 具体报错网址复核（2026-10-13）
+
+- `/about`、`/links`、`/posts`、`/works` 的线上服务端 HTML 均返回 HTTP 200，且分别包含一个 H1：素心、友情链接与网站收藏、技术文章与学习笔记、独立开发项目作品集。
+- 英文文章 `from-pixel-to-porcelain-how-linxi-smartmodel-turns-ai-imagination-into-collectible-art` 原搜索标题虽已自动限制为 65 字符，但会截断单词。现在改用完整的 `From Pixel to Porcelain: AI Art with Linxi SmartModel`，保留文章正文标题不变。数据库修改脚本为 `scripts/fix-linxi-seo-title.sql`，执行前备份位于服务器 `/opt/suxin-backups/linxi-seo-title-before-20261013.json`。
+- 抓取容量告警不能从截图确定根因。此次 5 个页面 HTTP 请求均成功；公开页面允许抓取，robots.txt 未设置 Crawl-delay，站点地图正常。尚未核实 Bing 后台 Crawl Control 的配置，不能将这些检查表述为告警已解除。Bing 报表需重新抓取后才能反映修改。
+
 - 栏目页的标题、描述、canonical 和分享摘要集中在 `lib/seo/metadata.ts`，不再继承个人简介作为页面描述，也不重复拼接站名。
 - 文章保留原始正文标题，搜索标题连同站名控制在 65 个 Unicode 字符以内。短描述从文章正文补充，排除代码块和编辑器属性，最多 160 字符；不会为了凑长度生成无关内容。
 - 关于页使用原有姓名作为 H1。沉浸式栏目保留原视觉布局，通过屏幕阅读器可见的页面标题补齐语义。

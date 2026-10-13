@@ -327,7 +327,7 @@ export default function DashboardAboutPage() {
                     className={ADMIN_INPUT_CLASS}
                     value={profileForm.aboutHeroNameEn}
                     onChange={(event) => updateProfile('aboutHeroNameEn', event.target.value)}
-                    placeholder="Sun Haiyang"
+                    placeholder="Suxin"
                   />
                 </AdminField>
                 <AdminField label="身份标签" fullWidth>

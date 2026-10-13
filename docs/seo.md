@@ -21,6 +21,8 @@ python scripts/audit-seo.py https://haiy.space --output output/seo-audit.json
 
 本次部署前保留了本地未提交改动（Git stash：`backup-local-before-production-seo-2026-10-13`）。服务器源码备份位于 `/opt/suxin-backups/blog-source-before-seo-20261013.tar.gz`，旧应用镜像标记为 `suxin-blog-app:before-seo-20261013`。数据库、上传目录和生产环境变量未作迁移或覆盖。
 
+线上复测额外发现 10 篇旧文章的 `seo_title` 等于原始标题加上 ` | ???????`。已备份到 `/opt/suxin-backups/seo-title-values-before-20261013.json`，仅将这些 SEO 字段恢复为原始标题，保留正文和文章标题。检查脚本也会检测这种损坏的后缀，避免仅满足长度检查却输出乱码。文章查询缓存最多需要约 5 分钟刷新。
+
 检查脚本使用标题 15–65 字符、描述 70–160 字符作为本站的编辑检查范围，不代表搜索排名规则，也不能代替 Bing 后台复查。中文搜索摘要尤其需要兼顾阅读体验，不应为满足英文长度建议堆砌关键词。
 
 “Limited crawl capacity”还涉及搜索引擎分配的抓取预算与后台 Crawl Control 设置。本站 robots.txt 不设置 Crawl-delay，公开内容允许抓取；应结合 Bing 最新抓取结果、服务器错误率和响应时间确认恢复，不能只凭部署成功认定告警已消失。

@@ -4,6 +4,7 @@ Usage: python scripts/audit-seo.py https://haiy.space --output output/seo.json
 """
 import argparse
 import json
+import re
 import time
 import urllib.request
 from urllib.parse import urlsplit
@@ -77,6 +78,8 @@ def main():
                     errors.append("short_title")
                 if len(page.title) > 65:
                     errors.append("long_title")
+                if re.search(r"\|\s*\?{3,}", page.title):
+                    errors.append("garbled_title_suffix")
                 if len(page.description) < 70:
                     errors.append("short_description")
                 if len(page.description) > 160:

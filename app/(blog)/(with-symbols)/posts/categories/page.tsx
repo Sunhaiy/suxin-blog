@@ -4,7 +4,7 @@
  * 文章分类页 — Bento 网格，首位分类大卡 + 其余小卡，附最新文章预览。
  */
 
-import type { Metadata } from 'next'
+import { publicPageMetadata } from '@/lib/seo/metadata'
 import Link from 'next/link'
 import { findCategories, findLatestPostPerCategory } from '@/lib/db/dao/postDao'
 import {
@@ -13,7 +13,7 @@ import {
   RiGitBranchLine, RiFolderLine, RiArrowRightUpLine,
 } from '@remixicon/react'
 
-export const metadata: Metadata = { title: '分类 · 素心' }
+export const metadata = publicPageMetadata('/posts/categories')
 export const revalidate = 60
 
 type RemixIcon = React.ComponentType<{ size?: number | string; className?: string }>

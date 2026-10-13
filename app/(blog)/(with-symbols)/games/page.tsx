@@ -1,4 +1,4 @@
-import type { Metadata } from 'next'
+import { publicPageMetadata } from '@/lib/seo/metadata'
 import { GameGrid } from '@/components/ui/GameGrid'
 import { findGames, findGameStatusCounts } from '@/lib/db/dao/acgDao'
 import { getOptimizedMediaUrl } from '@/lib/media'
@@ -6,13 +6,7 @@ import { getSiteProfile } from '@/lib/site'
 
 const PAGE_SIZE = 15
 
-export const metadata: Metadata = {
-  title: '游戏收藏',
-  description: '记录我玩过、正在玩和准备开启的游戏。',
-  alternates: {
-    canonical: '/games',
-  },
-}
+export const metadata = publicPageMetadata('/games')
 
 export const revalidate = 3600
 

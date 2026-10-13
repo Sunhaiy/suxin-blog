@@ -1,5 +1,32 @@
 # SEO 配置说明
 
+## 2026-10 SEO 修复与回归检查
+
+- 栏目页的标题、描述、canonical 和分享摘要集中在 `lib/seo/metadata.ts`，不再继承个人简介作为页面描述，也不重复拼接站名。
+- 文章保留原始正文标题，搜索标题连同站名控制在 65 个 Unicode 字符以内。短描述从文章正文补充，排除代码块和编辑器属性，最多 160 字符；不会为了凑长度生成无关内容。
+- 关于页使用原有姓名作为 H1。沉浸式栏目保留原视觉布局，通过屏幕阅读器可见的页面标题补齐语义。
+- 筛选结果使用 `noindex, follow`，正常文章分页保留独立 canonical。管理登录页禁止索引。
+- 站点地图只包含可索引页面，删除会跳转的旧作品详情地址；旧链接永久跳转到作品集。不再把每次生成地图的时间当作静态页面的修改时间。文章的 `updated_at` 也会被阅读计数触发器更新，因此暂不输出不可靠的 `lastmod`；以后引入只随内容变化的时间戳后再恢复。
+
+验证命令：
+
+```bash
+npm run test:seo
+npx tsc --noEmit
+npm run lint
+python scripts/audit-seo.py https://haiy.space --output output/seo-audit.json
+```
+
+临时实例可增加 `--origin http://127.0.0.1:13000`，使用生产站点的 sitemap URL 与 canonical，但请求临时实例。HTTP 检查使用 Bingbot User-Agent，检查服务端 HTML 中的标题、描述、H1、canonical、索引指令及重定向。
+
+本次部署前保留了本地未提交改动（Git stash：`backup-local-before-production-seo-2026-10-13`）。服务器源码备份位于 `/opt/suxin-backups/blog-source-before-seo-20261013.tar.gz`，旧应用镜像标记为 `suxin-blog-app:before-seo-20261013`。数据库、上传目录和生产环境变量未作迁移或覆盖。
+
+检查脚本使用标题 15–65 字符、描述 70–160 字符作为本站的编辑检查范围，不代表搜索排名规则，也不能代替 Bing 后台复查。中文搜索摘要尤其需要兼顾阅读体验，不应为满足英文长度建议堆砌关键词。
+
+“Limited crawl capacity”还涉及搜索引擎分配的抓取预算与后台 Crawl Control 设置。本站 robots.txt 不设置 Crawl-delay，公开内容允许抓取；应结合 Bing 最新抓取结果、服务器错误率和响应时间确认恢复，不能只凭部署成功认定告警已消失。
+
+参考：[Bing 抓取控制](https://www.bing.com/webmasters/help/crawl-control-55a30303)、[Bing 站长指南](https://www.bing.com/webmasters/help/bing-webmaster-guidelines-30fba23a)、[Google 摘要说明](https://developers.google.com/search/docs/appearance/snippet)。
+
 这份文档说明项目当前已经内置的 SEO 能力，以及 Google、Bing、百度三个平台上线后还需要补的配置。
 
 ## 项目已内置

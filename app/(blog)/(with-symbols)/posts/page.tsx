@@ -1,3 +1,4 @@
+import { publicPageMetadata } from '@/lib/seo/metadata'
 import type { Metadata } from 'next'
 import Link from 'next/link'
 import { FeaturedCarousel } from '@/components/ui/FeaturedCarousel'
@@ -8,12 +9,27 @@ import { findAllTags, findCategories, findPosts } from '@/lib/db/dao/postDao'
 import { getOptimizedMediaUrl, pickDeterministicMediaUrl, resolveMediaUrl } from '@/lib/media'
 import { getSiteProfile } from '@/lib/site'
 
-export const metadata: Metadata = {
-  title: '文章',
-  description: '按分类、标签和关键词浏览全部公开文章。',
-  alternates: {
-    canonical: '/posts',
-  },
+type PostsSearchParams = { page?: string; tags?: string; keyword?: string; category?: string }
+
+export async function generateMetadata({ searchParams }: {
+  searchParams: Promise<PostsSearchParams>
+}): Promise<Metadata> {
+  const params = await searchParams
+  const metadata = publicPageMetadata('/posts')
+  const page = Math.max(1, Math.floor(Number(params.page) || 1))
+  const filtered = Boolean(params.tags || params.keyword || params.category)
+  if (filtered) {
+    return { ...metadata, robots: { index: false, follow: true } }
+  }
+  if (page > 1) {
+    return {
+      ...metadata,
+      title: `技术文章与学习笔记：第 ${page} 页`,
+      alternates: { canonical: `/posts?page=${page}` },
+      openGraph: { ...metadata.openGraph, url: `/posts?page=${page}` },
+    }
+  }
+  return metadata
 }
 
 export const revalidate = 60
@@ -28,7 +44,7 @@ export default async function PostsPage({
   const currentCategory = category ?? ''
   const currentTags = tagsParam ? tagsParam.split(',').filter(Boolean) : []
   const isFiltered = Boolean(currentCategory || currentTags.length || keyword)
-  const currentPage = Math.max(1, Number(page ?? 1) || 1)
+  const currentPage = Math.max(1, Math.floor(Number(page) || 1))
 
   const filteredPromise = findPosts({
     status: 'published',
@@ -70,6 +86,7 @@ export default async function PostsPage({
 
   return (
     <div className="relative isolate min-h-[calc(100vh-4rem)] bg-background">
+      <h1 className="sr-only">技术文章与学习笔记</h1>
       <div className="mx-auto max-w-6xl px-6 py-12 sm:px-8">
       {!isFiltered ? (
         <section className="mb-10 rounded-[28px] border border-border/75 bg-card/72 p-5 backdrop-blur-xl sm:p-6">

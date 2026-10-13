@@ -1,13 +1,10 @@
-import type { Metadata } from 'next'
+import { publicPageMetadata } from '@/lib/seo/metadata'
 import { findMoments } from '@/lib/db/dao/momentDao'
 import { getSiteProfile } from '@/lib/site'
 import type { MomentRow } from '@/types/moment'
 import { MomentFeedCard } from './MomentFeedCard'
 
-export const metadata: Metadata = {
-  title: '瞬间',
-  description: '把照片、碎念、天气和路过的小事收在这里。',
-}
+export const metadata = publicPageMetadata('/moments')
 
 export const revalidate = 30
 
@@ -29,6 +26,7 @@ export default async function MomentsPage() {
 
   return (
     <div className="min-h-[calc(100vh-4rem)] bg-background">
+      <h1 className="sr-only">日常瞬间与生活随记</h1>
       <div className="mx-auto max-w-[700px] px-4 pb-20 pt-8 sm:px-6 sm:pt-10">
         {moments.length === 0 ? (
           <div className="rounded-[28px] border border-border/75 bg-card/92 px-8 py-24 text-center backdrop-blur-2xl">

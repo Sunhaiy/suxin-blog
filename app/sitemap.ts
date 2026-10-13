@@ -1,17 +1,19 @@
 import type { MetadataRoute } from 'next'
 import { findPosts } from '@/lib/db/dao/postDao'
-import { findWorkDetails } from '@/lib/db/dao/worksDao'
 import { getSiteProfile } from '@/lib/site'
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
-  const [siteProfile, posts, works] = await Promise.all([
+  const [siteProfile, firstPage] = await Promise.all([
     getSiteProfile(),
     findPosts({ status: 'published', pageSize: 1000 }),
-    findWorkDetails(),
   ])
 
   const siteUrl = (siteProfile.siteUrl || 'https://haiy.space').replace(/\/$/, '')
-  const now = new Date()
+  const posts = [...firstPage.data]
+  for (let page = 2; page <= firstPage.totalPages; page++) {
+    const result = await findPosts({ status: 'published', pageSize: 1000, page })
+    posts.push(...result.data)
+  }
 
   const staticRoutes: MetadataRoute.Sitemap = [
     '',
@@ -29,24 +31,18 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     '/acg',
   ].map((path) => ({
     url: `${siteUrl}${path}`,
-    lastModified: now,
     changeFrequency: path === '' ? 'daily' : 'weekly',
     priority: path === '' ? 1 : path === '/posts' || path === '/works' ? 0.9 : 0.7,
   }))
 
-  const postRoutes: MetadataRoute.Sitemap = posts.data.map((post) => ({
+  const postRoutes: MetadataRoute.Sitemap = posts.map((post) => ({
     url: `${siteUrl}/posts/${post.slug}`,
-    lastModified: post.updated_at ?? post.published_at ?? post.created_at,
+    // The database also updates updated_at on view-count changes, so it cannot
+    // serve as an honest content modification timestamp for crawlers.
     changeFrequency: 'monthly',
     priority: 0.8,
   }))
 
-  const workRoutes: MetadataRoute.Sitemap = works.map((work) => ({
-    url: `${siteUrl}/works/${work.slug}`,
-    lastModified: work.updated_at,
-    changeFrequency: 'monthly',
-    priority: 0.75,
-  }))
-
-  return [...staticRoutes, ...postRoutes, ...workRoutes]
+  // Work detail routes redirect to /works and are not canonical documents.
+  return [...staticRoutes, ...postRoutes]
 }

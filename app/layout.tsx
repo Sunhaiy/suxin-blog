@@ -8,6 +8,7 @@ import './noto-sans-sc-sliced.css'
 // Material Symbols 图标字体：仅 wght 轴 927KB（替代默认 5.2MB 全量），全图标保留
 import './material-symbols.css'
 import { DEFAULT_SITE_PROFILE, getSiteProfile } from '@/lib/site'
+import { publicPageMetadata } from '@/lib/seo/metadata'
 import './globals.css'
 
 function resolveMetadataBase(siteUrl?: string) {
@@ -33,6 +34,7 @@ export async function generateMetadata(): Promise<Metadata> {
     ...(bingVerification ? { 'msvalidate.01': bingVerification } : {}),
     ...(baiduVerification ? { 'baidu-site-verification': baiduVerification } : {}),
   }
+  const description = publicPageMetadata('/').description
 
   return {
     metadataBase: resolveMetadataBase(profile.siteUrl),
@@ -40,7 +42,7 @@ export async function generateMetadata(): Promise<Metadata> {
       default: `${profile.siteName} · ${profile.siteNameEn}`,
       template: `%s | ${profile.siteName}`,
     },
-    description: profile.bio,
+    description,
     authors: [{ name: profile.ownerName }],
     applicationName: profile.siteName,
     alternates: {
@@ -53,13 +55,13 @@ export async function generateMetadata(): Promise<Metadata> {
       locale: 'zh_CN',
       siteName: profile.siteName,
       title: profile.siteName,
-      description: profile.bio,
+      description: description || undefined,
       images: profile.avatarUrl ? [profile.avatarUrl] : [],
     },
     twitter: {
       card: 'summary',
       title: profile.siteName,
-      description: profile.bio,
+      description: description || undefined,
       images: profile.avatarUrl ? [profile.avatarUrl] : [],
     },
     icons: siteIcon

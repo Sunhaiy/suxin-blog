@@ -4,11 +4,11 @@
  * 文章归档页 — 按年月时间线排列。
  */
 
-import type { Metadata } from 'next'
+import { publicPageMetadata } from '@/lib/seo/metadata'
 import Link from 'next/link'
 import { findPostsForArchive } from '@/lib/db/dao/postDao'
 
-export const metadata: Metadata = { title: '归档 · 素心' }
+export const metadata = publicPageMetadata('/posts/archive')
 export const revalidate = 60
 
 interface GroupedPost {

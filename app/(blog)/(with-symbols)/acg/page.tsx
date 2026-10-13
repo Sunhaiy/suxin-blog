@@ -1,9 +1,9 @@
-import type { Metadata } from 'next'
+import { publicPageMetadata } from '@/lib/seo/metadata'
 import { AnimeGrid } from '@/components/ui/AnimeGrid'
 import { GameGrid } from '@/components/ui/GameGrid'
 import { findAnimes, findGames } from '@/lib/db/dao/acgDao'
 
-export const metadata: Metadata = { title: '数字陈列室' }
+export const metadata = publicPageMetadata('/acg')
 export const revalidate = 3600
 
 export default async function AcgPage() {
@@ -14,6 +14,7 @@ export default async function AcgPage() {
 
   return (
     <div className="mx-auto max-w-6xl px-6 py-12">
+      <h1 className="mb-8 text-3xl font-bold">数字陈列室：动漫与游戏收藏</h1>
       <section id="anime" className="mb-20">
         <h2 className="mb-2 text-2xl font-bold">动漫追迹</h2>
         <p className="mb-8 text-sm text-muted-foreground">

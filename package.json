@@ -15,6 +15,7 @@
     "start": "next start",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
+    "test:seo": "node --import tsx --test scripts/seo-metadata.test.ts",
     "db:migrate": "npx tsx lib/db/migrate.ts",
     "db:seed": "npx tsx lib/db/seed.ts",
     "content:editor-showcase": "npx tsx scripts/ensure-editor-showcase-post.ts",

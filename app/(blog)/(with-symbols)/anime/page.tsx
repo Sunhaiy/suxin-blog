@@ -1,13 +1,11 @@
-import type { Metadata } from 'next'
+import { publicPageMetadata } from '@/lib/seo/metadata'
 import { AnimeGrid } from '@/components/ui/AnimeGrid'
 import { findAnimes, findAnimeStatusCounts } from '@/lib/db/dao/acgDao'
 import { getOptimizedMediaUrl } from '@/lib/media'
 
 const PAGE_SIZE = 15
 
-export const metadata: Metadata = {
-  title: '追番列表 · 素心',
-}
+export const metadata = publicPageMetadata('/anime')
 
 export const revalidate = 3600
 

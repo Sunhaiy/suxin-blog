@@ -1,4 +1,4 @@
-import type { Metadata } from 'next'
+import { publicPageMetadata } from '@/lib/seo/metadata'
 import { LinkSiteProfileCard } from '@/components/ui/LinkSiteProfileCard'
 import { LinkSubmissionDialog } from '@/components/ui/LinkSubmissionDialog'
 import { MaterialSymbol } from '@/components/ui/MaterialSymbol'
@@ -7,13 +7,7 @@ import { findLinks } from '@/lib/db/dao/linkDao'
 import { getSiteProfile } from '@/lib/site'
 import type { LinkCategoryRow, LinkRow } from '@/types/link'
 
-export const metadata: Metadata = {
-  title: '友情链接',
-  description: '收藏一些值得停留的站点，也开放友链申请。',
-  alternates: {
-    canonical: '/links',
-  },
-}
+export const metadata = publicPageMetadata('/links')
 
 export const dynamic = 'force-dynamic'
 
@@ -96,6 +90,7 @@ export default async function LinksPage() {
 
   return (
     <div className="min-h-[calc(100vh-4rem)] bg-background">
+      <h1 className="sr-only">友情链接与网站收藏</h1>
       <div className="mx-auto max-w-6xl px-6 py-12 sm:px-8">
         <div className="space-y-8">
         {activeGroups.map((group) => {

@@ -1,4 +1,4 @@
-import type { Metadata } from 'next'
+import { publicPageMetadata } from '@/lib/seo/metadata'
 import type React from 'react'
 import { preload } from 'react-dom'
 import Link from 'next/link'
@@ -20,10 +20,7 @@ type AboutProjectCard = {
   slug?: string
 }
 
-export const metadata: Metadata = {
-  title: '关于',
-  description: '孙海洋的个人介绍、核心能力、精选项目与生活方式。',
-}
+export const metadata = publicPageMetadata('/about')
 
 export const revalidate = 60
 
@@ -304,9 +301,9 @@ export default async function AboutPage() {
           </Link>
 
           <div className="max-w-[640px]">
-            <p className="about-hero-title text-[clamp(4.6rem,12vw,8.8rem)] font-black leading-[0.82] tracking-[-0.12em] text-white">
+            <h1 className="about-hero-title text-[clamp(4.6rem,12vw,8.8rem)] font-black leading-[0.82] tracking-[-0.12em] text-white">
               {siteProfile.aboutHeroName}
-            </p>
+            </h1>
             <p className="about-hero-copy mt-6 text-2xl font-semibold tracking-[-0.04em] text-white sm:text-3xl">
               {siteProfile.aboutHeroNameEn}
             </p>

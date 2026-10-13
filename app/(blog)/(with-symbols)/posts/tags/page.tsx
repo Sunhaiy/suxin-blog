@@ -4,11 +4,11 @@
  * 标签页 — 标签云 + 热门标签可视图。
  */
 
-import type { Metadata } from 'next'
+import { publicPageMetadata } from '@/lib/seo/metadata'
 import Link from 'next/link'
 import { findAllTags } from '@/lib/db/dao/postDao'
 
-export const metadata: Metadata = { title: '标签 · 素心' }
+export const metadata = publicPageMetadata('/posts/tags')
 export const revalidate = 60
 
 /** 根据 count 计算标签云字号（px），线性映射到 [12, 28] */

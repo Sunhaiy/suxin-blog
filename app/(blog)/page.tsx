@@ -1,4 +1,4 @@
-﻿import type { Metadata } from 'next'
+import { publicPageMetadata } from '@/lib/seo/metadata'
 import Link from 'next/link'
 import { PublicSymbol } from '@/components/ui/PublicSymbol'
 import { ProgressiveImage } from '@/components/ui/ProgressiveImage'
@@ -18,11 +18,7 @@ import { getOptimizedMediaUrl } from '@/lib/media'
 import { getBackgroundSceneSettings } from '@/lib/scene'
 import { getSiteProfile } from '@/lib/site'
 
-export const metadata: Metadata = {
-  title: '\u9996\u9875',
-  description:
-    '\u8bb0\u5f55\u6587\u7ae0\u3001\u77ac\u95f4\u3001\u9879\u76ee\u4e0e\u65e5\u5e38\u8f68\u8ff9\u7684\u4e2a\u4eba\u4e3b\u9875\u3002',
-}
+export const metadata = publicPageMetadata('/')
 
 export const revalidate = 60
 

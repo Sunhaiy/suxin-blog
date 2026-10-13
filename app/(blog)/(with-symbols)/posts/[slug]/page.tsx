@@ -1,4 +1,5 @@
 import type { Metadata } from 'next'
+import { articleDescription, articleTitle } from '@/lib/seo/metadata'
 import { preload } from 'react-dom'
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
@@ -44,8 +45,8 @@ export async function generateMetadata({
   const { slug } = await params
   const [post, siteProfile] = await Promise.all([findPostBySlug(slug), getSiteProfile()])
 
-  if (!post) {
-    return { title: '文章不存在' }
+  if (!post || post.status !== 'published') {
+    return { title: '文章不存在', robots: { index: false, follow: false } }
   }
 
   const coverUrl = resolveMediaUrl(
@@ -54,17 +55,19 @@ export async function generateMetadata({
   )
   const canonicalUrl = `${(siteProfile.siteUrl || 'https://haiy.space').replace(/\/$/, '')}/posts/${post.slug}`
   const publishedTime = toIsoDateString(post.published_at)
+  const title = articleTitle(post.seo_title || post.title, siteProfile.siteName, post.category)
+  const description = articleDescription(post.seo_description, post.excerpt, post.content)
 
   return {
-    title: post.seo_title || post.title,
-    description: post.seo_description || post.excerpt || undefined,
+    title: { absolute: title },
+    description,
     alternates: {
       canonical: canonicalUrl,
     },
     keywords: post.tags,
     openGraph: {
-      title: post.seo_title || post.title,
-      description: post.seo_description || post.excerpt || undefined,
+      title,
+      description,
       images: coverUrl ? [coverUrl] : [],
       type: 'article',
       ...(publishedTime ? { publishedTime } : {}),
@@ -72,8 +75,8 @@ export async function generateMetadata({
     },
     twitter: {
       card: coverUrl ? 'summary_large_image' : 'summary',
-      title: post.seo_title || post.title,
-      description: post.seo_description || post.excerpt || undefined,
+      title,
+      description,
       images: coverUrl ? [coverUrl] : [],
     },
   }

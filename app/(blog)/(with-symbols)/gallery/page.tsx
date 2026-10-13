@@ -1,13 +1,10 @@
-import type { Metadata } from 'next'
+import { publicPageMetadata } from '@/lib/seo/metadata'
 import { headers } from 'next/headers'
 import { ImmersiveGallery } from '@/components/ui/ImmersiveGallery'
 import { findGalleryAlbums } from '@/lib/db/dao/galleryAlbumDao'
 import { findGalleryItems } from '@/lib/db/dao/galleryDao'
 
-export const metadata: Metadata = {
-  title: '相册',
-  description: '用沉浸式横向画廊浏览收藏的照片与画面。',
-}
+export const metadata = publicPageMetadata('/gallery')
 
 export const revalidate = 600
 
@@ -24,10 +21,13 @@ export default async function GalleryPage() {
   ])
 
   return (
-    <ImmersiveGallery
-      items={items}
-      albums={albums}
-      initialMobileLayout={initialMobileLayout}
-    />
+    <>
+      <h1 className="sr-only">摄影相册与生活影像</h1>
+      <ImmersiveGallery
+        items={items}
+        albums={albums}
+        initialMobileLayout={initialMobileLayout}
+      />
+    </>
   )
 }

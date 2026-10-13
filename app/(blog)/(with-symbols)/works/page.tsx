@@ -1,13 +1,10 @@
-import type { Metadata } from 'next'
+import { publicPageMetadata } from '@/lib/seo/metadata'
 import { WorksCarousel } from '@/components/ui/WorksCarousel'
 import { findWorks } from '@/lib/db/dao/worksDao'
 import { getWorksGitHubActivity } from '@/lib/github'
 import { getSiteProfile } from '@/lib/site'
 
-export const metadata: Metadata = {
-  title: '项目票夹',
-  description: '用票据式沉浸预览浏览项目作品。',
-}
+export const metadata = publicPageMetadata('/works')
 
 export const revalidate = 60
 
@@ -17,6 +14,7 @@ export default async function WorksPage() {
 
   return (
     <main className="min-h-[calc(100vh-64px)] overflow-hidden bg-background">
+      <h1 className="sr-only">独立开发项目作品集</h1>
       {works.length === 0 ? (
         <div className="flex min-h-[calc(100vh-64px)] items-center justify-center px-6 text-center text-muted-foreground">
           暂无项目，敬请期待。
